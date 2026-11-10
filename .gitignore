@@ -1,0 +1,19 @@
+# Artefactos de compilación de .NET
+bin/
+obj/
+
+# IDE y archivos de usuario
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Paquetes NuGet locales
+packages/
+
+# Archivos del sistema y temporales
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
