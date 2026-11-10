@@ -1,6 +1,15 @@
+<!--
+Reporte de impacto de sincronización (borrador; eliminar antes de commitear)
+- Versión: 1.0.0 → 1.0.0 (sin bump: solo se completa el metadato de fecha,
+  no cambia ningún principio ni regla de gobernanza)
+- Principios modificados: ninguno
+- Secciones añadidas/eliminadas: ninguna
+- TODOs diferidos: ninguno
+-->
+
 # Constitución de blackhellheim-api
 
-Versión 1.0.0 · Ratificada 2026-11-05
+Versión 1.0.0 · Ratificada 2026-11-05 · Última modificación 2026-11-05
 
 Tienda de playeras Print-On-Demand para México (MXN, español). Este repositorio es la API (.NET 10). El frontend vive en `blackhellheim-web`.
 

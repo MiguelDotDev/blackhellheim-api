@@ -1,0 +1,32 @@
+openapi: 3.1.0
+info:
+  title: BlackHellHeim API
+  version: 0.1.0
+  description: >
+    Contrato de la API de la tienda BlackHellHeim. Esta versión inicial define
+    únicamente la comprobación de estado de la historia 001 (estructura base). La
+    infraestructura completa de OpenAPI (Scalar, servidor mock, publicación al
+    frontend) llega en su historia propia de la fundación.
+servers:
+  - url: http://localhost
+    description: Entorno de desarrollo local
+paths:
+  /salud:
+    get:
+      operationId: obtenerSalud
+      summary: Comprobación de estado de la API
+      description: >
+        Devuelve el estado de vida de la API. No depende de base de datos,
+        almacenamiento de archivos ni proveedores externos.
+      responses:
+        '200':
+          description: La API está en marcha
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [estado]
+                properties:
+                  estado:
+                    type: string
+                    const: ok
