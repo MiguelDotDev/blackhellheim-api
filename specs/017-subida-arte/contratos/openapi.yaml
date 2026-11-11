@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Arte (admin), version: 0.1.0 }
+paths:
+  /admin/arte:
+    post:
+      summary: Sube un arte PNG
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { type: object, required: [archivo], properties: { archivo: { type: string, format: binary } } }
+      responses:
+        '201': { description: Arte guardado, content: { application/json: { schema: { $ref: '#/components/schemas/ArteRespuesta' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '413': { $ref: '#/components/responses/Problema' }
+        '415': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  responses:
+    Problema: { description: 'ProblemDetails con extensión "codigo" (arte-no-png, arte-sin-transparencia, arte-resolucion-insuficiente, arte-demasiado-grande, arte-ilegible)', content: { application/problem+json: { schema: { type: object } } } }
+  schemas:
+    ArteRespuesta:
+      type: object
+      properties: { id: { type: string, format: uuid }, url: { type: string, format: uri }, ancho: { type: integer }, alto: { type: integer }, tamanoBytes: { type: integer, format: int64 }, reutilizado: { type: boolean } }

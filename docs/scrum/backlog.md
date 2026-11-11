@@ -51,7 +51,7 @@ Meta: Marca, cliente Printful, dominio de diseños y subida de arte. Rama: `spri
 | 11 | web | FE | 8 | M | Como cliente, quiero una marca reconocible: tokens, fuentes locales, logo y monograma. | Tokens de Tailwind, logo SVG y monograma entregados y usados en el esqueleto. |  | Pendiente |
 | 15 | api | BE | 10 | M | Quiero un cliente de Printful para catálogo, variantes y disponibilidad. | Lista variantes de una playera filtradas por técnica y país; un 429 se reintenta con retry-after. | specs/015-cliente-printful | Tareas listas |
 | 16 | api | BE DB | 8 | M | Quiero el dominio de diseño, producto base y variante. | Migración aplicada; un diseño apunta a variantes de Printful y a un archivo de arte. | specs/016-dominio-diseno | Tareas listas |
-| 17 | api | BE | 10 | M | Como administradora, quiero subir el arte a Azure Blob con validaciones. | Rechaza lo que no sea PNG con fondo transparente, menor de 200 MB y de resolución mínima; devuelve URL pública. |  | Pendiente |
+| 17 | api | BE | 10 | M | Como administradora, quiero subir el arte a Azure Blob con validaciones. | Rechaza lo que no sea PNG con fondo transparente, menor de 200 MB y de resolución mínima; devuelve URL pública. | specs/017-subida-arte | Tareas listas |
 
 ## Sprint 5 · 16–22 oct · 30 h
 
