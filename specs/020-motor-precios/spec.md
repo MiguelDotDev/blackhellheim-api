@@ -19,7 +19,7 @@
 4. El cliente nunca envía precios; solo el backend los calcula (regla 5 de AGENTS).
 
 ### HU 2 — Redondeo comercial (P1)
-1. El precio final es el **menor** valor ≥ precio bruto que termina en `…9` o `…90` (el candidato es el entero terminado en 9 o la decena `…90`; se elige el más cercano por arriba). Ejemplos: 412.30 → 419; 449.01 → 490; 489.99 → 490; 490.00 → 490; 490.01 → 499.
+1. **Lectura adoptada del criterio «9 o 90»**: el precio final es el menor valor ≥ precio bruto cuya terminación sea **…9 pesos enteros** (419, 429…) o, alternativamente, **…9.90** (419.90) según el parámetro `FormatoTerminacion` (`Entero9` por omisión, `Centavos90`). Ejemplos con `Entero9`: 412.30 → 419; 449.01 → 459; 489.99 → 499; 490.00 → 499; 499.00 → 499; 499.01 → 509. Con `Centavos90`: 412.30 → 419.90; 419.90 → 419.90; 419.91 → 429.90. `[MANUAL]` confirmar la lectura.
 2. Nunca por debajo del precio bruto (no se vende con pérdida de margen).
 3. Fronteras exactas probadas (límites de cada decena y centena).
 
@@ -49,7 +49,7 @@ Costo 0; decimales largos (decimal de 28 dígitos, sin `double`); redondeo en ca
 
 ## Criterios de éxito
 - **CE-001** Tabla de ≥20 casos de entrada/salida (incluidos límites) pasa al 100 %.
-- **CE-002** El 100 % de los precios terminan en 9 o 90.
+- **CE-002** El 100 % de los precios terminan en el formato de terminación elegido.
 - **CE-003** Una sola fila de tipo de cambio por día aun con concurrencia.
 
 ## Supuestos y fuera de alcance

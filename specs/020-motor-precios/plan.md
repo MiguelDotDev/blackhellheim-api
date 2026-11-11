@@ -6,7 +6,7 @@
 `CalculadoraPrecios` pura en Dominio (`decimal`), `RedondeoComercial` aparte; puerto `IProveedorTipoCambio` con adaptador Banxico (SIE, serie FIX `SF43718`, cabecera `Bmx-Token`); servicio de aplicación `ObtenerTipoCambioDelDia` con persistencia por día y reserva; puerto de consumo `ICalculadoraPrecios`.
 
 ## Decisiones
-1. **Redondeo**: dado el bruto `b`, sea `c1` = menor entero ≥ `b` con terminación 9 (`⌈(b−9)/10⌉·10+9`) y `c2` = menor múltiplo de 100 menos 10 ≥ `b` (terminación 90); precio = `min(c1, c2)`. Cubierto por tabla de casos; esto resuelve la ambigüedad del criterio «9 o 90» y se documenta.
+1. **Redondeo**: con `Entero9`, precio = `⌈(b−9)/10⌉·10+9` (si b ≤ 9, 9); con `Centavos90`, igual sobre el entero y sumando 0.90 al candidato `n9` solo si `n9 + 0.90 ≥ b`, si no se pasa al siguiente `n9 + 10`. Parámetro `FormatoTerminacion` en `ParametrosPrecio`. Se documenta la ambigüedad del criterio «9 o 90».
 2. **Concurrencia**: inserción con índice único + captura de violación (otra petición ganó) y relectura.
 3. **Fecha**: `TimeZoneInfo` de Ciudad de México.
 4. **Banxico**: `GET https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF43718/datos/oportuno` con token `Banxico__Token`; verificar ruta y términos de uso en T002. Sin dependencias.
