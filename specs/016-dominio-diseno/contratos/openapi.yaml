@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Diseños (admin), version: 0.1.0 }
+paths:
+  /admin/disenos:
+    get:
+      summary: Lista diseños
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: estado, in: query, schema: { type: string, enum: [Borrador, Publicado, Archivado] } }
+        - { name: pagina, in: query, schema: { type: integer, default: 1 } }
+        - { name: tamano, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaDisenos' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+    post:
+      summary: Crea un diseño en borrador
+      security: [{ bearer: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoSolicitud' } } } }
+      responses:
+        '201': { description: Creado, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /admin/disenos/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      security: [{ bearer: [] }]
+      responses:
+        '200': { description: Diseño, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
+        '404': { $ref: '#/components/responses/Problema' }
+    put:
+      summary: Edita un diseño (If-Match con la versión)
+      security: [{ bearer: [] }]
+      parameters: [{ name: If-Match, in: header, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoSolicitud' } } } }
+      responses:
+        '200': { description: Editado, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '412': { $ref: '#/components/responses/Problema' }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  responses:
+    Problema: { description: ProblemDetails, content: { application/problem+json: { schema: { type: object } } } }
+  schemas:
+    VarianteDto:
+      type: object
+      required: [printfulVarianteId, printfulProductoId, color, codigoColor, talla, costoBaseUsd]
+      properties: { printfulVarianteId: { type: integer }, printfulProductoId: { type: integer }, nombreProducto: { type: string }, color: { type: string }, codigoColor: { type: string }, talla: { type: string }, costoBaseUsd: { type: number } }
+    DisenoSolicitud:
+      type: object
+      required: [nombre]
+      properties: { nombre: { type: string, minLength: 3, maxLength: 80 }, descripcion: { type: string, maxLength: 2000 }, archivoArteId: { type: string, format: uuid }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteDto' } }, estado: { type: string, enum: [Borrador, Publicado, Archivado] } }
+    DisenoRespuesta:
+      type: object
+      properties: { id: { type: string, format: uuid }, nombre: { type: string }, slug: { type: string }, descripcion: { type: string }, estado: { type: string }, archivoArteUrl: { type: string }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteDto' } }, version: { type: string }, avisos: { type: array, items: { type: string } } }
+    PaginaDisenos:
+      type: object
+      properties: { elementos: { type: array, items: { $ref: '#/components/schemas/DisenoRespuesta' } }, pagina: { type: integer }, tamano: { type: integer }, total: { type: integer } }
