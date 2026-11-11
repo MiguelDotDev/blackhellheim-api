@@ -18,7 +18,7 @@ Meta: Backend en Docker, SDD y Jira listos. Rama: `sprint/01`.
 | 3 | api | BE DB | 8 | M | Quiero SQL Server en Compose, EF Core, migración inicial y datos semilla. | docker compose up crea la base y aplica la migración con semillas. | specs/003-sql-server-efcore | Hecha |
 | 4 | api | BE | 4 | M | Quiero OpenAPI con Scalar y errores como ProblemDetails. | /scalar muestra el contrato y un error de validación devuelve ProblemDetails. | specs/004-openapi-scalar | Hecha |
 | 5 | api | BE CI | 5 | M | Quiero un Dockerfile de la API y Compose con healthchecks y secretos por variables de entorno. | API y base arrancan sanas con un comando y no hay secretos en el repo. | specs/005-dockerfile-compose | Hecha |
-| 12 | api + web | DOC | 3 | M | Quiero Jira configurado con componentes, flujo y las historias cargadas. | El tablero muestra el backlog completo y el Sprint 1 activo. | specs/003-sql-server-efcore | En progreso |
+| 12 | api + web | DOC | 3 | M | Quiero Jira configurado con componentes, flujo y las historias cargadas. | El tablero muestra el backlog completo y el Sprint 1 activo. |  | Hecha |
 
 ## Sprint 2 · 25 sep–1 oct · 31 h
 
