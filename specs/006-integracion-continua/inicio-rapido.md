@@ -1,6 +1,6 @@
 # Inicio rápido (Fase 1): Integración continua del API
 
-Historia 002 · Fecha: 2026-11-10
+Historia 006 · Fecha: 2026-11-10
 
 Cómo dejar operativa la integración continua y validar de extremo a extremo que la
 historia funciona. Los pasos manuales se hacen una sola vez en GitHub y SonarQube

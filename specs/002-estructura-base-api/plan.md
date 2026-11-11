@@ -1,12 +1,12 @@
 # Plan de implementación: Estructura base del API
 
-**Rama**: `001-estructura-base-api` | **Fecha**: 2026-11-10 | **Spec**: [spec.md](spec.md)
+**Rama**: `002-estructura-base-api` | **Fecha**: 2026-11-10 | **Spec**: [spec.md](spec.md)
 
-**Entrada**: Especificación de funcionalidad en `specs/001-estructura-base-api/spec.md`
+**Entrada**: Especificación de funcionalidad en `specs/002-estructura-base-api/spec.md`
 
 ## Resumen
 
-La historia 001 crea la solución .NET 10 con Clean Architecture: cinco proyectos
+La historia 002 crea la solución .NET 10 con Clean Architecture: cinco proyectos
 (`Dominio`, `Aplicacion`, `Infraestructura`, `Api`, `Pruebas`) bajo `src/` en
 `BlackHellHeim.sln`, con la matriz de dependencias hacia adentro vigilada por una
 prueba de arquitectura que lee las referencias de los `.csproj`. La API mínima expone
@@ -74,7 +74,7 @@ complejidad queda vacía.
 ### Documentación (esta funcionalidad)
 
 ```text
-specs/001-estructura-base-api/
+specs/002-estructura-base-api/
 ├── plan.md               # Este archivo (salida de /speckit.plan)
 ├── investigacion.md      # Salida de la Fase 0 (/speckit.plan)
 ├── modelo-datos.md       # Salida de la Fase 1 (/speckit.plan)

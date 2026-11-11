@@ -1,6 +1,6 @@
 # Investigación (Fase 0): Estructura base del API
 
-Historia 001 · Fecha: 2026-11-10
+Historia 002 · Fecha: 2026-11-10
 
 El contexto técnico llegó resuelto en la descripción de la usuaria (.NET 10, Clean
 Architecture, xUnit, API mínima con `/salud`, `dotnet test`); no quedan
@@ -27,7 +27,7 @@ entre proyectos y añadirían dependencias que vigilar.
 ## D2. Contrato primero para `/salud`
 
 **Decisión**: definir `GET /salud` en
-`specs/001-estructura-base-api/contratos/openapi.yaml` antes de implementar el
+`specs/002-estructura-base-api/contratos/openapi.yaml` antes de implementar el
 endpoint, dentro de esta historia.
 
 **Justificación**: el principio II exige que todo endpoint se defina en OpenAPI antes
@@ -36,7 +36,7 @@ infraestructura de OpenAPI (Scalar, servidor mock, publicación al frontend, pip
 ProblemDetails) sigue fuera de alcance y llega en su historia propia de la fundación.
 
 **Alternativas descartadas**: implementar `/salud` sin contrato (viola el principio II)
-o diferir el endpoint a la historia de OpenAPI (deja la especificación 001 sin su
+o diferir el endpoint a la historia de OpenAPI (deja la especificación 002 sin su
 RF-007).
 
 ## D3. Comando único de verificación

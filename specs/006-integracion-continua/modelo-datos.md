@@ -1,6 +1,6 @@
 # Modelo de datos (Fase 1): Integración continua del API
 
-Historia 002 · Fecha: 2026-11-10
+Historia 006 · Fecha: 2026-11-10
 
 ## Naturaleza de los datos
 

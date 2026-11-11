@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: >
     Contrato de la API de la tienda BlackHellHeim. Esta versión inicial define
-    únicamente la comprobación de estado de la historia 001 (estructura base). La
+    únicamente la comprobación de estado de la historia 002 (estructura base). La
     infraestructura completa de OpenAPI (Scalar, servidor mock, publicación al
     frontend) llega en su historia propia de la fundación.
 servers:

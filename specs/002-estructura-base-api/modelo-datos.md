@@ -1,6 +1,6 @@
 # Modelo de datos (Fase 1): Estructura base del API
 
-Historia 001 · Fecha: 2026-11-10
+Historia 002 · Fecha: 2026-11-10
 
 ## Entidades
 

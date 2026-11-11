@@ -1,6 +1,6 @@
 # Inicio rápido (Fase 1): Estructura base del API
 
-Historia 001 · Fecha: 2026-11-10
+Historia 002 · Fecha: 2026-11-10
 
 Cómo validar de extremo a extremo que la historia funciona. Los detalles de
 implementación viven en `tasks.md` (por generarse con `/speckit.tasks`).

@@ -1,10 +1,10 @@
-# Especificación 001: Estructura base del API
+# Especificación 002: Estructura base del API
 
-**Rama de funcionalidad**: `001-estructura-base-api`
+**Rama de funcionalidad**: `002-estructura-base-api`
 
 **Creada**: 2026-11-10
 
-**Estado**: Borrador
+**Estado**: Completada
 
 **Entrada**: Descripción de la usuaria:
 
@@ -182,6 +182,6 @@ define en la historia de OpenAPI, conforme al principio II de la constitución.
   parte de esta historia.
 - La comprobación de estado se limita a indicar que la API está en marcha; las comprobaciones de
   dependencias (base de datos, archivos, proveedores) llegan con sus historias correspondientes.
-- Esta es la historia 1 de la épica E0 (fundación); el detalle y los números de historia del
+- Esta es la historia 2 de la épica E0 (fundación); el detalle y los números de historia del
   backlog viven en el documento «BlackHellHeim: backlog Scrum y estructura SDD», externo al
   repositorio.

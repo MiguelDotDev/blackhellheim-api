@@ -1,12 +1,12 @@
 # Plan de implementación: Integración continua del API
 
-**Rama**: `002-integracion-continua` | **Fecha**: 2026-11-10 | **Spec**: [spec.md](spec.md)
+**Rama**: `006-integracion-continua` | **Fecha**: 2026-11-10 | **Spec**: [spec.md](spec.md)
 
-**Entrada**: Especificación de funcionalidad en `specs/002-integracion-continua/spec.md`
+**Entrada**: Especificación de funcionalidad en `specs/006-integracion-continua/spec.md`
 
 ## Resumen
 
-La historia 002 dota al repositorio de una integración continua completa en GitHub
+La historia 006 dota al repositorio de una integración continua completa en GitHub
 Actions con tres flujos independientes: `integracion-continua.yml` (restore, build y
 `dotnet test` sobre `BlackHellHeim.sln` con .NET 10), `codeql.yml` (análisis estático de
 seguridad para C#) y `calidad-sonar.yml` (análisis de calidad con SonarQube Cloud). Los
@@ -91,7 +91,7 @@ justificar: la tabla de complejidad queda vacía.
 ### Documentación (esta funcionalidad)
 
 ```text
-specs/002-integracion-continua/
+specs/006-integracion-continua/
 ├── plan.md                    # Este archivo (salida de /speckit.plan)
 ├── investigacion.md           # Salida de la Fase 0 (/speckit.plan)
 ├── modelo-datos.md            # Salida de la Fase 1 (/speckit.plan)

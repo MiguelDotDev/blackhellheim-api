@@ -7,7 +7,7 @@ namespace BlackHellHeim.Pruebas.Api;
 
 /// <summary>
 /// Prueba en proceso de la comprobación de estado según
-/// <c>specs/001-estructura-base-api/contratos/openapi.yaml</c>.
+/// <c>specs/002-estructura-base-api/contratos/openapi.yaml</c>.
 /// </summary>
 public class SaludPruebas : IClassFixture<WebApplicationFactory<Program>>
 {

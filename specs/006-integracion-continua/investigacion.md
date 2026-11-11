@@ -1,6 +1,6 @@
 # Investigación (Fase 0): Integración continua del API
 
-Historia 002 · Fecha: 2026-11-10
+Historia 006 · Fecha: 2026-11-10
 
 El contexto técnico llegó resuelto en la descripción de la usuaria (GitHub Actions,
 .NET 10, CodeQL para C#, SonarQube Cloud, secretos fuera del repositorio, acciones

@@ -1,10 +1,10 @@
-# Especificación 002: Integración continua del API
+# Especificación 006: Integración continua del API
 
-**Rama de funcionalidad**: `002-integracion-continua`
+**Rama de funcionalidad**: `006-integracion-continua`
 
 **Creada**: 2026-11-10
 
-**Estado**: Borrador
+**Estado**: Plan cerrado
 
 **Entrada**: Descripción de la usuaria:
 
@@ -269,5 +269,5 @@ flujos: esas decisiones corresponden al plan.
 - La protección de rama y las verificaciones requeridas se activan como parte de esta historia; si
   por alguna razón no estuvieran activas, el flujo informaría el resultado sin bloquear la
   integración.
-- Esta es la historia 2 de la épica E0 (fundación); el detalle y los números de historia del backlog
+- Esta es la historia 6 de la épica E0 (fundación); el detalle y los números de historia del backlog
   viven en el documento «BlackHellHeim: backlog Scrum y estructura SDD», externo al repositorio.

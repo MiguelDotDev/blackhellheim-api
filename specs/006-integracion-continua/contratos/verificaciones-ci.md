@@ -1,6 +1,6 @@
 # Contrato de verificaciones de integración continua
 
-Historia 002 · Fecha: 2026-11-10
+Historia 006 · Fecha: 2026-11-10
 
 Este contrato define la interfaz que la integración continua expone al repositorio y a
 la protección de rama: qué flujos existen, con qué nombres, qué permisos usan, qué

@@ -1,6 +1,6 @@
 # Tareas: Estructura base del API
 
-**Entrada**: Documentos de diseño en `specs/001-estructura-base-api/` (spec.md, plan.md,
+**Entrada**: Documentos de diseño en `specs/002-estructura-base-api/` (spec.md, plan.md,
 investigacion.md, modelo-datos.md, contratos/openapi.yaml, inicio-rapido.md)
 
 **Requisitos previos**: plan.md (obligatorio), spec.md (obligatorio, historias de usuario),
@@ -81,7 +81,7 @@ responder `200` con `{ "estado": "ok" }`
 
 ### Implementación de la historia de usuario 4
 
-- [x] T012 [BE] [HU4] Implementar en `src/Api/Program.cs` el endpoint `GET /salud` que responde `200` con `application/json` y cuerpo `{ "estado": "ok" }` según `specs/001-estructura-base-api/contratos/openapi.yaml`; retirar la ruta de ejemplo `/` que trae la plantilla. Ruta: `src/Api/Program.cs`
+- [x] T012 [BE] [HU4] Implementar en `src/Api/Program.cs` el endpoint `GET /salud` que responde `200` con `application/json` y cuerpo `{ "estado": "ok" }` según `specs/002-estructura-base-api/contratos/openapi.yaml`; retirar la ruta de ejemplo `/` que trae la plantilla. Ruta: `src/Api/Program.cs`
 
 **Punto de control**: la API arranca y la sonda `/salud` responde
 
@@ -92,7 +92,7 @@ responder `200` con `{ "estado": "ok" }`
 Las HU2 y HU3 se difereron en la ronda 1 por decisión de la usuaria, junto con la prueba en
 proceso del endpoint. Ya están planificadas al final de este archivo (ronda 2: Fases 5–7 y
 fase final, tareas T016–T026). **⚠️ Constitución (principio III): sin pruebas no hay
-«Hecho»; la historia 001 se cierra hasta completar esa ronda (RF-005, RF-006, CE-001 a
+«Hecho»; la historia 002 se cierra hasta completar esa ronda (RF-005, RF-006, CE-001 a
 CE-004).**
 
 ---
@@ -102,7 +102,7 @@ CE-004).**
 **Propósito**: comprobar la solución completa de extremo a extremo
 
 - [x] T013 [BE] Ejecutar `dotnet build BlackHellHeim.sln` y confirmar que los cinco proyectos compilan sin errores (HU1, escenario 3). Solución: `BlackHellHeim.sln`
-- [x] T014 [BE] Arrancar la API con `dotnet run --project src/Api` y comprobar que `GET /salud` responde `200` con `{ "estado": "ok" }`, siguiendo `specs/001-estructura-base-api/inicio-rapido.md` (HU4). Proyecto: `src/Api/BlackHellHeim.Api.csproj`
+- [x] T014 [BE] Arrancar la API con `dotnet run --project src/Api` y comprobar que `GET /salud` responde `200` con `{ "estado": "ok" }`, siguiendo `specs/002-estructura-base-api/inicio-rapido.md` (HU4). Proyecto: `src/Api/BlackHellHeim.Api.csproj`
 - [x] T015 [BE] [P] Crear `.gitignore` en la raíz del repositorio con las rutas de artefactos de .NET (`bin/`, `obj/`, `.vs/`) para que la primera compilación no ensucie el repositorio. Ruta: `.gitignore`
 
 **Punto de control**: la estructura base queda verificada y el repositorio limpio
@@ -167,7 +167,7 @@ BlackHellHeim.sln` sin red ni puertos reales
 solución no compila
 
 - [x] T023 [BE] [HU4] Agregar el paquete `Microsoft.AspNetCore.Mvc.Testing` (MIT, verificado en `investigacion.md`, D5) a `src/Pruebas/BlackHellHeim.Pruebas.csproj` con `dotnet add src/Pruebas/BlackHellHeim.Pruebas.csproj package Microsoft.AspNetCore.Mvc.Testing --version 10.0.15` (la versión 11.x no es compatible con `net10.0`). Ruta: `src/Pruebas/BlackHellHeim.Pruebas.csproj`
-- [x] T024 [BE] [P] [HU4] Crear la prueba en proceso en `src/Pruebas/Api/SaludPruebas.cs`: con `WebApplicationFactory<Program>` obtener un cliente HTTP, solicitar `GET /salud` y afirmar estado `200`, encabezado `Content-Type: application/json` y cuerpo `{ "estado": "ok" }` conforme a `specs/001-estructura-base-api/contratos/openapi.yaml`. Ruta: `src/Pruebas/Api/SaludPruebas.cs`
+- [x] T024 [BE] [P] [HU4] Crear la prueba en proceso en `src/Pruebas/Api/SaludPruebas.cs`: con `WebApplicationFactory<Program>` obtener un cliente HTTP, solicitar `GET /salud` y afirmar estado `200`, encabezado `Content-Type: application/json` y cuerpo `{ "estado": "ok" }` conforme a `specs/002-estructura-base-api/contratos/openapi.yaml`. Ruta: `src/Pruebas/Api/SaludPruebas.cs`
 - [x] T025 [BE] [P] [HU4] Exponer `Program` al proyecto de pruebas agregando al final de `src/Api/Program.cs` la declaración `public partial class Program { }`, requerida por `WebApplicationFactory<Program>` con API mínima; no altera el comportamiento del endpoint. Ruta: `src/Api/Program.cs`
 
 **Punto de control**: la comprobación de estado queda probada en proceso, sin red ni puertos
@@ -182,7 +182,7 @@ a `dotnet build` (T013) como verificación final (RF-006, CE-001)
 - [x] T026 [BE] Ejecutar `dotnet test BlackHellHeim.sln` como comando único de cierre: compila los cinco proyectos y ejecuta todas las pruebas (grafo real, casos sintéticos y comprobación de estado) con resultado exitoso. Solución: `BlackHellHeim.sln`
 
 **Punto de control**: con todas las pruebas en verde el principio III queda satisfecho y la
-historia 001 puede cerrarse
+historia 002 puede cerrarse
 
 ---
 

@@ -14,7 +14,7 @@ Meta: Backend en Docker, SDD y Jira listos. Rama: `sprint/01`.
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
 | 1 | api + web | DOC | 3 | M | Como desarrolladora, quiero la constitución y las plantillas de Spec Kit en ambos repos para que cada cambio nazca de una spec. | constitucion.md aprobada y /speckit.specify corre en los dos repos. |  | Por auditar |
-| 2 | api | BE | 9 | M | Quiero la solución .NET 10 en capas con Mediator y comportamientos de pipeline. | Compila, y una consulta de ejemplo cruza API, Aplicación y Dominio sin violar dependencias. | specs/001-estructura-base-api (parcial) | Por auditar |
+| 2 | api | BE | 9 | M | Quiero la solución .NET 10 en capas con Mediator y comportamientos de pipeline. | Compila, y una consulta de ejemplo cruza API, Aplicación y Dominio sin violar dependencias. | specs/002-estructura-base-api (parcial) | Por auditar |
 | 3 | api | BE DB | 8 | M | Quiero SQL Server en Compose, EF Core, migración inicial y datos semilla. | docker compose up crea la base y aplica la migración con semillas. |  | Pendiente |
 | 4 | api | BE | 4 | M | Quiero OpenAPI con Scalar y errores como ProblemDetails. | /scalar muestra el contrato y un error de validación devuelve ProblemDetails. |  | Pendiente |
 | 5 | api | BE CI | 5 | M | Quiero un Dockerfile de la API y Compose con healthchecks y secretos por variables de entorno. | API y base arrancan sanas con un comando y no hay secretos en el repo. |  | Pendiente |
@@ -26,7 +26,7 @@ Meta: CI del backend, esqueleto Vue con ambientes, cliente y mock. Rama: `sprint
 
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
-| 6 | api | CI | 8 | M | Quiero CI del backend con build, pruebas, SonarQube Cloud y CodeQL. | Cada push corre todo y falla si hay problemas bloqueantes. | specs/002-integracion-continua (en curso) | Por auditar |
+| 6 | api | CI | 8 | M | Quiero CI del backend con build, pruebas, SonarQube Cloud y CodeQL. | Cada push corre todo y falla si hay problemas bloqueantes. | specs/006-integracion-continua (en curso) | Por auditar |
 | 7 | web | FE | 9 | M | Quiero el esqueleto Vue 3 con TypeScript, Vite, Pinia, Router, Tailwind y capas FSD. | npm run lint falla si una capa importa de otra superior. |  | Pendiente |
 | 8 | web | FE | 3 | M | Quiero ambientes de desarrollo, prueba y producción. | La URL del API cambia según .env.development, .env.test y .env.production. |  | Pendiente |
 | 9 | web | FE | 6 | M | Quiero un cliente API tipado generado desde OpenAPI y un servidor mock. | El cliente se regenera con un comando y el mock responde un endpoint de ejemplo. |  | Pendiente |
