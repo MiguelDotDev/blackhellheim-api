@@ -62,7 +62,7 @@
 
 - [ ] T025 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 3: detener `sqlserver`, comprobar `/salud/base` 503 y `/salud` 200, `api` `unhealthy`, reanudar y comprobar `healthy` sin reinicio del contenedor `api`. Debe fallar si la sonda no usa `/salud/base`.
 - [ ] T026 [P] [US2] [BE] Agregar a `src/Pruebas/Entorno/ComposePruebas.cs` la prueba de que el `healthcheck` del servicio `api` usa `/salud/base` y que `start_period` + reintentos × intervalo acota la espera a ≤ 120 s (error y validación).
-- [ ] T027 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de esquema al día: comparar `__EFMigrationsHistory` con las migraciones del *bundle* (`efbundle --help`/lista) y fallar si difieren.
+- [ ] T027 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de esquema al día: (1) comprobar con `docker inspect` que el contenedor `migraciones` terminó con `ExitCode` 0; (2) obtener los ids aplicados con `docker compose exec -T sqlserver /opt/mssql-tools18/bin/sqlcmd -C -h -1 -W -d BlackHellHeim -Q "SET NOCOUNT ON; SELECT MigrationId FROM dbo.__EFMigrationsHistory ORDER BY MigrationId"` usando `SQLCMDPASSWORD` del contenedor; (3) obtener los ids esperados de los archivos `src/Infraestructura/Persistencia/Migraciones/*.cs` que no terminan en `.Designer.cs` ni son `*ModelSnapshot.cs` (nombre sin extensión); (4) comparar ambas listas ordenadas y fallar mostrando solo los ids que difieren, sin imprimir credenciales. Debe fallar con la base sin migrar.
 
 ### Implementación
 
@@ -99,20 +99,22 @@
 - [ ] T037 [P] [US4] [BE] Agregar a `src/Pruebas/Entorno/DockerfilePruebas.cs`: todas las líneas `FROM` externas usan `@sha256:`; `restore` con `--locked-mode`; la última `USER` no es `root` (acepta `app` o `1654`) (éxito y error).
 - [ ] T038 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 6: `Config.User` de la imagen, ausencia de `dotnet --list-sdks`, de `.env`, `appsettings.Development.json` y `obj/`, y que la contraseña no aparece en `docker history` ni `docker image inspect`.
 - [ ] T039 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 7: dos construcciones `--no-cache`, extracción de `/app` con `docker create`/`docker cp` y comparación de SHA-256 de los archivos y versiones de `.deps.json`.
+- [ ] T040 [P] [US4] [BE] Escribir en `src/Pruebas/Entorno/DockerfilePruebas.cs` y `ComposePruebas.cs` las pruebas estáticas de RF-020: el `Dockerfile` fija `ASPNETCORE_ENVIRONMENT=Production` en la etapa `final`, y ningún servicio de `compose.yaml` define `ASPNETCORE_ENVIRONMENT` ni `DOTNET_ENVIRONMENT` con valor `Development` o `Pruebas`; la publicación elimina `appsettings.Development.json`. Debe fallar si algo de esto no se cumple.
+- [ ] T041 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de RF-020 en el contenedor en marcha: `docker compose exec -T api printenv ASPNETCORE_ENVIRONMENT` es `Production`; la ruta del endpoint de prueba definido por la HU4 (leerla de `src/Api/` cuando exista; la tarea de errores inesperados de `specs/004-openapi-scalar/tasks.md` lo registra solo en entorno `Pruebas`) responde 404; si la HU4 aún no está implementada, ninguna ruta bajo `/pruebas` responde distinto de 404; y `GET /openapi/v1.json` (si existe) no contiene rutas de prueba. Debe fallar si el contenedor corre en otro entorno.
 
 ### Implementación
 
-- [ ] T040 [US4] [CI] Ajustar el `Dockerfile` según T037, T038 y T039 (digests, `--locked-mode`, `USER`, limpieza, versión inyectada sin fecha de compilación).
-- [ ] T041 [US4] [CI] Ejecutar `./scripts/verificar-entorno.sh` completo y confirmar T038 y T039 en verde.
-- [ ] T042 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó.
+- [ ] T042 [US4] [CI] Ajustar el `Dockerfile` y `compose.yaml` según T037, T038, T039, T040 y T041 (digests, `--locked-mode`, `USER`, limpieza, `ENV ASPNETCORE_ENVIRONMENT=Production`, versión inyectada sin fecha de compilación).
+- [ ] T043 [US4] [CI] Ejecutar `dotnet test --filter "DockerfilePruebas|ComposePruebas"` y `./scripts/verificar-entorno.sh` completo; confirmar T038, T039, T040 y T041 en verde.
+- [ ] T044 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó.
 
 ## Fase 7: Pulido y verificación final
 
-- [ ] T043 [P] [CI] Agregar a `scripts/entorno.sh` la opción `--recrear` con confirmación explícita antes de `docker compose down -v` (RF-017) y una prueba en `scripts/verificar-entorno.sh` que confirme que sin confirmación no borra.
-- [ ] T044 [P] [CI] Comprobar manejo de errores en `scripts/entorno.sh`: Docker ausente, puerto ocupado e imagen no descargable (con red desactivada) producen mensajes claros y no dejan recursos a medias.
-- [ ] T045 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `/salud` y `/salud/base` conservan su contrato sin cambios.
-- [ ] T046 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
-- [ ] T047 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde, `docker compose up --build --wait` con `api` y `sqlserver` sanos y `./scripts/verificar-entorno.sh` en verde.
+- [ ] T045 [P] [CI] Agregar a `scripts/entorno.sh` la opción `--recrear` con confirmación explícita antes de `docker compose down -v` (RF-017) y una prueba en `scripts/verificar-entorno.sh` que confirme que sin confirmación no borra.
+- [ ] T046 [P] [CI] Comprobar manejo de errores en `scripts/entorno.sh`: Docker ausente, puerto ocupado e imagen no descargable (con red desactivada) producen mensajes claros y no dejan recursos a medias.
+- [ ] T047 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `/salud` y `/salud/base` conservan su contrato sin cambios.
+- [ ] T048 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
+- [ ] T049 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde, `docker compose up --build --wait` con `api` y `sqlserver` sanos y `./scripts/verificar-entorno.sh` en verde.
 
 ## Dependencias
 
@@ -124,7 +126,7 @@
 
 - Fase 3, pruebas: T009, T010, T011 juntas.
 - Fase 5, pruebas: T030, T031, T032, T033 juntas.
-- Fase 6, pruebas: T037, T038, T039 juntas.
+- Fase 6, pruebas: T037, T038, T039, T040, T041 juntas.
 
 ## Estrategia
 
