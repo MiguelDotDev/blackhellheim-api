@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: Borrador
+**Estado**: Tareas listas
 
 **Historia del backlog**: HU3 (componentes BE y DB)
 
