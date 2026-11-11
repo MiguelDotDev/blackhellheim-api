@@ -38,6 +38,10 @@ services:
     image: blackhellheim-api:local
     environment:
       ConnectionStrings__BlackHellHeim: Server=sqlserver,1433;Database=BlackHellHeim;User Id=sa;Password=${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env};Encrypt=True;TrustServerCertificate=True
+      # Autenticación (historia 013): la clave de firma es obligatoria; el administrador inicial es opcional.
+      Jwt__Clave: ${BHH_JWT_CLAVE:?Defina BHH_JWT_CLAVE en .env (mínimo 32 caracteres)}
+      Administrador__Correo: ${BHH_ADMIN_CORREO:-}
+      Administrador__Contrasena: ${BHH_ADMIN_CONTRASENA:-}
     ports:
       - "${BHH_API_PUERTO:-5068}:8080"
     depends_on:
