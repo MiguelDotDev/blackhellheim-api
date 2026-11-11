@@ -16,7 +16,7 @@ Como desarrolladora quiero crear una sola vez los recursos de Azure con comandos
 4. El script no contiene secretos: los lee de variables de entorno o los pide en el momento, y falla con mensaje claro si faltan.
 
 ### HU 2 — Autenticación GitHub → Azure sin secretos con OIDC (P1)
-1. **Dado** el script `scripts/azure/configurar-oidc.sh`, **cuando** se ejecuta `[MANUAL]`, **entonces** existe un registro de aplicación con credenciales federadas limitadas al repositorio y a la rama `main` (y al entorno `produccion`), con rol mínimo (Contributor solo sobre el grupo de recursos).
+1. **Dado** el script `scripts/azure/configurar-oidc.sh`, **cuando** se ejecuta `[MANUAL]`, **entonces** existe un registro de aplicación con una credencial federada limitada al repositorio y al entorno `produccion` (el flujo declara `environment: produccion`, cuyo subject de OIDC es por entorno, no por rama; el entorno se protege para que solo `main` despliegue), con rol mínimo (Contributor solo sobre el grupo de recursos).
 2. **Dado** el flujo de despliegue, **cuando** corre, **entonces** inicia sesión con `azure/login` usando `client-id`, `tenant-id` y `subscription-id` (identificadores, no secretos) y el permiso `id-token: write`; no existe ningún secreto de contraseña de Azure.
 3. **Dado** un pull request o una rama distinta de `main`, **cuando** corre el flujo, **entonces** no puede iniciar sesión en Azure.
 
@@ -66,7 +66,7 @@ La web publicada en el mismo entorno debe: servir por HTTPS, reenviar `/api/*` a
 - **CE-002** Un push a `main` llega a producción sin pasos manuales en <15 min.
 - **CE-003** Rollback efectivo en <2 min.
 - **CE-004** Cero secretos en el repo y en registros de Actions.
-- **CE-005** Costo mensual dentro de la capa gratuita o menor a lo presupuestado en `investigacion`.
+- **CE-005** Costo mensual dentro de la capa gratuita o del presupuesto anotado en `inicio-rapido.md`.
 
 ## Supuestos y fuera de alcance
 Dominio propio, WAF, ambientes de prueba/staging, monitoreo avanzado, Key Vault, Terraform/Bicep, Front Door y despliegue de la web (otro repo). Región por defecto `mexicocentral`/la más cercana con disponibilidad, a confirmar en el plan.
