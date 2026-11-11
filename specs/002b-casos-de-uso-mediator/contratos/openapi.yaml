@@ -1,0 +1,178 @@
+openapi: 3.1.0
+info:
+  title: BlackHellHeim API — casos de uso con CQRS
+  version: 0.2.0
+  description: >
+    Contrato de la consulta de ejemplo de la historia 002b. Define el endpoint que cruza
+    API, Aplicación y Dominio a través del mediador. La comprobación de estado `GET /salud`
+    se define en `specs/002-estructura-base-api/contratos/openapi.yaml` y se mantiene sin
+    cambios. La documentación interactiva con Scalar queda fuera del alcance de esta
+    historia.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
+paths:
+  /tiendas/{codigo}:
+    get:
+      operationId: consultarTienda
+      summary: Consulta una tienda de ejemplo por su código
+      description: >
+        Consulta de solo lectura que atraviesa el mediador y las capas de Aplicación y
+        Dominio. No usa base de datos ni proveedores externos. Los errores se devuelven
+        como ProblemDetails con el identificador de correlación.
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          description: Código de tres letras mayúsculas de la tienda.
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+            examples: [BHH]
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          description: >
+            Identificador de correlación de la petición. Si falta o no es válido, el
+            servidor genera uno y lo devuelve en la respuesta.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+      responses:
+        '200':
+          description: Tienda encontrada
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tienda'
+        '400':
+          description: La solicitud no pasó la validación antes del manejador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                codigoInvalido:
+                  value:
+                    type: https://blackhellheim.mx/errores/solicitud_invalida
+                    title: La solicitud no es válida
+                    status: 400
+                    detail: Revisa los campos indicados.
+                    instance: /tiendas/B
+                    codigo: solicitud_invalida
+                    idCorrelacion: 7f3c2a9e4b1d4c8f9a0e6d5b2c1f8a7e
+                    errores:
+                      codigo:
+                        - El código debe tener exactamente tres letras mayúsculas.
+        '404':
+          description: La tienda no existe
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                noEncontrada:
+                  value:
+                    type: https://blackhellheim.mx/errores/recurso_no_encontrado
+                    title: Recurso no encontrado
+                    status: 404
+                    detail: No existe una tienda con el código indicado.
+                    instance: /tiendas/ZZZ
+                    codigo: recurso_no_encontrado
+                    idCorrelacion: 7f3c2a9e4b1d4c8f9a0e6d5b2c1f8a7e
+        '408':
+          description: La operación fue cancelada
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                inesperado:
+                  value:
+                    type: https://blackhellheim.mx/errores/error_inesperado
+                    title: Error interno
+                    status: 500
+                    detail: Ocurrió un error inesperado. Usa el identificador de correlación para dar seguimiento.
+                    instance: /tiendas/BHH
+                    codigo: error_inesperado
+                    idCorrelacion: 7f3c2a9e4b1d4c8f9a0e6d5b2c1f8a7e
+components:
+  schemas:
+    Tienda:
+      type: object
+      required: [codigo, nombre, moneda]
+      properties:
+        codigo:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          examples: [BHH]
+        nombre:
+          type: string
+          examples: [BlackHellHeim]
+        moneda:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          examples: [MXN]
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

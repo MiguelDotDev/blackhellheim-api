@@ -1,0 +1,47 @@
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — publicación del contrato
+  version: 0.4.0
+  description: >
+    Contrato de la historia 004. No agrega operaciones de negocio: define el esquema
+    canónico de ProblemDetails que comparten todas las respuestas de error y documenta las
+    rutas de publicación del documento OpenAPI y de la página interactiva. Las operaciones
+    de la API viven en los contratos de sus historias y se componen con este archivo para
+    verificar que el documento publicado coincide con la fuente de verdad.
+  x-documento-openapi: /openapi/v1.json
+  x-documentacion-interactiva: /scalar
+  x-esquema-errores: ProblemDetails
+paths: {}
+components:
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string
