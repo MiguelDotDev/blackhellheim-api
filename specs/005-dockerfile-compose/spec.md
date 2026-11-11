@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: Borrador
+**Estado**: Tareas listas
 
 **Historia del backlog**: HU5 (componentes BE y CI)
 
