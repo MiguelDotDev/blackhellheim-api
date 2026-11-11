@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Catálogo Printful (admin), version: 0.1.0 }
+paths:
+  /admin/printful/productos:
+    get:
+      summary: Lista productos base de Printful (playeras)
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: tamano, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductoCatalogo' } } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
+  /admin/printful/productos/{id}:
+    get:
+      summary: Detalle de un producto base
+      security: [{ bearer: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Producto, content: { application/json: { schema: { $ref: '#/components/schemas/ProductoCatalogo' } } } }
+        '404': { $ref: '#/components/responses/Problema' }
+  /admin/printful/productos/{id}/variantes:
+    get:
+      summary: Variantes filtradas por técnica y país
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: tecnica, in: query, required: true, schema: { type: string, example: dtg } }
+        - { name: pais, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 2, example: MX } }
+      responses:
+        '200': { description: Variantes, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/VarianteCatalogo' } } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
+        '504': { $ref: '#/components/responses/Problema' }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  responses:
+    Problema: { description: ProblemDetails, content: { application/problem+json: { schema: { type: object } } } }
+  schemas:
+    ProductoCatalogo:
+      type: object
+      properties: { id: { type: integer }, nombre: { type: string }, tipo: { type: string }, tecnicas: { type: array, items: { type: string } } }
+    VarianteCatalogo:
+      type: object
+      properties: { id: { type: integer }, productoId: { type: integer }, color: { type: string }, codigoColor: { type: string }, talla: { type: string }, costoBaseUsd: { type: number }, tecnica: { type: string }, disponiblePais: { type: boolean } }
