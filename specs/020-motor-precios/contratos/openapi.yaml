@@ -1,0 +1,33 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Precios (admin), version: 0.1.0 }
+paths:
+  /admin/precios/parametros:
+    get:
+      security: [{ bearer: [] }]
+      responses:
+        '200': { description: Parámetros vigentes, content: { application/json: { schema: { $ref: '#/components/schemas/Parametros' } } } }
+    put:
+      security: [{ bearer: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Parametros' } } } }
+      responses:
+        '200': { description: Actualizados, content: { application/json: { schema: { $ref: '#/components/schemas/Parametros' } } } }
+        '400': { description: margen + comisión debe ser < 1, content: { application/problem+json: { schema: { type: object } } } }
+        '403': { description: Sin rol, content: { application/problem+json: { schema: { type: object } } } }
+  /admin/precios/simular:
+    get:
+      security: [{ bearer: [] }]
+      parameters: [{ name: varianteId, in: query, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200': { description: Desglose, content: { application/json: { schema: { $ref: '#/components/schemas/Desglose' } } } }
+        '404': { description: Variante inexistente, content: { application/problem+json: { schema: { type: object } } } }
+        '503': { description: Sin tipo de cambio, content: { application/problem+json: { schema: { type: object } } } }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  schemas:
+    Parametros:
+      type: object
+      required: [colchonCambiario, margen, comisionPasarela, impresionExtraUsd]
+      properties: { colchonCambiario: { type: number, minimum: 0, maximum: 1 }, margen: { type: number, minimum: 0, maximum: 0.9 }, comisionPasarela: { type: number, minimum: 0, maximum: 0.5 }, impresionExtraUsd: { type: number, minimum: 0 } }
+    Desglose:
+      type: object
+      properties: { costoBaseUsd: { type: number }, impresionExtraUsd: { type: number }, tipoCambio: { type: number }, tipoCambioFecha: { type: string, format: date }, tipoCambioObsoleto: { type: boolean }, costoMxn: { type: number }, precioBrutoMxn: { type: number }, precioFinalMxn: { type: number } }
