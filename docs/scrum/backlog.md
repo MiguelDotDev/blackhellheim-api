@@ -17,7 +17,7 @@ Meta: Backend en Docker, SDD y Jira listos. Rama: `sprint/01`.
 | 2 | api | BE | 9 | M | Quiero la solución .NET 10 en capas con Mediator y comportamientos de pipeline. | Compila, y una consulta de ejemplo cruza API, Aplicación y Dominio sin violar dependencias. | specs/002-estructura-base-api, specs/002b-casos-de-uso-mediator | Hecha |
 | 3 | api | BE DB | 8 | M | Quiero SQL Server en Compose, EF Core, migración inicial y datos semilla. | docker compose up crea la base y aplica la migración con semillas. | specs/003-sql-server-efcore | En progreso |
 | 4 | api | BE | 4 | M | Quiero OpenAPI con Scalar y errores como ProblemDetails. | /scalar muestra el contrato y un error de validación devuelve ProblemDetails. | specs/004-openapi-scalar | En progreso |
-| 5 | api | BE CI | 5 | M | Quiero un Dockerfile de la API y Compose con healthchecks y secretos por variables de entorno. | API y base arrancan sanas con un comando y no hay secretos en el repo. |  | Pendiente |
+| 5 | api | BE CI | 5 | M | Quiero un Dockerfile de la API y Compose con healthchecks y secretos por variables de entorno. | API y base arrancan sanas con un comando y no hay secretos en el repo. | specs/005-dockerfile-compose | En progreso |
 | 12 | api + web | DOC | 3 | M | Quiero Jira configurado con componentes, flujo y las historias cargadas. | El tablero muestra el backlog completo y el Sprint 1 activo. | specs/003-sql-server-efcore | En progreso |
 
 ## Sprint 2 · 25 sep–1 oct · 31 h
@@ -30,7 +30,7 @@ Meta: CI del backend, esqueleto Vue con ambientes, cliente y mock. Rama: `sprint
 | 7 | web | FE | 9 | M | Quiero el esqueleto Vue 3 con TypeScript, Vite, Pinia, Router, Tailwind y capas FSD. | npm run lint falla si una capa importa de otra superior. |  | Pendiente |
 | 8 | web | FE | 3 | M | Quiero ambientes de desarrollo, prueba y producción. | La URL del API cambia según .env.development, .env.test y .env.production. | specs/003-sql-server-efcore | En progreso |
 | 9 | web | FE | 6 | M | Quiero un cliente API tipado generado desde OpenAPI y un servidor mock. | El cliente se regenera con un comando y el mock responde un endpoint de ejemplo. |  | Pendiente |
-| 10 | web | CI | 5 | M | Quiero CI del frontend con lint, tipos, pruebas y build. | Cada push corre las cuatro verificaciones. |  | Pendiente |
+| 10 | web | CI | 5 | M | Quiero CI del frontend con lint, tipos, pruebas y build. | Cada push corre las cuatro verificaciones. | specs/005-dockerfile-compose | En progreso |
 
 ## Sprint 3 · 2–8 oct · 31 h
 
@@ -101,7 +101,7 @@ Meta: Código de creadora, seguimiento, historial y panel de pedidos. Rama: `spr
 |---|---|---|---|---|---|---|---|---|
 | 31 | api + web | BE FE DB | 7 | M | Como administradora, quiero crear códigos de creadora y que la cliente los escriba en el checkout, para saber cuántas ventas trae cada una. | El código se valida al aplicarlo y el pedido lo guarda; no cambia el precio ni genera comisión. |  | Pendiente |
 | 32 | api | BE | 8 | M | Quiero actualizar pedidos con los webhooks de envío de Printful. | El pedido pasa a enviado con número y enlace de guía. |  | Pendiente |
-| 33 | web | FE | 5 | M | Como cliente, quiero ver la confirmación y el estado de mi pedido. | Muestra estado, dirección y guía del pedido de la cliente con sesión. |  | Pendiente |
+| 33 | web | FE | 5 | M | Como cliente, quiero ver la confirmación y el estado de mi pedido. | Muestra estado, dirección y guía del pedido de la cliente con sesión. | specs/005-dockerfile-compose | En progreso |
 | 34 | api + web | BE FE | 10 | M | Como cliente, quiero mi historial de pedidos con detalle. | Lista mis pedidos paginados y abre el detalle de cada uno. |  | Pendiente |
 | 38 | api + web | BE FE | 11 | M | Como administradora, quiero ver los pedidos y, por cada código de creadora, cuántas ventas tiene y la lista paginada de sus compras. | El panel muestra el total de ventas (pedidos entregados) por código y una lista paginada de las compras con ese código; los pedidos se filtran por estado y la administradora puede marcar uno como entregado. |  | Pendiente |
 

@@ -41,11 +41,13 @@ public partial class ConfiguracionSinSecretosPruebas
             .Where(l => !string.IsNullOrWhiteSpace(l) && !l.TrimStart().StartsWith('#'))
             .ToArray();
 
-        Assert.Equal(2, lineas.Length);
+        // Contraseña y cadena de conexión con marcador (HU3) y el puerto opcional del API (HU5).
+        Assert.Equal(3, lineas.Length);
         Assert.StartsWith("BHH_SQL_SA_PASSWORD=", lineas[0]);
         Assert.Contains(Marcador, lineas[0]);
         Assert.StartsWith("ConnectionStrings__BlackHellHeim=", lineas[1]);
         Assert.Contains($"Password={Marcador}", lineas[1]);
+        Assert.Equal("BHH_API_PUERTO='5068'", lineas[2]);
     }
 
     [Fact]
@@ -55,6 +57,14 @@ public partial class ConfiguracionSinSecretosPruebas
 
         Assert.Contains(".env", gitignore);
         Assert.DoesNotContain(".env", ArchivosVersionados());
+    }
+
+    [Fact]
+    public void ElArchivoEnvTampocoEntraEnElContextoDeConstruccionDeDocker()
+    {
+        var dockerignore = File.ReadAllLines(Path.Combine(Raiz(), ".dockerignore")).Select(l => l.Trim());
+
+        Assert.Contains(".env", dockerignore);
     }
 
     [Fact]

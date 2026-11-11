@@ -8,9 +8,9 @@ deben revalidarse contra el registro al implementar.
 
 ## D1. Imágenes base y fijación
 
-- **Decisión**: SDK `mcr.microsoft.com/dotnet/sdk:10.0@sha256:747cbade5bfd918a175ac32f8f1d931edec2c7d0d5397a3de72eaef1ac1f66d2`
-  y runtime `mcr.microsoft.com/dotnet/aspnet:10.0@sha256:8af87eba5e7cdafb1514d7388be287365da97c132509e84dfe252ffd552398ca`,
-  más `runtime-deps:10.0` (digest por resolver al implementar) para la etapa de migraciones.
+- **Decisión**: SDK `mcr.microsoft.com/dotnet/sdk:10.0@sha256:fe0fd4e93bd2fbb47c883b7a6369e5c8d3db8bf01cdc5981f6ee35fbdf3ff4fb`
+  y runtime `mcr.microsoft.com/dotnet/aspnet:10.0@sha256:bfd912c83295ce66d4b706ebb8541b9f14259b0e76fbb88b2751f58ce2399d2e`,
+  más `runtime-deps:10.0@sha256:9cab4d7d886226d47b5489ef9abf0544e2f109fde11a8acc190217610af26c00` para la etapa de migraciones.
   SQL Server: `mcr.microsoft.com/mssql/server:2022-latest@sha256:cf8f0ab2ebe61feec2eed2629061a07d247f791c2a8ddda74a4ac9f06a291718`
   (HU3 usa la etiqueta; aquí se fija por digest).
 - **Razón**: imágenes oficiales de Microsoft; el digest da referencias inmutables (RF-006).
@@ -108,3 +108,32 @@ deben revalidarse contra el registro al implementar.
 - Scripts que arrancan el API en el host con Compose solo para la base: no cumple el
   objetivo de "mismo artefacto" (RF-007).
 - Compose `profiles` para separar API y base: complica el comando único.
+
+## Actualización de digests (implementación, T006)
+
+Revalidados con `docker pull` el 2026-11-11: SDK, `aspnet` y `runtime-deps` tenían versiones más
+nuevas que las del plan; se fijan los digests vigentes de D1 (SDK `fe0fd4e9…`, `aspnet`
+`bfd912c8…`, `runtime-deps` `9cab4d7d…`). SQL Server 2022 conserva `cf8f0ab2…`. Actualizar un
+digest es una decisión explícita: se vuelve a ejecutar `scripts/verificar-entorno.sh`.
+
+Decisión sobre `global.json`: se fija `version: 10.0.100` con `rollForward: latestFeature` (no
+`10.0.402`/`latestPatch` como decía el plan) para que compile tanto con el SDK local de la
+desarrolladora (10.0.114) como con el del contenedor; la reproducibilidad la da el digest de la
+imagen del SDK.
+
+## Decisiones tomadas al implementar
+
+- **Constructor clásico de Docker**: esta máquina no tiene `buildx`, así que el `Dockerfile` no usa
+  funciones exclusivas de BuildKit (`# syntax=`, `COPY --chmod`); los permisos se fijan con `RUN chmod`.
+  Funciona igual con BuildKit.
+- **Bundle de migraciones**: generado con una variable de conexión ficticia sin credenciales solo en
+  ese `RUN` (resuelto R1: funciona y no llega a las imágenes; lo verifica `scripts/probar-imagen.sh`).
+  El *bundle* recibe la conexión real en tiempo de ejecución con `--connection`.
+- **Archivo de configuración alterno**: los scripts aceptan `BHH_ENV_ARCHIVO` (por defecto `.env`) y
+  Compose se invoca con `--env-file`, para poder verificar el entorno sin tocar el `.env` de la
+  desarrolladora.
+- **Reproducibilidad**: dos construcciones `--no-cache` produjeron 66 archivos idénticos en `/app`
+  (SHA-256), incluido `*.deps.json`.
+- **Arranque sin red (C5)**: no probado; una reconstrucción con `--build` sin red puede fallar al
+  restaurar NuGet si las capas no están en caché. Limitación documentada en `plan.md`.
+- **arm64**: no verificado (T047 pendiente de la desarrolladora; el `Dockerfile` mapea `TARGETARCH`).
