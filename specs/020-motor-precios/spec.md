@@ -25,8 +25,8 @@
 
 ### HU 3 — Tipo de cambio por día (P1)
 1. **Cuando** se pide el tipo de cambio de hoy, **entonces** se obtiene del proveedor (puerto `IProveedorTipoCambio`, Banxico FIX) una vez al día y se guarda con su fecha; las consultas posteriores del día usan lo guardado.
-2. **Dado** que el proveedor falla o no hay dato (fin de semana/festivo), **entonces** se usa el último guardado, marcado `ObsoletoDesde`, y se registra una advertencia; si no existe ninguno, error 503 y no se calcula.
-3. **Dado** un pedido ya pagado, **entonces** su precio no cambia aunque el tipo de cambio cambie (el congelado lo hace HU-28; aquí se expone el cálculo con la tasa explícita).
+2. **Dado** que el proveedor falla o no hay dato (fin de semana/festivo), **entonces** se usa el último guardado, marcado como reserva (`EsReserva`), y se registra una advertencia; si no existe ninguno, error 503 y no se calcula.
+3. El cálculo recibe la tasa como dato explícito y no consulta el reloj, para que HU-28 pueda congelar el precio de un pedido pagado (el congelado queda fuera de esta HU).
 4. Un tipo de cambio fuera de rango razonable (±20 % del último guardado) se rechaza y conserva el anterior.
 
 ### HU 4 — Parámetros configurables y recálculo (P2)

@@ -10,7 +10,7 @@ Etiquetas: [BE] [DB] [MANUAL]. Pruebas primero.
 - [ ] T004 [P] [BE] Pruebas del redondeo (tabla con límites, ambos formatos: 412.30→419, 449.01→459, 489.99→499, 490.00→499, 499.00→499, 499.01→509, 0→9; y 412.30→419.90, 419.91→429.90) y de la fórmula (≥20 casos, validación de margen+comisión ≥1, costos negativos, tipo de cambio ≤0).
 - [ ] T005 [BE] `RedondeoComercial` y `CalculadoraPrecios` con `decimal`.
 ## Fase 3: Tipo de cambio
-- [ ] T006 [P] [BE] Pruebas de `ObtenerTipoCambioDelDia`: éxito y guarda, reutiliza el del día, falla→reserva obsoleta, rango ±20 %, sin dato→503, concurrencia.
+- [ ] T006 [P] [BE] Pruebas de `ObtenerTipoCambioDelDia`: éxito y guarda, reutiliza el del día, falla→reserva obsoleta, rango ±20 %, sin dato→503, concurrencia y cambio de día en zona de Ciudad de México (23:59→00:00).
 - [ ] T007 [DB] Entidades, configuración EF y migración `AgregarPrecios` (índice único por fecha, semilla de parámetros).
 - [ ] T008 [BE] Puerto, adaptador Banxico (con pruebas de mapeo sobre JSON de ejemplo y sin red) y servicio.
 ## Fase 4: Aplicación y API
