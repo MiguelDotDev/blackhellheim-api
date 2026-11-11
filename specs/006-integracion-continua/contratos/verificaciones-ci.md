@@ -121,7 +121,7 @@ Propiedades del scanner:
 | `sonar.host.url` | `https://sonarcloud.io` |
 | `sonar.organization` | `${{ vars.SONAR_ORGANIZATION }}` |
 | `sonar.projectKey` | `${{ vars.SONAR_PROJECT_KEY }}` |
-| `sonar.token` | `${{ secrets.SONAR_TOKEN }}` |
+| `sonar.token` | No se pasa como argumento: el scanner lee la variable de entorno `SONAR_TOKEN` (`env: SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}` en los pasos `begin` y `end`) |
 | `sonar.cs.cobertura.reportsPaths` | `**/TestResults/**/coverage.cobertura.xml` |
 | `sonar.qualitygate.wait` | `true` |
 | `sonar.qualitygate.timeout` | `300` |
