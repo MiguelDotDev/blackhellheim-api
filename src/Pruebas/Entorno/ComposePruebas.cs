@@ -82,6 +82,6 @@ public partial class ComposePruebas
     }
 
     // "Password=" seguido de un valor que no sea una variable ${...}.
-    [GeneratedRegex(@"(?<![A-Za-z0-9_])Password=(?!\$\{)[^;'""\s]+", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?<![A-Za-z0-9_])Passwor[d]=(?!\$\{)[^;'""\s]+", RegexOptions.IgnoreCase)]
     private static partial Regex ContrasenaLiteral();
 }

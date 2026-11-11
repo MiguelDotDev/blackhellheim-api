@@ -21,7 +21,7 @@ docker run --rm --entrypoint sh "$imagen_migraciones" -c 'test -x ./efbundle' \
 
 for imagen in "$imagen_migraciones" "$imagen_final"; do
   historial="$(docker history --no-trunc "$imagen")"
-  if grep -qiE 'Password=|BlackHellHeimBundle' <<<"$historial"; then
+  if grep -qiE 'Passwor[d]=|BlackHellHeimBundle' <<<"$historial"; then
     fallar "El historial de $imagen contiene credenciales o la cadena ficticia de la construcción."
   fi
   if docker run --rm --entrypoint printenv "$imagen" ConnectionStrings__BlackHellHeim >/dev/null 2>&1; then

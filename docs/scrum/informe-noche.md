@@ -84,6 +84,9 @@ Para probar todo con tu `.env`: `./scripts/entorno.sh` y después `./scripts/ver
   SqlClient (decisión 6). La limpié liberando solo mis procesos y mi contenedor; el arreglo está en
   el commit de la HU3. Hubo otros contenedores en tu máquina (`blackhellheim-api`, `petmate-sqlserver`)
   que no toqué.
+- Al revisar tras el commit de la HU5, la prueba de secretos falló porque los scripts y la prueba de
+  Compose (ya versionados) contenían el patrón de búsqueda literal; se reescribió con `Passwor[d]=`
+  y las 144 pruebas volvieron a pasar (commit "Corrige patrones de búsqueda de secretos").
 - El constructor clásico de Docker imprime un aviso de obsolescencia; es inofensivo.
 - No probado (documentado en el plan): arranque sin red (C5), imagen no descargable y arm64.
 - Quedó sin versionar `.claude/settings.json` (no es mío, no lo toqué).

@@ -43,7 +43,7 @@ contar_tiendas() {
 sin_secretos() {
   local texto
   texto="$(cat)"
-  ! grep -qF -- "$BHH_SQL_SA_PASSWORD" <<<"$texto" && ! grep -qiE 'Password=[^*[:space:];"]' <<<"$texto"
+  ! grep -qF -- "$BHH_SQL_SA_PASSWORD" <<<"$texto" && ! grep -qiE 'Passwor[d]=[^*[:space:];"]' <<<"$texto"
 }
 
 paso "1. Un solo comando deja el entorno sano"
