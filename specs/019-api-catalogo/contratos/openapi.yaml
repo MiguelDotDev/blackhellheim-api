@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Catálogo, version: 0.1.0 }
+paths:
+  /catalogo/playeras:
+    get:
+      summary: Lista paginada de playeras publicadas
+      parameters:
+        - { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: tamano, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 12 } }
+        - { name: texto, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: color, in: query, schema: { type: string } }
+        - { name: talla, in: query, schema: { type: string } }
+        - { name: precioMin, in: query, schema: { type: number, minimum: 0 } }
+        - { name: precioMax, in: query, schema: { type: number, minimum: 0 } }
+        - { name: orden, in: query, schema: { type: string, enum: [novedad, precio_asc, precio_desc, nombre], default: novedad } }
+      responses:
+        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaPlayeras' } } } }
+        '400': { description: Parámetros inválidos, content: { application/problem+json: { schema: { type: object } } } }
+  /catalogo/playeras/{slug}:
+    get:
+      summary: Detalle de una playera
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Detalle, content: { application/json: { schema: { $ref: '#/components/schemas/PlayeraDetalle' } } } }
+        '404': { description: No existe o no está publicada, content: { application/problem+json: { schema: { type: object } } } }
+components:
+  schemas:
+    Color: { type: object, properties: { nombre: { type: string }, codigo: { type: string } } }
+    PlayeraResumen:
+      type: object
+      properties: { slug: { type: string }, nombre: { type: string }, imagenUrl: { type: string }, precioDesdeMxn: { type: [number, 'null'] }, colores: { type: array, items: { $ref: '#/components/schemas/Color' } } }
+    PaginaPlayeras:
+      type: object
+      properties: { elementos: { type: array, items: { $ref: '#/components/schemas/PlayeraResumen' } }, pagina: { type: integer }, tamano: { type: integer }, total: { type: integer } }
+    VarianteCatalogo:
+      type: object
+      properties: { color: { type: string }, codigoColor: { type: string }, talla: { type: string }, precioMxn: { type: [number, 'null'] }, disponible: { type: boolean } }
+    PlayeraDetalle:
+      type: object
+      properties: { slug: { type: string }, nombre: { type: string }, descripcion: { type: string }, imagenes: { type: array, items: { type: string } }, colores: { type: array, items: { $ref: '#/components/schemas/Color' } }, tallas: { type: array, items: { type: string } }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteCatalogo' } } }

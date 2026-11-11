@@ -1,0 +1,2 @@
+# Modelo de datos 019
+Solo lectura sobre HU-16 (`Disenos`, `Variantes`, `DisenosVariantes`, `ArchivosArte`) y HU-20 (precio). Posible migración `IndicesCatalogo`: índice en `Disenos(Estado, CreadoUtc)` y en `Variantes(Activa, Color, Talla)`. Vista lógica `PlayeraResumen {Slug, Nombre, ImagenUrl, PrecioDesdeMxn, Colores[]}` y `PlayeraDetalle` (+ Descripcion, Imagenes[], Variantes[{Color,CodigoColor,Talla,PrecioMxn,Disponible}]).
