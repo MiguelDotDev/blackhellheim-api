@@ -10,7 +10,8 @@ La historia 006 dota al repositorio de una integración continua completa en Git
 Actions con tres flujos independientes: `integracion-continua.yml` (restore, build y
 `dotnet test` sobre `BlackHellHeim.sln` con .NET 10), `codeql.yml` (análisis estático de
 seguridad para C#) y `calidad-sonar.yml` (análisis de calidad con SonarQube Cloud). Los
-tres se disparan en cada pull request y en cada push a `main`, usan permisos mínimos en
+tres se disparan en cada pull request hacia `main`, `release`, `developer` y `sprint/**` y
+en cada push a esas mismas ramas, usan permisos mínimos en
 `GITHUB_TOKEN`, fijan cada acción oficial a un SHA completo con su licencia anotada y
 aprovechan la caché de NuGet de `actions/setup-dotnet` para mantener cada job por debajo
 de 10 minutos. El token de Sonar vive en un secreto del repositorio; cuando no existe
@@ -20,15 +21,17 @@ protección de rama, de modo que un cambio roto no pueda integrarse.
 
 ## Contexto técnico
 
-**Lenguaje/Versión**: C# sobre .NET 10; los proyectos declaran `net10.0` y el flujo
-instala la última revisión `10.0.x` del SDK. No se agrega `global.json`: el repositorio
-fija el framework de destino y el flujo la banda `10.0.x`, lo que evita bloquear el SDK
-local 10.0.114 y mantiene el rango de parches actualizado.
+**Lenguaje/Versión**: C# sobre .NET 10; los proyectos declaran `net10.0`. El repositorio
+ya tiene `global.json` (historia 002: SDK `10.0.100` con `rollForward: latestFeature`) y el
+flujo lo usa como única fuente de la versión con `global-json-file: global.json` en
+`actions/setup-dotnet`, de modo que la CI, el Dockerfile y el entorno local resuelven el
+mismo SDK sin duplicar la versión en los flujos.
 
 **Dependencias principales**:
 - Acciones oficiales de GitHub, fijadas a SHA completo (véase la tabla de licencias).
 - `dotnet-sonarscanner` 12.1.0 (NuGet, LGPL-3.0), herramienta oficial de SonarSource
-  para soluciones .NET, instalada como herramienta local del repositorio.
+  para soluciones .NET, que se agrega al manifiesto `.config/dotnet-tools.json` ya
+  existente (hoy solo declara `dotnet-ef` 10.0.15).
 - `coverlet.collector` 10.1.0 (NuGet, MIT), colector de cobertura que alimenta a Sonar.
 - Temurin JDK 21 (GPLv2 con Classpath Exception) mediante `actions/setup-java`, requisito
   del scanner de Sonar.
@@ -44,6 +47,26 @@ flujo de compilación y pruebas lo ejecuta en `Release`; el flujo de Sonar lo re
 pruebas unitarias de reglas de negocio siguen siendo responsabilidad de cada historia
 (principio III); aquí se garantiza que se ejecuten en cada cambio.
 
+*Pruebas con contenedores reales (historia 003)*: `BlackHellHeim.Pruebas` usa
+Testcontainers (`Testcontainers.MsSql` 4.16.0, imagen
+`mcr.microsoft.com/mssql/server:2022-latest`) en
+`Infraestructura/Persistencia/ContenedorSqlServer.cs`. Los ejecutores `ubuntu-latest` de
+GitHub traen Docker preinstalado, así que `dotnet test` las corre tal cual: no hay
+`services:` ni pasos de Docker en el flujo, y Testcontainers levanta y destruye el
+contenedor dentro de la propia prueba. La contraseña de SQL Server se genera en tiempo de
+ejecución y no se versiona; las pruebas no leen `.env` ni secretos del repositorio. Se
+descarga la imagen en cada ejecución (no hay caché de imágenes), costo que cuenta dentro
+del límite de 10 minutos. Si Docker no estuviera disponible las pruebas fallan de forma
+visible; no se omiten en silencio.
+
+*Fuera de la CI*: `scripts/verificar-entorno.sh` (humo completo del entorno: levanta
+Compose, tumba y recupera la base, construye la imagen y comprueba reproducibilidad),
+`scripts/probar-base-datos.sh` y `scripts/probar-imagen.sh` son verificaciones manuales de
+las historias 003 y 005. `verificar-entorno.sh` completo NO se ejecuta en la CI por su
+duración y porque necesita `.env` y Compose; lo que sí cubre la CI de esas historias son
+las pruebas xUnit de `src/Pruebas` (persistencia con Testcontainers y las pruebas de
+`Entorno/` sobre Dockerfile, `compose.yaml` y ausencia de secretos).
+
 **Plataforma destino**: ejecutores `ubuntu-latest` alojados por GitHub. El repositorio es
 público y usa recursos gratuitos (Actions para repositorios públicos y SonarQube Cloud
 para proyectos públicos).
@@ -53,13 +76,19 @@ modifica el código de la API.
 
 **Metas de rendimiento**: cada job con `timeout-minutes: 10`; con la caché de NuGet y la
 ejecución en paralelo de los tres flujos, el resultado completo de un pull request queda
-disponible en 10 minutos o menos para el tamaño actual del repositorio.
+disponible en 10 minutos o menos para el tamaño actual del repositorio. El riesgo
+principal es la descarga de la imagen de SQL Server y el arranque del contenedor en
+`dotnet test`; se mide en la primera ejecución y, si el job se acerca al límite, se
+recorta lo que corre en el flujo (nunca se sube el límite ni se omiten las pruebas con
+contenedor).
 
 **Restricciones**: repositorio público sin secretos versionados; solo software libre o
 gratuito; permisos mínimos en `GITHUB_TOKEN`; acciones fijadas a SHA; nombres de
-verificación estables para la protección de rama; todo en español.
+verificación estables para la protección de rama; restauración con `--locked-mode`
+(los proyectos usan `packages.lock.json`); todo en español.
 
-**Escala/Alcance**: una solución (`BlackHellHeim.sln`), cinco proyectos, tres flujos de
+**Escala/Alcance**: una solución (`BlackHellHeim.sln`), cinco proyectos (cada uno con su
+`packages.lock.json`), tres flujos de
 trabajo y cuatro verificaciones visibles (compilación y pruebas, CodeQL, SonarQube Cloud
 y la detección de token que habilita el análisis de calidad).
 
@@ -116,12 +145,14 @@ corresponde a `research.md` y `inicio-rapido.md` a `quickstart.md` de la plantil
     └── calidad-sonar.yml          # Análisis de calidad con SonarQube Cloud
 
 .config/
-└── dotnet-tools.json              # Fija dotnet-sonarscanner 12.1.0
+└── dotnet-tools.json              # Existente (dotnet-ef); se agrega dotnet-sonarscanner 12.1.0
 
+global.json                        # Existente (SDK 10.0.100); lo lee setup-dotnet
 BlackHellHeim.sln                  # Solución objetivo de restore/build/test
 src/
 └── Pruebas/
-    └── BlackHellHeim.Pruebas.csproj  # Agrega coverlet.collector (MIT) para cobertura
+    ├── BlackHellHeim.Pruebas.csproj  # Agrega coverlet.collector (MIT) para cobertura
+    └── packages.lock.json            # Se regenera al agregar coverlet.collector
 ```
 
 **Decisión de estructura**: tres flujos separados en lugar de uno monolítico. Cada
@@ -135,9 +166,9 @@ las verificaciones requeridas documentadas en `contratos/verificaciones-ci.md`.
 
 | Flujo | Disparadores | Job(s) | Permisos | Secretos/variables |
 |-------|--------------|--------|----------|-------------------|
-| `integracion-continua.yml` | `pull_request` y `push` a `main` | `Compilación y pruebas` | `contents: read` | ninguno |
-| `codeql.yml` | `pull_request` y `push` a `main` | `CodeQL (C#)` | `contents: read`, `security-events: write` | ninguno |
-| `calidad-sonar.yml` | `pull_request` y `push` a `main` | `Detección de token de Sonar` y `SonarQube Cloud` | `contents: read` | `SONAR_TOKEN` (secreto), `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` (variables) |
+| `integracion-continua.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `Compilación y pruebas` | `contents: read` | ninguno |
+| `codeql.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `CodeQL (C#)` | `contents: read`, `security-events: write` | ninguno |
+| `calidad-sonar.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `Detección de token de Sonar` y `SonarQube Cloud` | `contents: read` | `SONAR_TOKEN` (secreto), `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` (variables) |
 
 Reglas comunes:
 
@@ -145,8 +176,14 @@ Reglas comunes:
   última ejecución del commit vigente cuente.
 - `timeout-minutes: 10` por job.
 - `actions/checkout` con `persist-credentials: false`.
-- `actions/setup-dotnet` con `dotnet-version: 10.0.x`, `cache: true` y
-  `cache-dependency-path: '**/*.csproj'`.
+- `actions/setup-dotnet` con `global-json-file: global.json`, `cache: true` y
+  `cache-dependency-path: '**/packages.lock.json'` (la caché de NuGet exige los archivos
+  de bloqueo, que ya existen).
+- `dotnet restore BlackHellHeim.sln --locked-mode`: la CI falla si un `.csproj` cambia
+  sin regenerar su `packages.lock.json`, igual que el `Dockerfile`.
+- Las ramas de los disparadores son `main`, `release`, `developer` y `sprint/**` (flujo
+  de ramas de `AGENTS.md`); en `pull_request` se filtra por la rama base y en `push` por
+  la rama empujada. Una rama de trabajo sin pull request no dispara la CI.
 - Sin `paths-ignore`: incluso un pull request de solo documentación dispara las
   verificaciones y reporta un estado comprensible, en lugar de dejar una verificación
   requerida en pendiente.

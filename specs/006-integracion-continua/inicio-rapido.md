@@ -15,7 +15,10 @@ implementación viven en `tasks.md` (por generarse con `/speckit.tasks`).
 - Cuenta de GitHub con acceso a SonarQube Cloud.
 - `gh` CLI autenticado (opcional, para los comandos de ejemplo) o acceso a la interfaz
   web de GitHub.
-- SDK de .NET 10 local para validar antes de subir (`dotnet --version` reporta 10.x).
+- SDK de .NET 10 local para validar antes de subir (`dotnet --version` reporta 10.x;
+  `global.json` fija la banda 10.0.1xx).
+- Docker local en ejecución: las pruebas de persistencia usan Testcontainers y levantan
+  SQL Server en un contenedor, igual que en el ejecutor de GitHub.
 
 ## Paso 1. Crear la cuenta y el proyecto en SonarQube Cloud
 
@@ -84,7 +87,10 @@ La configuración avanzada por flujo no convive con la configuración predetermi
 
 1. Ir a **Settings → Branches** (o **Rules**) y crear una regla para `main`.
 2. Activar **Require a pull request before merging**.
-3. Activar **Require status checks to pass before merging** y agregar exactamente estas
+3. Los flujos se disparan en pull requests hacia `main`, `release`, `developer` y
+   `sprint/**` y en push a esas ramas; la regla de este paso protege `main`. Si se desea,
+   repetir la regla para `release` y `developer` con las mismas verificaciones.
+   Activar **Require status checks to pass before merging** y agregar exactamente estas
    verificaciones:
    - `Compilación y pruebas`
    - `CodeQL (C#)`
@@ -114,13 +120,16 @@ renombra un job, hay que actualizar la protección de rama y
 ## Validación local antes de subir
 
 ```bash
-dotnet restore BlackHellHeim.sln
+dotnet restore BlackHellHeim.sln --locked-mode
 dotnet build BlackHellHeim.sln --no-restore --configuration Release
 dotnet test BlackHellHeim.sln --no-build --configuration Release
 ```
 
 Resultado esperado: compilación limpia y todas las pruebas en verde. Es exactamente lo
-que ejecuta el job `Compilación y pruebas`.
+que ejecuta el job `Compilación y pruebas`, incluidas las pruebas con contenedores
+(requieren Docker en marcha). `scripts/verificar-entorno.sh` completo NO forma parte de la
+CI por su duración (levanta Compose, construye la imagen y comprueba reproducibilidad);
+se ejecuta a mano cuando cambian el entorno local, el `Dockerfile` o `compose.yaml`.
 
 Para validar la herramienta de Sonar sin subir nada:
 
@@ -129,7 +138,8 @@ dotnet tool restore
 dotnet sonarscanner --version
 ```
 
-Resultado esperado: `12.1.0` o la versión fijada en `.config/dotnet-tools.json`. No
+Resultado esperado: `12.1.0` o la versión fijada en `.config/dotnet-tools.json` (el
+manifiesto ya existe por `dotnet-ef`; solo se agrega esta herramienta). No
 ejecutar el análisis local sin necesidad; el token no debe quedar en el historial del
 shell.
 
@@ -174,4 +184,9 @@ gh variable list
 - **CodeQL no publica resultados**: confirmar que la configuración predeterminada está
   desactivada y que el job tiene `security-events: write`.
 - **Un check requerido queda pendiente**: confirmar que el nombre del job no cambió y
-  que el flujo se dispara para la base `main`.
+  que el flujo se dispara para la base del pull request (`main`, `release`, `developer`
+  o `sprint/**`).
+- **`dotnet restore --locked-mode` falla**: un `.csproj` cambió sin regenerar su
+  `packages.lock.json`; ejecutar `dotnet restore` en local y versionar los cambios.
+- **Fallan las pruebas de persistencia en la CI**: revisar que el paso de pruebas llegue a
+  Docker (descarga de la imagen de SQL Server) y que el job no agote los 10 minutos.

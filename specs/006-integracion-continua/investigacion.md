@@ -70,8 +70,9 @@ compilación y sin caché explícita de NuGet).
 
 ## D4. SonarQube Cloud con `dotnet-sonarscanner`, no con la acción de SonarSource
 
-**Decisión**: instalar `dotnet-sonarscanner` 12.1.0 como herramienta local del
-repositorio en `.config/dotnet-tools.json` y ejecutar
+**Decisión**: agregar `dotnet-sonarscanner` 12.1.0 como herramienta local del
+repositorio al `.config/dotnet-tools.json` ya existente (hoy declara `dotnet-ef`
+10.0.15; lo creó la historia 003) y ejecutar
 `dotnet sonarscanner begin` → `dotnet build` → `dotnet test` → `dotnet sonarscanner end`
 en el job de calidad. Usar Temurin JDK 21 con `actions/setup-java`.
 
@@ -110,10 +111,11 @@ bifurcaciones, riesgo de seguridad inaceptable) y fallar el job cuando no hay to
 
 ## D6. Caché de NuGet y objetivo de 10 minutos
 
-**Decisión**: usar `cache: true` y `cache-dependency-path: '**/*.csproj'` en
-`actions/setup-dotnet` en los tres flujos, compilar en `Release`, ejecutar
-`dotnet test --no-build` después de compilar y limitar cada job con
-`timeout-minutes: 10`.
+**Decisión**: usar `cache: true` y `cache-dependency-path: '**/packages.lock.json'` en
+`actions/setup-dotnet` en los tres flujos, restaurar con `--locked-mode`, compilar en
+`Release`, ejecutar `dotnet test --no-build` después de compilar y limitar cada job con
+`timeout-minutes: 10`. Las pruebas con Testcontainers corren dentro de ese mismo
+`dotnet test` (véase D13).
 
 **Justificación**: la caché de paquetes evita descargar NuGet en cada ejecución y es la
 mayor ganancia para el tamaño actual. Compilar una vez y probar con `--no-build` evita
@@ -181,16 +183,17 @@ podría integrarse, incumpliendo el RF-004).
 
 ## D10. Versión de .NET en el flujo
 
-**Decisión**: `dotnet-version: 10.0.x` en `actions/setup-dotnet`, sin `global.json`.
+**Decisión**: `global-json-file: global.json` en `actions/setup-dotnet`. El repositorio
+ya tiene `global.json` (SDK `10.0.100`, `rollForward: latestFeature`), creado en la
+historia 002 y usado también por el `Dockerfile`.
 
-**Justificación**: los proyectos fijan `net10.0`; la banda `10.0.x` instala la última
-revisión disponible y coincide con el SDK local 10.0.114. Un `global.json` estricto
-podría bloquear el entorno local o exigir actualizaciones coordinadas sin beneficio para
-esta historia.
+**Justificación**: una sola fuente de la versión del SDK para CI, imagen y entorno local;
+`latestFeature` permite que el ejecutor use el parche más nuevo de la banda 10.0 sin
+editar los flujos. Esta decisión sustituye a la original (`dotnet-version: 10.0.x` sin
+`global.json`), que quedó obsoleta al existir el archivo.
 
-**Alternativas descartadas**: `dotnet-version: 10.0.114` (fija un parche que envejece y
-obliga a actualizar el flujo en cada revisión) y `global.json` con una versión exacta
-(misma desventaja y un archivo más que mantener).
+**Alternativas descartadas**: `dotnet-version: 10.0.x` (duplica la versión y puede
+divergir de `global.json`) y `dotnet-version: 10.0.114` (fija un parche que envejece).
 
 ## D11. Licencias verificadas (principio IV)
 
@@ -212,7 +215,10 @@ herramienta de Sonar es la vía oficial y gratuita para repositorios públicos.
 
 - **Nombres de flujos y jobs**: en español y estables; los jobs se llaman como las
   verificaciones requeridas. Los archivos usan `kebab-case` en español.
-- **Rama principal**: `main`, tanto para `push` como para la base de `pull_request`.
+- **Ramas disparadoras**: `main`, `release`, `developer` y `sprint/**` (flujo de ramas
+  de `AGENTS.md`), tanto para `push` como para la base de `pull_request`. La protección
+  de rama requerida sigue documentada para `main`; `release` y `developer` pueden
+  reutilizar las mismas verificaciones.
 - **Sin `paths-ignore`**: un pull request de solo documentación también ejecuta las
   verificaciones; así la protección de rama nunca queda con un check pendiente.
 - **Sin despliegue**: ningún flujo publica la API, aprovisiona base de datos o
@@ -220,3 +226,34 @@ herramienta de Sonar es la vía oficial y gratuita para repositorios públicos.
 - **CodeQL y Sonar automáticos**: la configuración predeterminada de CodeQL y el
   análisis automático de Sonar se desactivan en la interfaz del repositorio para que no
   compitan con los flujos de esta historia; el paso manual queda en `inicio-rapido.md`.
+
+## D13. Pruebas con contenedores reales y alcance de los scripts en la CI
+
+**Decisión**: `dotnet test` corre en el ejecutor `ubuntu-latest` sin pasos ni servicios
+extra de Docker. Las pruebas de persistencia (historia 003) usan Testcontainers
+(`Testcontainers.MsSql` 4.16.0, `mcr.microsoft.com/mssql/server:2022-latest`) y
+levantan su propio contenedor desechable con una contraseña generada en ejecución. Los
+flujos `integracion-continua.yml` y `calidad-sonar.yml` (que ejecuta pruebas con
+cobertura) las incluyen; `codeql.yml` solo compila y no necesita Docker.
+`scripts/verificar-entorno.sh` completo, `probar-base-datos.sh` y `probar-imagen.sh` NO
+se ejecutan en la CI.
+
+**Justificación**: los ejecutores de GitHub alojados traen el demonio de Docker, que es
+lo único que Testcontainers requiere; declarar `services:` duplicaría el contenedor y
+mezclaría credenciales con el flujo. `verificar-entorno.sh` levanta Compose con `.env`,
+construye la imagen, comprueba reproducibilidad y simula caída y recuperación de la base:
+por duración y por depender de `.env` (ignorado por git) no cabe en 10 minutos junto con
+las pruebas. Sus garantías de CI quedan cubiertas por las pruebas xUnit de
+`src/Pruebas/Entorno` (Dockerfile, `compose.yaml`, ausencia de secretos) y de
+persistencia.
+
+**Alternativas descartadas**: `services: sqlserver` en el flujo (contenedor duplicado y
+credencial en el YAML), ejecutar `verificar-entorno.sh` en cada pull request (supera el
+presupuesto de tiempo y exige un `.env`), omitir las pruebas con contenedor en la CI
+(dejaría la persistencia sin protección) y un flujo programado nocturno para el humo
+completo (fuera del alcance de esta historia; puede abrirse como historia aparte).
+
+**Riesgo**: la descarga de la imagen de SQL Server en cada ejecución consume parte del
+presupuesto de 10 minutos y no se cachea. Se mide en la primera ejecución; si fuera
+necesario, se evalúa un espejo o precalentado de la imagen en otra historia, sin relajar
+el límite.

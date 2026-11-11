@@ -264,6 +264,14 @@ flujos: esas decisiones corresponden al plan.
   almacena como credencial cifrada.
 - Los ejecutores de integración continua tienen acceso a la red para restaurar dependencias, pero no
   llaman a proveedores externos reales (principio VII de la constitución).
+- «La rama principal» de los escenarios es `main`; además, por el flujo de ramas del
+  repositorio (`AGENTS.md`), las mismas verificaciones se ejecutan en pull requests y push
+  hacia `release`, `developer` y `sprint/**`. La protección de rama exigida sigue siendo
+  la de `main`.
+- Las pruebas del repositorio incluyen pruebas con contenedores reales (Testcontainers)
+  que requieren Docker en el ejecutor; el ejecutor alojado de GitHub lo incluye y no se
+  usan credenciales. El humo completo del entorno local (`scripts/verificar-entorno.sh`)
+  queda fuera de la CI por su duración.
 - La verificación automática cubre los cambios de código, proyectos y configuración del flujo; no se
   promete cobertura de servicios externos que aún no existen.
 - La protección de rama y las verificaciones requeridas se activan como parte de esta historia; si
