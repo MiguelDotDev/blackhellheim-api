@@ -32,9 +32,9 @@
 
 ### Pruebas primero
 
-- [ ] T009 [P] [US1] [BE] Escribir `src/Pruebas/Api/OpenApiPublicadoPruebas.cs`: 200 `application/json`; `openapi` empieza con `3.1`; título `BlackHellHeim API`; contiene `/salud`, `/tiendas/{codigo}`, `/salud/base`; sin `/openapi` ni `/scalar`; cada operación tiene `500` `application/problem+json` con `$ref` a `ProblemDetails`. Debe fallar.
-- [ ] T010 [P] [US1] [BE] Agregar a `OpenApiPublicadoPruebas.cs` la prueba de validez: el documento se parsea con `Microsoft.OpenApi` sin errores de lectura y sin referencias rotas (RF-002, CE-002).
-- [ ] T011 [P] [US1] [BE] Agregar a `OpenApiPublicadoPruebas.cs` que `/salud` responde igual que antes y aparece documentado (RF-016, CE-008).
+- [ ] T009 [P] [US1] [BE] Escribir `src/Pruebas/Api/OpenApiPublicadoPruebas.cs`: 200 `application/json`; `openapi` empieza con `3.1`; título `BlackHellHeim API`; contiene `/salud`, `/tiendas/{codigo}`, `/salud/base`; sin `/openapi` ni `/scalar`; cada operación tiene `500` `application/problem+json` con `$ref` a `ProblemDetails`. Debe fallar. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T010 [P] [US1] [BE] Agregar a `OpenApiPublicadoPruebas.cs` la prueba de validez: el documento se parsea con `Microsoft.OpenApi` sin errores de lectura y sin referencias rotas (RF-002, CE-002). Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T011 [P] [US1] [BE] Agregar a `OpenApiPublicadoPruebas.cs` que `/salud` responde igual que antes y aparece documentado (RF-016, CE-008). Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
 
 ### Implementación
 
@@ -53,9 +53,9 @@
 
 ### Pruebas primero
 
-- [ ] T016 [P] [US2] [BE] Escribir `src/Pruebas/Api/DocumentacionScalarPruebas.cs`: `GET /scalar` redirige a `/scalar/`; `GET /scalar/` responde 200 `text/html`, menciona `BlackHellHeim API`, referencia `/openapi/v1.json` y no carga recursos de un CDN externo; responde en < 3 s. Debe fallar.
-- [ ] T017 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` la prueba del documento no disponible (RF-009). Comportamiento exacto: la página `/scalar/` siempre responde 200 `text/html` y contiene un aviso oculto con el texto literal `No se pudo cargar el contrato OpenAPI de BlackHellHeim API. Verifica que /openapi/v1.json responda e inténtalo de nuevo.` (elemento con `id="aviso-documento"` y atributo `hidden`) junto con un script en línea que hace `fetch('/openapi/v1.json')` y, si la respuesta no es 2xx o la solicitud falla, quita `hidden`. La prueba verifica en el HTML el texto literal, el `id`, el atributo `hidden` y la referencia a `/openapi/v1.json`. Una segunda prueba fuerza que la generación del documento falle (transformador de prueba que lanza) y comprueba que `/openapi/v1.json` responde 500 `application/problem+json` con `codigo: error_inesperado` sin detalles internos, mientras `/scalar/` sigue en 200 con el aviso. Debe fallar.
-- [ ] T018 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` (con `FabricaApiPruebas.WithWebHostBuilder(b => b.UseEnvironment("Production"))`) que en entorno `Production` `GET /scalar` (siguiendo la redirección a `/scalar/`) y `GET /openapi/v1.json` responden 200, y que `GET /pruebas/error` responde 404. Debe fallar.
+- [ ] T016 [P] [US2] [BE] Escribir `src/Pruebas/Api/DocumentacionScalarPruebas.cs`: `GET /scalar` redirige a `/scalar/`; `GET /scalar/` responde 200 `text/html`, menciona `BlackHellHeim API`, referencia `/openapi/v1.json` y no carga recursos de un CDN externo; responde en < 3 s. Debe fallar. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T017 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` la prueba del documento no disponible (RF-009). Comportamiento exacto: la página `/scalar/` siempre responde 200 `text/html` y contiene un aviso oculto con el texto literal `No se pudo cargar el contrato OpenAPI de BlackHellHeim API. Verifica que /openapi/v1.json responda e inténtalo de nuevo.` (elemento con `id="aviso-documento"` y atributo `hidden`) junto con un script en línea que hace `fetch('/openapi/v1.json')` y, si la respuesta no es 2xx o la solicitud falla, quita `hidden`. La prueba verifica en el HTML el texto literal, el `id`, el atributo `hidden` y la referencia a `/openapi/v1.json`. Una segunda prueba fuerza que la generación del documento falle (transformador de prueba que lanza) y comprueba que `/openapi/v1.json` responde 500 `application/problem+json` con `codigo: error_inesperado` sin detalles internos, mientras `/scalar/` sigue en 200 con el aviso. Debe fallar. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T018 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` (con `FabricaApiPruebas.WithWebHostBuilder(b => b.UseEnvironment("Production"))`) que en entorno `Production` `GET /scalar` (siguiendo la redirección a `/scalar/`) y `GET /openapi/v1.json` responden 200, y que `GET /pruebas/error` responde 404. Debe fallar. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
 
 ### Implementación
 
@@ -72,9 +72,9 @@
 
 ### Pruebas primero
 
-- [ ] T023 [P] [US3] [BE] Escribir `src/Pruebas/Api/ErroresUniformesPruebas.cs`, caso validación: `GET /tiendas/B` → 400 `application/problem+json`, `codigo`, `idCorrelacion`, `errores.codigo`, cabecera `X-Correlation-ID`, sin `traceId`. Debe fallar.
-- [ ] T024 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs`, caso inesperado: `GET /pruebas/error` (endpoint de prueba que lanza una `InvalidOperationException` con un mensaje interno que no debe aparecer en la respuesta), disponible solo cuando el entorno no es `Production` (Development y Pruebas) y excluido del documento; → 500 `application/problem+json`, `codigo: error_inesperado`, mensaje genérico, sin traza, sin rutas internas ni detalles, `idCorrelacion` y `X-Correlation-ID`.
-- [ ] T025 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs` que, si no existe correlación, el manejador la genera; y que `GET /pruebas/error` responde 404 en el entorno `Production` y no aparece en `/openapi/v1.json`.
+- [ ] T023 [P] [US3] [BE] Escribir `src/Pruebas/Api/ErroresUniformesPruebas.cs`, caso validación: `GET /tiendas/B` → 400 `application/problem+json`, `codigo`, `idCorrelacion`, `errores.codigo`, cabecera `X-Correlation-ID`, sin `traceId`. Debe fallar. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T024 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs`, caso inesperado: `GET /pruebas/error` es un endpoint de prueba que lanza una `InvalidOperationException` con un mensaje interno que no debe aparecer en la respuesta. Se registra SOLO cuando el entorno NO es `Production` (es decir, en `Development` y `Pruebas`) y nunca en `Production`; además se excluye del documento OpenAPI. Con `FabricaApiPruebas` en entorno `Pruebas` → 500 `application/problem+json`, `codigo: error_inesperado`, mensaje genérico, sin traza, sin rutas internas ni detalles, `idCorrelacion` y `X-Correlation-ID`. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T025 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs` que, si no existe correlación, el manejador la genera; y que `GET /pruebas/error` responde 404 en el entorno `Production` y no aparece en `/openapi/v1.json`. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
 
 ### Implementación
 
@@ -94,8 +94,8 @@
 
 - [ ] T031 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/LectorContratos.cs` (localiza la raíz con `BlackHellHeim.sln`, lee `specs/*/contratos/openapi.yaml` con YamlDotNet y convierte a JSON) con pruebas de lectura y de raíz no encontrada.
 - [ ] T032 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/ComparadorContratos.cs` y sus pruebas: composición (duplicado distinto es error, normaliza `openapi` a `3.1`, ignora `info`, `servers`, `tags`, ejemplos y `x-*`) y proyección (rutas, métodos, parámetros, cuerpos, respuestas, esquemas).
-- [ ] T033 [US4] [BE] Escribir `src/Pruebas/Api/ContratoOpenApiPruebas.cs`: el documento publicado coincide con el contrato compuesto en ambos sentidos (operaciones y esquemas), `ProblemDetails` idéntico en todas las copias y cada operación con respuesta de error. Debe fallar si algo difiere.
-- [ ] T034 [US4] [BE] Agregar a `ContratoOpenApiPruebas.cs` la prueba negativa que altera un contrato en memoria y comprueba que la comparación falla con un mensaje que nombra la operación o esquema diferente.
+- [ ] T033 [US4] [BE] Escribir `src/Pruebas/Api/ContratoOpenApiPruebas.cs`: el documento publicado coincide con el contrato compuesto en ambos sentidos (operaciones y esquemas), `ProblemDetails` idéntico en todas las copias y cada operación con respuesta de error. Debe fallar si algo difiere. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
+- [ ] T034 [US4] [BE] Agregar a `ContratoOpenApiPruebas.cs` la prueba negativa que altera un contrato en memoria y comprueba que la comparación falla con un mensaje que nombra la operación o esquema diferente. Usar `FabricaApiPruebas` (nunca `WebApplicationFactory<Program>` directo; regla de T013 de la spec 003).
 
 ### Implementación
 
