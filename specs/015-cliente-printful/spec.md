@@ -12,7 +12,7 @@
 Como administradora quiero ver los productos base (playeras) y sus variantes para armar diseños (HU-16/18).
 1. **Dado** un id de producto de catálogo válido, **cuando** lo consulto, **entonces** obtengo nombre, tipo, técnicas disponibles y colores.
 2. **Dado** un id inexistente, **cuando** lo consulto, **entonces** recibo 404 ProblemDetails.
-3. **Cuando** listo productos con filtro de categoría «playeras», **entonces** recibo una página con id y nombre.
+3. **Cuando** listo productos con el parámetro `categoria` (por omisión «playeras»), **entonces** recibo una página con id y nombre.
 
 ### HU 2 — Variantes filtradas por técnica y país (P1)
 1. **Dado** un producto, una técnica (p. ej. DTG) y un país (MX), **cuando** pido sus variantes, **entonces** recibo solo las variantes con esa técnica y disponibles para envío a ese país, con color, código de color, talla y costo base en USD.
