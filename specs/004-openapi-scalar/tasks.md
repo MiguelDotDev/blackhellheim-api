@@ -55,13 +55,14 @@
 
 - [ ] T016 [P] [US2] [BE] Escribir `src/Pruebas/Api/DocumentacionScalarPruebas.cs`: `GET /scalar` redirige a `/scalar/`; `GET /scalar/` responde 200 `text/html`, menciona `BlackHellHeim API`, referencia `/openapi/v1.json` y no carga recursos de un CDN externo; responde en < 3 s. Debe fallar.
 - [ ] T017 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` la prueba del documento no disponible (RF-009). Comportamiento exacto: la página `/scalar/` siempre responde 200 `text/html` y contiene un aviso oculto con el texto literal `No se pudo cargar el contrato OpenAPI de BlackHellHeim API. Verifica que /openapi/v1.json responda e inténtalo de nuevo.` (elemento con `id="aviso-documento"` y atributo `hidden`) junto con un script en línea que hace `fetch('/openapi/v1.json')` y, si la respuesta no es 2xx o la solicitud falla, quita `hidden`. La prueba verifica en el HTML el texto literal, el `id`, el atributo `hidden` y la referencia a `/openapi/v1.json`. Una segunda prueba fuerza que la generación del documento falle (transformador de prueba que lanza) y comprueba que `/openapi/v1.json` responde 500 `application/problem+json` con `codigo: error_inesperado` sin detalles internos, mientras `/scalar/` sigue en 200 con el aviso. Debe fallar.
+- [ ] T018 [P] [US2] [BE] Agregar a `DocumentacionScalarPruebas.cs` (con `FabricaApiPruebas.WithWebHostBuilder(b => b.UseEnvironment("Production"))`) que en entorno `Production` `GET /scalar` (siguiendo la redirección a `/scalar/`) y `GET /openapi/v1.json` responden 200, y que `GET /pruebas/error` responde 404. Debe fallar.
 
 ### Implementación
 
-- [ ] T018 [US2] [BE] Registrar en `src/Api/Program.cs` `MapScalarApiReference()` con título `BlackHellHeim API`, activos locales y agente de IA desactivado.
-- [ ] T019 [US2] [BE] Implementar el aviso de T017 en `src/Api/Program.cs`/`src/Api/OpenApi/` inyectando el elemento y el script en la cabecera o el cuerpo de la página de Scalar mediante la opción de contenido personalizado del paquete; si `Scalar.AspNetCore` 2.20.0 no la ofrece, servir `/scalar/` desde un endpoint propio que devuelva el HTML de Scalar con el aviso, sin CDN externo y sin cambiar las rutas `/scalar` y `/scalar/`.
-- [ ] T020 [US2] [BE] Ejecutar `dotnet test --filter DocumentacionScalarPruebas` en verde (T016, T017 y el aviso de T019).
-- [ ] T021 [US2] [MANUAL] Abrir `/scalar` en el navegador y confirmar visualmente que se ven título, versión y las tres operaciones.
+- [ ] T019 [US2] [BE] Registrar en `src/Api/Program.cs` `MapScalarApiReference()` con título `BlackHellHeim API`, activos locales y agente de IA desactivado.
+- [ ] T020 [US2] [BE] Implementar el aviso de T017 en `src/Api/Program.cs`/`src/Api/OpenApi/` inyectando el elemento y el script en la cabecera o el cuerpo de la página de Scalar mediante la opción de contenido personalizado del paquete; si `Scalar.AspNetCore` 2.20.0 no la ofrece, servir `/scalar/` desde un endpoint propio que devuelva el HTML de Scalar con el aviso, sin CDN externo y sin cambiar las rutas `/scalar` y `/scalar/`.
+- [ ] T021 [US2] [BE] Ejecutar `dotnet test --filter DocumentacionScalarPruebas` en verde (T016, T017, la de `Production` de T018 y el aviso de T020).
+- [ ] T022 [US2] [MANUAL] Abrir `/scalar` en el navegador y confirmar visualmente que se ven título, versión y las tres operaciones.
 
 ## Fase 5: Historia 3 — Errores uniformes como problema (P3)
 
@@ -71,17 +72,17 @@
 
 ### Pruebas primero
 
-- [ ] T022 [P] [US3] [BE] Escribir `src/Pruebas/Api/ErroresUniformesPruebas.cs`, caso validación: `GET /tiendas/B` → 400 `application/problem+json`, `codigo`, `idCorrelacion`, `errores.codigo`, cabecera `X-Correlation-ID`, sin `traceId`. Debe fallar.
-- [ ] T023 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs`, caso inesperado: endpoint de prueba que lanza una excepción, registrado solo con entorno `Pruebas` y excluido del documento; → 500 `application/problem+json`, `codigo: error_inesperado`, mensaje genérico, sin traza, sin rutas internas ni detalles, `idCorrelacion` y `X-Correlation-ID`.
-- [ ] T024 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs` que, si no existe correlación, el manejador la genera; y que el endpoint de prueba no existe fuera del entorno `Pruebas`.
+- [ ] T023 [P] [US3] [BE] Escribir `src/Pruebas/Api/ErroresUniformesPruebas.cs`, caso validación: `GET /tiendas/B` → 400 `application/problem+json`, `codigo`, `idCorrelacion`, `errores.codigo`, cabecera `X-Correlation-ID`, sin `traceId`. Debe fallar.
+- [ ] T024 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs`, caso inesperado: `GET /pruebas/error` (endpoint de prueba que lanza una `InvalidOperationException` con un mensaje interno que no debe aparecer en la respuesta), disponible solo cuando el entorno no es `Production` (Development y Pruebas) y excluido del documento; → 500 `application/problem+json`, `codigo: error_inesperado`, mensaje genérico, sin traza, sin rutas internas ni detalles, `idCorrelacion` y `X-Correlation-ID`.
+- [ ] T025 [P] [US3] [BE] Agregar a `ErroresUniformesPruebas.cs` que, si no existe correlación, el manejador la genera; y que `GET /pruebas/error` responde 404 en el entorno `Production` y no aparece en `/openapi/v1.json`.
 
 ### Implementación
 
-- [ ] T025 [US3] [BE] Crear `src/Api/OpenApi/ProblemaDeError.cs` con la traducción `ErrorUniforme → ProblemDetails` (400, 404, 408, 409, 503, 500) reutilizando el mapeo de 002b.
-- [ ] T026 [US3] [BE] Crear `src/Api/Errores/OpcionesProblemDetails.cs` (`CustomizeProblemDetails` que quita `traceId` y fija el formato).
-- [ ] T027 [US3] [BE] Crear `src/Api/Errores/ManejadorExcepcionesGlobal.cs` (`IExceptionHandler`): `Tipo = Inesperado`, `Codigo = "error_inesperado"`, mensaje genérico e `IdCorrelacion` de `IContextoEjecucion`.
-- [ ] T028 [US3] [BE] Registrar en `src/Api/Program.cs` `AddProblemDetails`, `AddExceptionHandler<ManejadorExcepcionesGlobal>` y `UseExceptionHandler()`; registrar el endpoint de prueba que lanza solo en entorno `Pruebas`.
-- [ ] T029 [US3] [BE] Ejecutar `dotnet test --filter ErroresUniformesPruebas` en verde.
+- [ ] T026 [US3] [BE] Crear `src/Api/OpenApi/ProblemaDeError.cs` con la traducción `ErrorUniforme → ProblemDetails` (400, 404, 408, 409, 503, 500) reutilizando el mapeo de 002b.
+- [ ] T027 [US3] [BE] Crear `src/Api/Errores/OpcionesProblemDetails.cs` (`CustomizeProblemDetails` que quita `traceId` y fija el formato).
+- [ ] T028 [US3] [BE] Crear `src/Api/Errores/ManejadorExcepcionesGlobal.cs` (`IExceptionHandler`): `Tipo = Inesperado`, `Codigo = "error_inesperado"`, mensaje genérico e `IdCorrelacion` de `IContextoEjecucion`.
+- [ ] T029 [US3] [BE] Registrar en `src/Api/Program.cs` `AddProblemDetails`, `AddExceptionHandler<ManejadorExcepcionesGlobal>` y `UseExceptionHandler()`; registrar `GET /pruebas/error` (lanza la excepción de T024) solo si `!app.Environment.IsProduction()`, con `ExcludeFromDescription()`.
+- [ ] T030 [US3] [BE] Ejecutar `dotnet test --filter ErroresUniformesPruebas` en verde.
 
 ## Fase 6: Historia 4 — Contrato primero verificable (P4)
 
@@ -91,23 +92,23 @@
 
 ### Pruebas primero
 
-- [ ] T030 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/LectorContratos.cs` (localiza la raíz con `BlackHellHeim.sln`, lee `specs/*/contratos/openapi.yaml` con YamlDotNet y convierte a JSON) con pruebas de lectura y de raíz no encontrada.
-- [ ] T031 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/ComparadorContratos.cs` y sus pruebas: composición (duplicado distinto es error, normaliza `openapi` a `3.1`, ignora `info`, `servers`, `tags`, ejemplos y `x-*`) y proyección (rutas, métodos, parámetros, cuerpos, respuestas, esquemas).
-- [ ] T032 [US4] [BE] Escribir `src/Pruebas/Api/ContratoOpenApiPruebas.cs`: el documento publicado coincide con el contrato compuesto en ambos sentidos (operaciones y esquemas), `ProblemDetails` idéntico en todas las copias y cada operación con respuesta de error. Debe fallar si algo difiere.
-- [ ] T033 [US4] [BE] Agregar a `ContratoOpenApiPruebas.cs` la prueba negativa que altera un contrato en memoria y comprueba que la comparación falla con un mensaje que nombra la operación o esquema diferente.
+- [ ] T031 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/LectorContratos.cs` (localiza la raíz con `BlackHellHeim.sln`, lee `specs/*/contratos/openapi.yaml` con YamlDotNet y convierte a JSON) con pruebas de lectura y de raíz no encontrada.
+- [ ] T032 [P] [US4] [BE] Escribir `src/Pruebas/Contratos/ComparadorContratos.cs` y sus pruebas: composición (duplicado distinto es error, normaliza `openapi` a `3.1`, ignora `info`, `servers`, `tags`, ejemplos y `x-*`) y proyección (rutas, métodos, parámetros, cuerpos, respuestas, esquemas).
+- [ ] T033 [US4] [BE] Escribir `src/Pruebas/Api/ContratoOpenApiPruebas.cs`: el documento publicado coincide con el contrato compuesto en ambos sentidos (operaciones y esquemas), `ProblemDetails` idéntico en todas las copias y cada operación con respuesta de error. Debe fallar si algo difiere.
+- [ ] T034 [US4] [BE] Agregar a `ContratoOpenApiPruebas.cs` la prueba negativa que altera un contrato en memoria y comprueba que la comparación falla con un mensaje que nombra la operación o esquema diferente.
 
 ### Implementación
 
-- [ ] T034 [US4] [BE] Ajustar `TransformadorDocumentoBlackHellHeim.cs` y los metadatos de los endpoints (`ProducesProblem`) hasta que T032 pase, y corregir los contratos de la Fase 2 si la diferencia es del contrato.
-- [ ] T035 [US4] [BE] Ejecutar `dotnet test --filter "ContratoOpenApiPruebas|ComparadorContratos|LectorContratos"` en verde.
+- [ ] T035 [US4] [BE] Ajustar `TransformadorDocumentoBlackHellHeim.cs` y los metadatos de los endpoints (`ProducesProblem`) hasta que T033 pase, y corregir los contratos de la Fase 2 si la diferencia es del contrato.
+- [ ] T036 [US4] [BE] Ejecutar `dotnet test --filter "ContratoOpenApiPruebas|ComparadorContratos|LectorContratos"` en verde.
 
 ## Fase 7: Pulido y verificación final
 
-- [ ] T036 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que no se crearon proyectos nuevos ni dependencias hacia afuera.
-- [ ] T037 [P] [BE] Buscar secretos, trazas o rutas internas en las respuestas de error y en el documento publicado; deben ser cero (CE-006).
-- [ ] T038 [MANUAL] Decidir si `/scalar` y `/openapi/v1.json` quedan públicos en el despliegue (decisión de las historias 005/006) y anotarlo en `specs/004-openapi-scalar/investigacion.md`.
-- [ ] T039 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU4: Spec = `specs/004-openapi-scalar`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
-- [ ] T040 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas y `dotnet test BlackHellHeim.sln` en verde; arrancar con `dotnet run --project src/Api --launch-profile http` y comprobar `/openapi/v1.json`, `/scalar`, `GET /tiendas/B` (400) y `/salud` (200).
+- [ ] T037 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que no se crearon proyectos nuevos ni dependencias hacia afuera.
+- [ ] T038 [P] [BE] Buscar secretos, trazas o rutas internas en las respuestas de error y en el documento publicado; deben ser cero (CE-006).
+- [ ] T039 [MANUAL] Decidir si `/scalar` y `/openapi/v1.json` quedan públicos en el despliegue (decisión de las historias 005/006) y anotarlo en `specs/004-openapi-scalar/investigacion.md`.
+- [ ] T040 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU4: Spec = `specs/004-openapi-scalar`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
+- [ ] T041 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas y `dotnet test BlackHellHeim.sln` en verde; arrancar con `dotnet run --project src/Api --launch-profile http` y comprobar `/openapi/v1.json`, `/scalar`, `GET /tiendas/B` (400) y `/salud` (200).
 
 ## Dependencias
 
@@ -118,7 +119,7 @@
 
 - Fase 2: T005, T006, T007 y T008 juntas.
 - US1, pruebas: T009, T010, T011 juntas.
-- US3, pruebas: T022, T023, T024 juntas.
+- US3, pruebas: T023, T024, T025 juntas.
 
 ## Estrategia
 
