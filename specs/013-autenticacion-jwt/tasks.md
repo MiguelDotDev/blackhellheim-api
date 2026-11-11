@@ -22,7 +22,7 @@ Etiquetas: [BE] [DB] [CI] [MANUAL]. Pruebas primero (constitución III). `[P]` p
 
 ## Fase 4: API
 - [ ] T012 [BE] Pruebas de endpoints (registro 201/400/409, inicio 200/401/423, renovar 200/401 y reuso, cerrar 204, `/auth/yo` 200/401, 403 por rol, atributos de la cookie, ausencia de secretos en respuestas).
-- [ ] T013 [BE] `AuthEndpoints`, autenticación JWT, autorización por rol y errores 401/403 en ProblemDetails; fallo de arranque sin `Jwt__Clave`; `UseForwardedHeaders`; ajustar `OrdenDelPipelinePruebas`.
+- [ ] T013 [BE] `AuthEndpoints`, autenticación JWT, autorización por rol y errores 401/403 en ProblemDetails; fallo de arranque sin `Jwt__Clave`; `Secure` siempre activo salvo `Development` (con prueba); ajustar `OrdenDelPipelinePruebas`.
 - [ ] T014 [BE] Actualizar `compose.yaml`/`.env.example` con nombres de variables sin valores reales; documentar en `inicio-rapido`.
 
 ## Fase 5: Cierre
