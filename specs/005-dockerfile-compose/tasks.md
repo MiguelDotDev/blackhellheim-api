@@ -33,22 +33,24 @@
 - [ ] T009 [P] [US1] [BE] Escribir `src/Pruebas/Entorno/ComposePruebas.cs`: `compose.yaml` define `sqlserver`, `migraciones` y `api`; `api` depende de `sqlserver` con `service_healthy` y de `migraciones` con `service_completed_successfully`; `sqlserver` y `api` tienen `healthcheck`; `migraciones` tiene `restart: "no"` (éxito y error). Debe fallar.
 - [ ] T010 [P] [US1] [BE] Escribir `src/Pruebas/Entorno/DockerfilePruebas.cs` con las pruebas de existencia y estructura: etapas `restauracion`, `compilacion`, `migraciones` y `final`; `final` no usa la imagen SDK ni `COPY . .`. Debe fallar.
 - [ ] T011 [P] [US1] [CI] Escribir el esqueleto de `scripts/verificar-entorno.sh` con el paso 1 (`up --build --wait`, servicios en estado esperado y `GET /salud` y `GET /salud/base` en 200) y salida distinta de cero ante fallo. Debe fallar.
+- [ ] T012 [P] [US1] [CI] Escribir `scripts/probar-imagen.sh` (R1): construye con `docker build` los destinos `migraciones` y `final`; falla si alguna construcción falla; comprueba que la imagen `migraciones` contiene el ejecutable `efbundle` (`docker run --rm --entrypoint sh <imagen> -c 'test -x ./efbundle'`); `docker history --no-trunc` de `migraciones` y `final` no contiene `Password=` ni la cadena ficticia de la construcción; y `docker run --rm --entrypoint printenv <imagen> ConnectionStrings__BlackHellHeim` falla (la variable no queda en la imagen). Debe fallar mientras no exista el `Dockerfile`.
 
 ### Implementación
 
-- [ ] T012 [US1] [CI] Crear `docker/sonda-http.sh` (bash, `/dev/tcp`, `GET <ruta>` a `127.0.0.1:8080`, sale 0 solo con 200, 1 en cualquier otro caso o tiempo agotado de 3 s) con bits de ejecución.
-- [ ] T013 [US1] [CI] Crear `Dockerfile` con la etapa `restauracion` (`FROM` por digest del SDK, copia de `global.json`, `Directory.Build.props`, `.sln`, `.csproj` y `packages.lock.json`, y `dotnet restore --locked-mode`).
-- [ ] T014 [US1] [CI] Agregar al `Dockerfile` la etapa `compilacion`: copia del código, `dotnet publish src/Api -c Release --no-restore -p:UseAppHost=false -o /app/publicar` y eliminación de `appsettings.Development.json` de la publicación.
-- [ ] T015 [US1] [CI] Agregar al `Dockerfile` la generación del *bundle* con `dotnet ef migrations bundle --self-contained -r linux-${arch}` (mapeo desde `TARGETARCH`, `dotnet-ef` 10.0.15 por `.config/dotnet-tools.json` de la HU3) en `/app/migraciones/efbundle`.
-- [ ] T016 [US1] [CI] Agregar al `Dockerfile` la etapa `migraciones` sobre `runtime-deps:10.0` por digest, con `USER app` y *entrypoint* en shell que invoque `./efbundle --connection "$ConnectionStrings__BlackHellHeim"` sin imprimir la cadena.
-- [ ] T017 [US1] [CI] Agregar al `Dockerfile` la etapa `final` sobre `aspnet:10.0` por digest: copia solo `/app/publicar` y `docker/sonda-http.sh` (`--chmod=555`), `USER app`, `EXPOSE 8080`, `ENV ASPNETCORE_ENVIRONMENT=Production` y etiquetas OCI (`source`, `version`, `revision`, `licenses`) con `ARG VERSION` y `ARG REVISION`.
-- [ ] T018 [US1] [DB] Modificar `compose.yaml`: fijar la imagen de `sqlserver` por digest y agregar su `healthcheck` (`/opt/mssql-tools18/bin/sqlcmd -C -Q "SELECT 1"` con `SQLCMDPASSWORD`, intervalo 10 s, `timeout` 5 s, 12 reintentos, `start_period` 20 s).
-- [ ] T019 [US1] [CI] Agregar a `compose.yaml` el servicio `migraciones` (`build.target: migraciones`, `restart: "no"`, `depends_on.sqlserver: service_healthy`, cadena con host `sqlserver` y `${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env}`).
-- [ ] T020 [US1] [CI] Agregar a `compose.yaml` el servicio `api` (`build.target: final`, imagen `blackhellheim-api:local`, `depends_on` según T009, puerto `${BHH_API_PUERTO:-5068}:8080`, `healthcheck` con `docker/sonda-http.sh /salud/base`, intervalo 10 s, 6 reintentos, `start_period` 20 s, `restart: unless-stopped`).
-- [ ] T021 [US1] [CI] Agregar `BHH_API_PUERTO` con valor por defecto como marcador en `.env.example`, sin valores reales.
-- [ ] T022 [US1] [CI] Crear `scripts/entorno.sh`: valida Docker y Compose v2, `.env` existente sin marcadores, puertos 1433 y `BHH_API_PUERTO` libres, ejecuta `docker compose up --build --wait --remove-orphans`, informa servicios sanos y `http://localhost:${BHH_API_PUERTO:-5068}`; ante fallo muestra `docker compose ps` y registros filtrados (sin cadenas de conexión) y sale distinto de cero.
-- [ ] T023 [US1] [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (≥ 8 caracteres, sin `;`, `=` ni comillas).
-- [ ] T024 [US1] [CI] Ejecutar `./scripts/entorno.sh` en limpio y verificar T009, T010 y T011 en verde y que repetir el comando termina sin error con `SELECT COUNT(*) FROM dbo.Tiendas` = 2.
+- [ ] T013 [US1] [CI] Crear `docker/sonda-http.sh` (bash, `/dev/tcp`, `GET <ruta>` a `127.0.0.1:8080`, sale 0 solo con 200, 1 en cualquier otro caso o tiempo agotado de 3 s) con bits de ejecución.
+- [ ] T014 [US1] [CI] Crear `Dockerfile` con la etapa `restauracion` (`FROM` por digest del SDK, copia de `global.json`, `Directory.Build.props`, `.sln`, `.csproj` y `packages.lock.json`, y `dotnet restore --locked-mode`).
+- [ ] T015 [US1] [CI] Agregar al `Dockerfile` la etapa `compilacion`: copia del código, `dotnet publish src/Api -c Release --no-restore -p:UseAppHost=false -o /app/publicar` y eliminación de `appsettings.Development.json` de la publicación.
+- [ ] T016 [US1] [CI] Agregar al `Dockerfile` la generación del *bundle* con `dotnet ef migrations bundle --self-contained -r linux-${arch}` (mapeo desde `TARGETARCH`, `dotnet-ef` 10.0.15 por `.config/dotnet-tools.json` de la HU3) en `/app/migraciones/efbundle`. Como `FabricaContextoDiseno` (HU3) exige `ConnectionStrings__BlackHellHeim`, pasar una variable ficticia sin credenciales solo en ese comando, en línea y sin `ENV` ni `ARG` (`RUN ConnectionStrings__BlackHellHeim="Server=localhost;Database=BlackHellHeimBundle;Integrated Security=true;Encrypt=False" dotnet ef migrations bundle ...`), de modo que no se propague a las etapas `migraciones` y `final`.
+- [ ] T017 [US1] [CI] Agregar al `Dockerfile` la etapa `migraciones` sobre `runtime-deps:10.0` por digest, con `USER app` y *entrypoint* en shell que invoque `./efbundle --connection "$ConnectionStrings__BlackHellHeim"` sin imprimir la cadena.
+- [ ] T018 [US1] [CI] Agregar al `Dockerfile` la etapa `final` sobre `aspnet:10.0` por digest: copia solo `/app/publicar` y `docker/sonda-http.sh` (`--chmod=555`), `USER app`, `EXPOSE 8080`, `ENV ASPNETCORE_ENVIRONMENT=Production` y etiquetas OCI (`source`, `version`, `revision`, `licenses`) con `ARG VERSION` y `ARG REVISION`.
+- [ ] T019 [US1] [CI] Probar la construcción antes de seguir: ejecutar `./scripts/probar-imagen.sh` y no continuar con `compose.yaml` hasta que pase. Si el *bundle* falla, aplicar la contingencia de `plan.md` (Riesgos y pendientes) y registrar la decisión en `investigacion.md` D3.
+- [ ] T020 [US1] [DB] Modificar `compose.yaml`: fijar la imagen de `sqlserver` por digest y agregar su `healthcheck` (`/opt/mssql-tools18/bin/sqlcmd -C -Q "SELECT 1"` con `SQLCMDPASSWORD`, intervalo 10 s, `timeout` 5 s, 12 reintentos, `start_period` 20 s).
+- [ ] T021 [US1] [CI] Agregar a `compose.yaml` el servicio `migraciones` (`build.target: migraciones`, `restart: "no"`, `depends_on.sqlserver: service_healthy`, cadena con host `sqlserver` y `${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env}`).
+- [ ] T022 [US1] [CI] Agregar a `compose.yaml` el servicio `api` (`build.target: final`, imagen `blackhellheim-api:local`, `depends_on` según T009, puerto `${BHH_API_PUERTO:-5068}:8080`, `healthcheck` con `docker/sonda-http.sh /salud/base`, intervalo 10 s, 6 reintentos, `start_period` 20 s, `restart: unless-stopped`).
+- [ ] T023 [US1] [CI] Agregar `BHH_API_PUERTO` con valor por defecto como marcador en `.env.example`, sin valores reales.
+- [ ] T024 [US1] [CI] Crear `scripts/entorno.sh`: valida Docker y Compose v2, `.env` existente sin marcadores, puertos 1433 y `BHH_API_PUERTO` libres, ejecuta `docker compose up --build --wait --remove-orphans`, informa servicios sanos y `http://localhost:${BHH_API_PUERTO:-5068}`; ante fallo muestra `docker compose ps` y registros filtrados (sin cadenas de conexión) y sale distinto de cero.
+- [ ] T025 [US1] [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (≥ 8 caracteres, sin `;`, `=` ni comillas).
+- [ ] T026 [US1] [CI] Ejecutar `./scripts/entorno.sh` en limpio y verificar T009, T010 y T011 en verde y que repetir el comando termina sin error con `SELECT COUNT(*) FROM dbo.Tiendas` = 2.
 
 **Punto de control**: US1 funciona por sí sola.
 
@@ -60,14 +62,14 @@
 
 ### Pruebas primero
 
-- [ ] T025 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 3: detener `sqlserver`, comprobar `/salud/base` 503 y `/salud` 200, `api` `unhealthy`, reanudar y comprobar `healthy` sin reinicio del contenedor `api`. Debe fallar si la sonda no usa `/salud/base`.
-- [ ] T026 [P] [US2] [BE] Agregar a `src/Pruebas/Entorno/ComposePruebas.cs` la prueba de que el `healthcheck` del servicio `api` usa `/salud/base` y que `start_period` + reintentos × intervalo acota la espera a ≤ 120 s (error y validación).
-- [ ] T027 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de esquema al día: (1) comprobar con `docker inspect` que el contenedor `migraciones` terminó con `ExitCode` 0; (2) obtener los ids aplicados con `docker compose exec -T sqlserver /opt/mssql-tools18/bin/sqlcmd -C -h -1 -W -d BlackHellHeim -Q "SET NOCOUNT ON; SELECT MigrationId FROM dbo.__EFMigrationsHistory ORDER BY MigrationId"` usando `SQLCMDPASSWORD` del contenedor; (3) obtener los ids esperados de los archivos `src/Infraestructura/Persistencia/Migraciones/*.cs` que no terminan en `.Designer.cs` ni son `*ModelSnapshot.cs` (nombre sin extensión); (4) comparar ambas listas ordenadas y fallar mostrando solo los ids que difieren, sin imprimir credenciales. Debe fallar con la base sin migrar.
+- [ ] T027 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 3: detener `sqlserver`, comprobar `/salud/base` 503 y `/salud` 200, `api` `unhealthy`, reanudar y comprobar `healthy` sin reinicio del contenedor `api`. Debe fallar si la sonda no usa `/salud/base`.
+- [ ] T028 [P] [US2] [BE] Agregar a `src/Pruebas/Entorno/ComposePruebas.cs` la prueba de que el `healthcheck` del servicio `api` usa `/salud/base` y que `start_period` + reintentos × intervalo acota la espera a ≤ 120 s (error y validación).
+- [ ] T029 [P] [US2] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de esquema al día: (1) comprobar con `docker inspect` que el contenedor `migraciones` terminó con `ExitCode` 0; (2) obtener los ids aplicados con `docker compose exec -T sqlserver /opt/mssql-tools18/bin/sqlcmd -C -h -1 -W -d BlackHellHeim -Q "SET NOCOUNT ON; SELECT MigrationId FROM dbo.__EFMigrationsHistory ORDER BY MigrationId"` usando `SQLCMDPASSWORD` del contenedor; (3) obtener los ids esperados de los archivos `src/Infraestructura/Persistencia/Migraciones/*.cs` que no terminan en `.Designer.cs` ni son `*ModelSnapshot.cs` (nombre sin extensión); (4) comparar ambas listas ordenadas y fallar mostrando solo los ids que difieren, sin imprimir credenciales. Debe fallar con la base sin migrar.
 
 ### Implementación
 
-- [ ] T028 [US2] [CI] Ajustar los parámetros de `healthcheck` en `compose.yaml` si T025 o T026 lo exigen, y documentar la limitación de RF-009 en `specs/005-dockerfile-compose/investigacion.md` D6 si cambia.
-- [ ] T029 [US2] [CI] Ejecutar `./scripts/verificar-entorno.sh` y confirmar T025, T026 y T027 en verde.
+- [ ] T030 [US2] [CI] Ajustar los parámetros de `healthcheck` en `compose.yaml` si T027 o T028 lo exigen, y documentar la limitación de RF-009 en `specs/005-dockerfile-compose/investigacion.md` D6 si cambia.
+- [ ] T031 [US2] [CI] Ejecutar `./scripts/verificar-entorno.sh` y confirmar T027, T028 y T029 en verde.
 
 ## Fase 5: Historia 3 — Credenciales solo por variables de entorno (P3)
 
@@ -77,16 +79,16 @@
 
 ### Pruebas primero
 
-- [ ] T030 [P] [US3] [BE] Escribir `src/Pruebas/Entorno/ConfiguracionSinSecretosPruebas.cs`: `.env.example` solo contiene marcadores `__DEFINIR_CLAVE_LOCAL__` y las variables esperadas; `.env` está en `.gitignore` y `.dockerignore`; no hay `.env` versionado (éxito y error).
-- [ ] T031 [P] [US3] [BE] Agregar a `ConfiguracionSinSecretosPruebas.cs` la búsqueda en `git ls-files` de contraseñas, cadenas de conexión con `Password=` distintas del marcador y claves; cero coincidencias (validación).
-- [ ] T032 [P] [US3] [BE] Agregar a `ConfiguracionSinSecretosPruebas.cs` que `compose.yaml` usa `${BHH_SQL_SA_PASSWORD:?` y no contiene valores literales de contraseña.
-- [ ] T033 [P] [US3] [CI] Agregar a `scripts/verificar-entorno.sh` los pasos 5 y 8: variable obligatoria ausente falla nombrándola sin valor; `docker compose logs` y la salida del comando no contienen la contraseña ni la cadena completa.
+- [ ] T032 [P] [US3] [BE] Escribir `src/Pruebas/Entorno/ConfiguracionSinSecretosPruebas.cs`: `.env.example` solo contiene marcadores `__DEFINIR_CLAVE_LOCAL__` y las variables esperadas; `.env` está en `.gitignore` y `.dockerignore`; no hay `.env` versionado (éxito y error).
+- [ ] T033 [P] [US3] [BE] Agregar a `ConfiguracionSinSecretosPruebas.cs` la búsqueda en `git ls-files` de contraseñas, cadenas de conexión con `Password=` distintas del marcador y claves; cero coincidencias (validación).
+- [ ] T034 [P] [US3] [BE] Agregar a `ConfiguracionSinSecretosPruebas.cs` que `compose.yaml` usa `${BHH_SQL_SA_PASSWORD:?` y no contiene valores literales de contraseña.
+- [ ] T035 [P] [US3] [CI] Agregar a `scripts/verificar-entorno.sh` los pasos 5 y 8: variable obligatoria ausente falla nombrándola sin valor; `docker compose logs` y la salida del comando no contienen la contraseña ni la cadena completa.
 
 ### Implementación
 
-- [ ] T034 [US3] [CI] Completar `.gitignore` y `.dockerignore` si T030 lo exige, y revisar `.env.example` para que cumpla T030.
-- [ ] T035 [US3] [CI] Verificar que `scripts/entorno.sh` y los mensajes de error nunca imprimen valores (usar solo nombres de variables).
-- [ ] T036 [US3] [CI] Ejecutar `dotnet test` filtrando `ConfiguracionSinSecretosPruebas` y `./scripts/verificar-entorno.sh` (pasos 5 y 8) en verde.
+- [ ] T036 [US3] [CI] Completar `.gitignore` y `.dockerignore` si T032 lo exige, y revisar `.env.example` para que cumpla T032.
+- [ ] T037 [US3] [CI] Verificar que `scripts/entorno.sh` y los mensajes de error nunca imprimen valores (usar solo nombres de variables).
+- [ ] T038 [US3] [CI] Ejecutar `dotnet test` filtrando `ConfiguracionSinSecretosPruebas` y `./scripts/verificar-entorno.sh` (pasos 5 y 8) en verde.
 
 ## Fase 6: Historia 4 — Imagen reproducible y mismo artefacto (P4)
 
@@ -96,25 +98,26 @@
 
 ### Pruebas primero
 
-- [ ] T037 [P] [US4] [BE] Agregar a `src/Pruebas/Entorno/DockerfilePruebas.cs`: todas las líneas `FROM` externas usan `@sha256:`; `restore` con `--locked-mode`; la última `USER` no es `root` (acepta `app` o `1654`) (éxito y error).
-- [ ] T038 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 6: `Config.User` de la imagen, ausencia de `dotnet --list-sdks`, de `.env`, `appsettings.Development.json` y `obj/`, y que la contraseña no aparece en `docker history` ni `docker image inspect`.
-- [ ] T039 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 7: dos construcciones `--no-cache`, extracción de `/app` con `docker create`/`docker cp` y comparación de SHA-256 de los archivos y versiones de `.deps.json`.
-- [ ] T040 [P] [US4] [BE] Escribir en `src/Pruebas/Entorno/DockerfilePruebas.cs` y `ComposePruebas.cs` las pruebas estáticas de RF-020: el `Dockerfile` fija `ASPNETCORE_ENVIRONMENT=Production` en la etapa `final`, y ningún servicio de `compose.yaml` define `ASPNETCORE_ENVIRONMENT` ni `DOTNET_ENVIRONMENT` con valor `Development` o `Pruebas`; la publicación elimina `appsettings.Development.json`. Debe fallar si algo de esto no se cumple.
-- [ ] T041 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de RF-020 en el contenedor en marcha: `docker compose exec -T api printenv ASPNETCORE_ENVIRONMENT` es `Production`; la ruta del endpoint de prueba definido por la HU4 (leerla de `src/Api/` cuando exista; la tarea de errores inesperados de `specs/004-openapi-scalar/tasks.md` lo registra solo en entorno `Pruebas`) responde 404; si la HU4 aún no está implementada, ninguna ruta bajo `/pruebas` responde distinto de 404; y `GET /openapi/v1.json` (si existe) no contiene rutas de prueba. Debe fallar si el contenedor corre en otro entorno.
+- [ ] T039 [P] [US4] [BE] Agregar a `src/Pruebas/Entorno/DockerfilePruebas.cs`: todas las líneas `FROM` externas usan `@sha256:`; `restore` con `--locked-mode`; la última `USER` no es `root` (acepta `app` o `1654`) (éxito y error).
+- [ ] T040 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 6: `Config.User` de la imagen, ausencia de `dotnet --list-sdks`, de `.env`, `appsettings.Development.json` y `obj/`, y que la contraseña no aparece en `docker history` ni `docker image inspect`.
+- [ ] T041 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso 7: dos construcciones `--no-cache`, extracción de `/app` con `docker create`/`docker cp` y comparación de SHA-256 de los archivos y versiones de `.deps.json`.
+- [ ] T042 [P] [US4] [BE] Escribir en `src/Pruebas/Entorno/DockerfilePruebas.cs` y `ComposePruebas.cs` las pruebas estáticas de RF-020: el `Dockerfile` fija `ASPNETCORE_ENVIRONMENT=Production` en la etapa `final`, y ningún servicio de `compose.yaml` define `ASPNETCORE_ENVIRONMENT` ni `DOTNET_ENVIRONMENT` con valor `Development` o `Pruebas`; la publicación elimina `appsettings.Development.json`. Debe fallar si algo de esto no se cumple.
+- [ ] T043 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el paso de RF-020 en el contenedor en marcha: `docker compose exec -T api printenv ASPNETCORE_ENVIRONMENT` es `Production`; `GET /pruebas/error` (el endpoint de prueba que define la HU4, disponible solo fuera de `Production`) responde 404; y `GET /openapi/v1.json`, si existe, no contiene rutas bajo `/pruebas`. Debe fallar si el contenedor corre en otro entorno.
 
 ### Implementación
 
-- [ ] T042 [US4] [CI] Ajustar el `Dockerfile` y `compose.yaml` según T037, T038, T039, T040 y T041 (digests, `--locked-mode`, `USER`, limpieza, `ENV ASPNETCORE_ENVIRONMENT=Production`, versión inyectada sin fecha de compilación).
-- [ ] T043 [US4] [CI] Ejecutar `dotnet test --filter "DockerfilePruebas|ComposePruebas"` y `./scripts/verificar-entorno.sh` completo; confirmar T038, T039, T040 y T041 en verde.
-- [ ] T044 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó.
+- [ ] T044 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el chequeo de documentación pública en el contenedor: `GET /scalar` (con `-L`) y `GET /openapi/v1.json` responden 200. Si la HU4 aún no está implementada (el documento responde 404), el paso se marca OMITIDO con un aviso explícito, nunca como éxito silencioso. Debe fallar si la HU4 está implementada y alguna ruta no responde 200.
+- [ ] T045 [US4] [CI] Ajustar el `Dockerfile` y `compose.yaml` según T039, T040, T041, T042, T043 y T044 (digests, `--locked-mode`, `USER`, limpieza, `ENV ASPNETCORE_ENVIRONMENT=Production`, versión inyectada sin fecha de compilación).
+- [ ] T046 [US4] [CI] Ejecutar `dotnet test --filter "DockerfilePruebas|ComposePruebas"` y `./scripts/verificar-entorno.sh` completo; confirmar T040, T041, T042, T043 y T044 en verde.
+- [ ] T047 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó.
 
 ## Fase 7: Pulido y verificación final
 
-- [ ] T045 [P] [CI] Agregar a `scripts/entorno.sh` la opción `--recrear` con confirmación explícita antes de `docker compose down -v` (RF-017) y una prueba en `scripts/verificar-entorno.sh` que confirme que sin confirmación no borra.
-- [ ] T046 [P] [CI] Comprobar manejo de errores en `scripts/entorno.sh`: Docker ausente, puerto ocupado e imagen no descargable (con red desactivada) producen mensajes claros y no dejan recursos a medias.
-- [ ] T047 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `/salud` y `/salud/base` conservan su contrato sin cambios.
-- [ ] T048 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
-- [ ] T049 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde, `docker compose up --build --wait` con `api` y `sqlserver` sanos y `./scripts/verificar-entorno.sh` en verde.
+- [ ] T048 [P] [CI] Agregar a `scripts/entorno.sh` la opción `--recrear` con confirmación explícita antes de `docker compose down -v` (RF-017) y una prueba en `scripts/verificar-entorno.sh` que confirme que sin confirmación no borra.
+- [ ] T049 [P] [CI] Comprobar manejo de errores en `scripts/entorno.sh`: Docker ausente, puerto ocupado e imagen no descargable (con red desactivada) producen mensajes claros y no dejan recursos a medias.
+- [ ] T050 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `/salud` y `/salud/base` conservan su contrato sin cambios.
+- [ ] T051 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
+- [ ] T052 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde, `docker compose up --build --wait` con `api` y `sqlserver` sanos y `./scripts/verificar-entorno.sh` en verde.
 
 ## Dependencias
 
@@ -125,8 +128,8 @@
 ## Ejecución en paralelo (ejemplos)
 
 - Fase 3, pruebas: T009, T010, T011 juntas.
-- Fase 5, pruebas: T030, T031, T032, T033 juntas.
-- Fase 6, pruebas: T037, T038, T039, T040, T041 juntas.
+- Fase 5, pruebas: T032, T033, T034, T035 juntas.
+- Fase 6, pruebas: T039, T040, T041, T042, T043 juntas.
 
 ## Estrategia
 

@@ -300,6 +300,15 @@ Salidas: `modelo-datos.md`, `contratos/entorno.md`, `inicio-rapido.md`.
   el *bundle* usa la variable de entorno en tiempo de ejecución. Plan de contingencia: servicio
   `migraciones` basado en la etapa SDK con `dotnet ef database update` (más pesado), o seguir
   usando `scripts/base-datos.sh` desde el host.
+- **Generación del *bundle* sin secretos**: `FabricaContextoDiseno` (HU3) exige
+  `ConnectionStrings__BlackHellHeim`; en el `Dockerfile` se pasa una variable ficticia sin
+  credenciales solo en el `RUN` del *bundle* (sin `ENV` ni `ARG`) y `scripts/probar-imagen.sh`
+  verifica que no queda en las imágenes `migraciones` y `final`.
+- **Limitación documentada (C5): arranque sin red no probado**. RF-019 exige que el entorno
+  funcione sin conexión una vez descargadas las imágenes. Esta historia **no** lo prueba
+  automáticamente: una reconstrucción con `--build` sin red puede fallar al restaurar NuGet si
+  las capas no están en caché. Sin cambios de código, `docker compose up` sin `--build` con
+  imágenes ya construidas sí debería funcionar, pero queda sin verificar.
 - **arm64**: no verificado; se declara y se informa claramente si falla.
 - **Backlog**: `docs/scrum/backlog.md` solo lista las HU 2 y 6 en lo revisado; se debe añadir
   o confirmar la fila de la HU5 y que pertenece a `sprint/01`.
