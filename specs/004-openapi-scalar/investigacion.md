@@ -202,3 +202,13 @@ Se creó un proyecto desechable en `/tmp/opencode` con .NET 10, `Microsoft.AspNe
 - Un endpoint excluido con `ExcludeFromDescription()` no aparece en el documento.
 - El esquema generado para un `record EstadoSalud(string Estado)` es un `$ref` a
   `EstadoSalud` con `estado` requerido y tipo cadena, sin `const`.
+
+## Decisión T039: exposición de la documentación en el despliegue
+
+**Decisión (del responsable del proyecto)**: `/scalar` y `/openapi/v1.json` **no quedan públicos**
+en el despliegue. Hoy se publican en todos los entornos, incluido el contenedor; esto debe
+cambiarse en las historias 005/006 (despliegue).
+
+Pendiente de implementar (no forma parte de la HU4): restringir ambas rutas fuera de desarrollo
+(p. ej. registrarlas solo si `IsDevelopment()` o protegerlas) y ajustar las pruebas
+`OpenApiPublicadoPruebas` y `DocumentacionScalarPruebas`.

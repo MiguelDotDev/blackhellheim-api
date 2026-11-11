@@ -62,7 +62,7 @@
 - [X] T019 [US2] [BE] Registrar en `src/Api/Program.cs` `MapScalarApiReference()` con título `BlackHellHeim API`, activos locales y agente de IA desactivado.
 - [X] T020 [US2] [BE] Implementar el aviso de T017 en `src/Api/Program.cs`/`src/Api/OpenApi/` inyectando el elemento y el script en la cabecera o el cuerpo de la página de Scalar mediante la opción de contenido personalizado del paquete; si `Scalar.AspNetCore` 2.20.0 no la ofrece, servir `/scalar/` desde un endpoint propio que devuelva el HTML de Scalar con el aviso, sin CDN externo y sin cambiar las rutas `/scalar` y `/scalar/`.
 - [X] T021 [US2] [BE] Ejecutar `dotnet test --filter DocumentacionScalarPruebas` en verde (T016, T017, la de `Production` de T018 y el aviso de T020).
-- [ ] T022 [US2] [MANUAL] Abrir `/scalar` en el navegador y confirmar visualmente que se ven título, versión y las tres operaciones.
+- [X] T022 [US2] [MANUAL] Abrir `/scalar` en el navegador y confirmar visualmente que se ven título, versión y las tres operaciones.
 
 ## Fase 5: Historia 3 — Errores uniformes como problema (P3)
 
@@ -106,8 +106,8 @@
 
 - [X] T037 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que no se crearon proyectos nuevos ni dependencias hacia afuera.
 - [X] T038 [P] [BE] Buscar secretos, trazas o rutas internas en las respuestas de error y en el documento publicado; deben ser cero (CE-006).
-- [ ] T039 [MANUAL] Decidir si `/scalar` y `/openapi/v1.json` quedan públicos en el despliegue (decisión de las historias 005/006) y anotarlo en `specs/004-openapi-scalar/investigacion.md`.
-- [ ] T040 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU4: Spec = `specs/004-openapi-scalar`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
+- [X] T039 [MANUAL] Decidir si `/scalar` y `/openapi/v1.json` quedan públicos en el despliegue (decisión de las historias 005/006) y anotarlo en `specs/004-openapi-scalar/investigacion.md`. **Decisión: no quedan públicos** (ver `investigacion.md`).
+- [X] T040 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU4: Spec = `specs/004-openapi-scalar`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
 - [X] T041 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas y `dotnet test BlackHellHeim.sln` en verde; arrancar con `dotnet run --project src/Api --launch-profile http` y comprobar `/openapi/v1.json`, `/scalar`, `GET /tiendas/B` (400) y `/salud` (200).
 
 ## Dependencias

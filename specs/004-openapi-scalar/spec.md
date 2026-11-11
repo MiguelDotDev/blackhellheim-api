@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: En progreso (pendientes solo tareas [MANUAL]: T022, T039, T040)
+**Estado**: Hecha
 
 **Historia del backlog**: HU4 (componente BE)
 
