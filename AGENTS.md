@@ -32,3 +32,16 @@ docker compose up -d   # SQL Server y Azurite locales
 
 ## Flujo SDD
 `/speckit.specify` → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.analyze` → `/speckit.implement`. Las tareas llevan etiqueta [BE] [FE] [DB] [CI] y se importan a Jira (proyecto BHH) como subtareas.
+
+## Flujo por historia de usuario y ramas
+
+**Ramas**: `main` (despliega a Azure, solo recibe de `release`), `release` (pruebas y aprobación), `developer` (integración) y `sprint/NN` (una por sprint, sale de `developer`). Nunca hagas commit directo a `main`, `release` ni `developer`.
+
+**Trabajo por historia (requisito académico)**:
+
+1. La fuente de verdad de qué HU pertenece a qué sprint es `docs/scrum/backlog.md`. Antes de empezar, identifica la HU y su sprint, y trabaja sobre la rama `sprint/NN` de ese sprint (si no existe, dime y no la crees tú). No uses ramas por historia.
+2. Cada HU corresponde a una carpeta en `specs/`. Implementa una HU a la vez; no mezcles HU distintas en el mismo commit.
+3. Cuando terminen todas las tareas de una HU y sus pruebas pasen, haz commit con el mensaje `"HU-N: <título corto>"` y actualiza su fila en `backlog.md` (Spec y Estado = Hecha). Después DETENTE y dime textualmente: `"HU-N terminada. Haz push a sprint/NN"` con el comando exacto. No hagas push tú.
+4. Cuando todas las HU de un sprint estén en Hecha, dime textualmente: `"Sprint N completo. Abre pull request de sprint/NN a developer"`. Luego developer a release y release a main solo con mi aprobación explícita.
+5. Si una HU toca ambos repos, trabaja la parte de este repo, márcalo en la fila y avísame qué falta en el otro.
+6. Si el backlog y las carpetas de specs no coinciden, avísame en vez de suponer.
