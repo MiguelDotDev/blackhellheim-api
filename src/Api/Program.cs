@@ -52,6 +52,7 @@ app.MapearSalud();
 app.MapearTiendas();
 app.MapearAuth();
 app.MapearPrintfulAdmin();
+app.MapearDisenosAdmin();
 app.MapearSaludBaseDatos();
 
 if (!app.Environment.IsProduction())

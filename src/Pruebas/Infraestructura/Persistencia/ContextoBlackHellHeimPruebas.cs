@@ -86,9 +86,10 @@ public class ContextoBlackHellHeimPruebas(ContenedorSqlServer sql)
         var aplicadas = await sql.ConsultarEscalarAsync<string>(cadena,
             "SELECT STRING_AGG(MigrationId, '|') FROM dbo.__EFMigrationsHistory");
         var ids = aplicadas.Split('|').Order().ToArray();
-        Assert.Equal(2, ids.Length);
+        Assert.Equal(3, ids.Length);
         Assert.EndsWith("_MigracionInicial", ids[0]);
         Assert.EndsWith("_AgregarIdentidad", ids[1]);
+        Assert.EndsWith("_AgregarDominioDisenos", ids[2]);
 
         await contexto.GetInfrastructure().GetRequiredService<IMigrator>().MigrateAsync("0");
         Assert.Equal(0, await sql.ConsultarEscalarAsync<int>(cadena, "SELECT COUNT(*) FROM dbo.__EFMigrationsHistory"));

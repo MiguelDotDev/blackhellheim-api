@@ -6,6 +6,8 @@ using BlackHellHeim.Aplicacion.Ejemplos;
 using BlackHellHeim.Aplicacion.Tiendas.ConsultarTienda;
 using BlackHellHeim.Aplicacion.Autenticacion;
 using BlackHellHeim.Aplicacion.Impresion;
+using BlackHellHeim.Aplicacion.Disenos;
+using BlackHellHeim.Infraestructura.Disenos;
 using Mediator;
 using BlackHellHeim.Aplicacion.Tiendas;
 using BlackHellHeim.Infraestructura.Tiendas;
@@ -43,6 +45,12 @@ public static class RegistroServicios
 
         servicios.AddScoped<IValidadorSolicitud<ListarProductosQuery>, ValidadorListarProductos>();
         servicios.AddScoped<IValidadorSolicitud<ListarVariantesQuery>, ValidadorListarVariantes>();
+
+        servicios.AddScoped<IRepositorioDisenos, RepositorioDisenos>();
+        servicios.AddSingleton<ITerminosBloqueados, TerminosBloqueadosConfiguracion>();
+        servicios.AddScoped<IValidadorSolicitud<CrearDisenoComando>, ValidadorCrearDiseno>();
+        servicios.AddScoped<IValidadorSolicitud<EditarDisenoComando>, ValidadorEditarDiseno>();
+        servicios.AddScoped<IValidadorSolicitud<ListarDisenosQuery>, ValidadorListarDisenos>();
 
         return servicios;
     }

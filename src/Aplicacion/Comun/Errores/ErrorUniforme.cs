@@ -11,6 +11,7 @@ public enum TipoError
     NoAutenticado,
     Bloqueado,
     Prohibido,
+    PrecondicionFallida,
     ProveedorFallo,
     ProveedorSaturado,
     ProveedorTiempoAgotado,
@@ -44,6 +45,10 @@ public sealed record ErrorUniforme(
     /// <summary>Mensaje único: no distingue correo inexistente de contraseña errónea.</summary>
     public static ErrorUniforme NoAutenticado(string idCorrelacion) =>
         new(TipoError.NoAutenticado, "no_autenticado", "Credenciales inválidas o sesión no válida.", null, idCorrelacion);
+
+    public static ErrorUniforme PrecondicionFallida(string idCorrelacion) =>
+        new(TipoError.PrecondicionFallida, "version_desactualizada",
+            "El recurso cambió desde que lo leíste. Vuelve a cargarlo antes de editar.", null, idCorrelacion);
 
     public static ErrorUniforme ProveedorFallo(string idCorrelacion) =>
         new(TipoError.ProveedorFallo, "proveedor_fallo", "El proveedor de impresión no pudo atender la solicitud.", null, idCorrelacion);
