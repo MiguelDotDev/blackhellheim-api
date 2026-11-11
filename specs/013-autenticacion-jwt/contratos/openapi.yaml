@@ -1,0 +1,57 @@
+openapi: 3.1.0
+info: { title: BlackHellHeim API · Autenticación, version: 0.1.0 }
+paths:
+  /auth/registro:
+    post:
+      summary: Registra un cliente
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CredencialesSolicitud' } } } }
+      responses:
+        '201': { description: Cuenta creada; cookie de refresh establecida, content: { application/json: { schema: { $ref: '#/components/schemas/SesionRespuesta' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /auth/inicio-sesion:
+    post:
+      summary: Inicia sesión
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CredencialesSolicitud' } } } }
+      responses:
+        '200': { description: Sesión iniciada, content: { application/json: { schema: { $ref: '#/components/schemas/SesionRespuesta' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '423': { $ref: '#/components/responses/Problema' }
+  /auth/renovar:
+    post:
+      summary: Rota el refresh (cookie) y entrega un acceso nuevo
+      responses:
+        '200': { description: Acceso y refresh nuevos, content: { application/json: { schema: { $ref: '#/components/schemas/SesionRespuesta' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /auth/cerrar-sesion:
+    post:
+      summary: Revoca la familia del refresh y borra la cookie
+      responses:
+        '204': { description: Sesión cerrada }
+  /auth/yo:
+    get:
+      summary: Perfil de la sesión actual
+      security: [{ bearer: [] }]
+      responses:
+        '200': { description: Perfil, content: { application/json: { schema: { $ref: '#/components/schemas/PerfilRespuesta' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+components:
+  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
+  responses:
+    Problema: { description: ProblemDetails, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  schemas:
+    CredencialesSolicitud:
+      type: object
+      required: [correo, contrasena]
+      properties: { correo: { type: string, format: email }, contrasena: { type: string, minLength: 10, maxLength: 128 } }
+    SesionRespuesta:
+      type: object
+      required: [tokenAcceso, expiraEnSegundos, rol]
+      properties: { tokenAcceso: { type: string }, expiraEnSegundos: { type: integer, example: 900 }, rol: { type: string, enum: [Cliente, Administrador] } }
+    PerfilRespuesta:
+      type: object
+      properties: { id: { type: string, format: uuid }, correo: { type: string }, rol: { type: string } }
+    Problema:
+      type: object
+      properties: { type: { type: string }, title: { type: string }, status: { type: integer }, detail: { type: string }, errors: { type: object } }
