@@ -42,6 +42,8 @@ services:
       Jwt__Clave: ${BHH_JWT_CLAVE:?Defina BHH_JWT_CLAVE en .env (mínimo 32 caracteres)}
       Administrador__Correo: ${BHH_ADMIN_CORREO:-}
       Administrador__Contrasena: ${BHH_ADMIN_CONTRASENA:-}
+      # Printful (historia 015): opcional; sin token los endpoints de catálogo responden 502.
+      Printful__Token: ${BHH_PRINTFUL_TOKEN:-}
     ports:
       - "${BHH_API_PUERTO:-5068}:8080"
     depends_on:

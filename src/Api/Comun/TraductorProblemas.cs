@@ -18,6 +18,9 @@ public static class TraductorProblemas
         TipoError.NoAutenticado => StatusCodes.Status401Unauthorized,
         TipoError.Bloqueado => StatusCodes.Status423Locked,
         TipoError.Prohibido => StatusCodes.Status403Forbidden,
+        TipoError.ProveedorFallo => StatusCodes.Status502BadGateway,
+        TipoError.ProveedorSaturado => StatusCodes.Status503ServiceUnavailable,
+        TipoError.ProveedorTiempoAgotado => StatusCodes.Status504GatewayTimeout,
         _ => StatusCodes.Status500InternalServerError
     };
 
@@ -33,6 +36,9 @@ public static class TraductorProblemas
             TipoError.NoAutenticado => ("No autenticado", error.Mensaje),
             TipoError.Bloqueado => ("Cuenta bloqueada", error.Mensaje),
             TipoError.Prohibido => ("Acceso prohibido", error.Mensaje),
+            TipoError.ProveedorFallo => ("Proveedor de impresión con fallo", error.Mensaje),
+            TipoError.ProveedorSaturado => ("Proveedor de impresión saturado", error.Mensaje),
+            TipoError.ProveedorTiempoAgotado => ("Proveedor de impresión sin respuesta", error.Mensaje),
             TipoError.NoDisponible => ("Base de datos no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };
@@ -47,6 +53,11 @@ public static class TraductorProblemas
             ["codigo"] = error.Codigo,
             ["idCorrelacion"] = error.IdCorrelacion
         };
+
+        if (error.ReintentarEnSegundos is { } segundos)
+        {
+            cuerpo["retryAfter"] = segundos;
+        }
 
         if (error.Campos is { Count: > 0 })
         {

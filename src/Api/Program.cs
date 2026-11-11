@@ -20,6 +20,7 @@ builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.NumberHandlin
 
 builder.Services.AgregarIdentidad(builder.Configuration);
 builder.Services.AgregarAutenticacionJwt();
+builder.Services.AgregarPrintful(builder.Configuration);
 builder.Services.AddHostedService<SembradoAdministrador>();
 
 builder.Services.AddProblemDetails(opciones => opciones.CustomizeProblemDetails = OpcionesProblemDetails.Configurar);
@@ -50,6 +51,7 @@ app.MapScalarApiReference(opciones => opciones
 app.MapearSalud();
 app.MapearTiendas();
 app.MapearAuth();
+app.MapearPrintfulAdmin();
 app.MapearSaludBaseDatos();
 
 if (!app.Environment.IsProduction())

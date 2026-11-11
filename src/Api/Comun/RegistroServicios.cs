@@ -5,6 +5,7 @@ using BlackHellHeim.Aplicacion.Comun.Validacion;
 using BlackHellHeim.Aplicacion.Ejemplos;
 using BlackHellHeim.Aplicacion.Tiendas.ConsultarTienda;
 using BlackHellHeim.Aplicacion.Autenticacion;
+using BlackHellHeim.Aplicacion.Impresion;
 using Mediator;
 using BlackHellHeim.Aplicacion.Tiendas;
 using BlackHellHeim.Infraestructura.Tiendas;
@@ -39,6 +40,9 @@ public static class RegistroServicios
         servicios.AddScoped<EmisorSesion>();
         servicios.AddScoped<IValidadorSolicitud<RegistrarComando>, ValidadorRegistrar>();
         servicios.AddScoped<IValidadorSolicitud<IniciarSesionComando>, ValidadorIniciarSesion>();
+
+        servicios.AddScoped<IValidadorSolicitud<ListarProductosQuery>, ValidadorListarProductos>();
+        servicios.AddScoped<IValidadorSolicitud<ListarVariantesQuery>, ValidadorListarVariantes>();
 
         return servicios;
     }
