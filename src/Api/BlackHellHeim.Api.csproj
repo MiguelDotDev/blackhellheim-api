@@ -2,6 +2,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aplicacion\BlackHellHeim.Aplicacion.csproj" />
+    <ProjectReference Include="..\Infraestructura\BlackHellHeim.Infraestructura.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.20.0" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,0 +1,57 @@
+# Entorno local de BlackHellHeim (historias 003 y 005). Los secretos llegan por variables de
+# entorno (.env, ignorado por git); aquí solo hay referencias a ellas.
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest@sha256:cf8f0ab2ebe61feec2eed2629061a07d247f791c2a8ddda74a4ac9f06a291718
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env}
+    ports:
+      - "1433:1433"
+    volumes:
+      - datos-sqlserver:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # Contenedor de un solo uso: aplica las migraciones y las semillas con el bundle de EF Core.
+  migraciones:
+    build:
+      context: .
+      target: migraciones
+    image: blackhellheim-migraciones:local
+    environment:
+      ConnectionStrings__BlackHellHeim: Server=sqlserver,1433;Database=BlackHellHeim;User Id=sa;Password=${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env};Encrypt=True;TrustServerCertificate=True
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      target: final
+    image: blackhellheim-api:local
+    environment:
+      ConnectionStrings__BlackHellHeim: Server=sqlserver,1433;Database=BlackHellHeim;User Id=sa;Password=${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env};Encrypt=True;TrustServerCertificate=True
+    ports:
+      - "${BHH_API_PUERTO:-5068}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      migraciones:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/app/sonda-http.sh", "/salud/base"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  datos-sqlserver:
