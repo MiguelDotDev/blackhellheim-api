@@ -34,15 +34,15 @@
 
 - [ ] T011 [P] [US1] [BE] Escribir `src/Pruebas/Infraestructura/Persistencia/ContenedorSqlServer.cs`: fixture xUnit que inicia `mcr.microsoft.com/mssql/server:2022-latest` con Testcontainers y una contraseña generada en tiempo de ejecución, nunca versionada.
 - [ ] T012 [P] [US1] [BE] Escribir `src/Pruebas/Infraestructura/Persistencia/ContextoBlackHellHeimPruebas.cs`: migrar crea `dbo.Tiendas` con `Codigo char(3)` no Unicode (clave primaria), `Nombre nvarchar(120)` no nulo y `Moneda char(3)` no Unicode no nulo, y las dos semillas `BHH` ("BlackHellHeim", MXN) y `DEM` ("Tienda de demostración", MXN); migrar dos veces no duplica. Debe fallar.
-- [ ] T013 [P] [US1] [CI] Escribir `scripts/base-datos.sh` en modo de prueba de aceptación: primero un `scripts/probar-base-datos.sh` que ejecuta el script dos veces y verifica `SELECT COUNT(*) FROM dbo.Tiendas` = 2. Debe fallar.
+- [ ] T013 [P] [US1] [CI] Escribir la prueba de aceptación `scripts/probar-base-datos.sh` (aún sin el script que prueba): ejecuta `./scripts/base-datos.sh` dos veces, exige código de salida 0 en ambas y `SELECT COUNT(*) FROM dbo.Tiendas` = 2 tras cada una. Debe fallar porque `scripts/base-datos.sh` todavía no existe.
 
 ### Implementación
 
 - [ ] T014 [US1] [DB] Crear `src/Infraestructura/Persistencia/Configuraciones/TiendaConfiguracion.cs`: tabla `dbo.Tiendas`; `Codigo` con `HasConversion` a `string`, `HasMaxLength(3)`, `IsUnicode(false)`, `IsFixedLength()`, `ValueGeneratedNever()`; `Nombre` `IsRequired()` `HasMaxLength(120)`; `Moneda` `IsRequired()` `HasMaxLength(3)` `IsUnicode(false)` `IsFixedLength()`; `HasData` con `BHH` y `DEM`. Aplicar la configuración en `ContextoBlackHellHeim`.
 - [ ] T015 [US1] [DB] Crear `src/Infraestructura/Persistencia/FabricaContextoDiseno.cs` (`IDesignTimeDbContextFactory`) que lee `ConnectionStrings__BlackHellHeim` y, si falta, lanza un error que nombra la variable y remite a `.env.example`, sin imprimir valores.
 - [ ] T016 [US1] [DB] Generar la migración con `dotnet ef migrations add MigracionInicial -p src/Infraestructura -s src/Infraestructura -o Persistencia/Migraciones` y revisar que crea `Tiendas` con las columnas de T012 y las dos semillas.
-- [ ] T017 [US1] [CI] Crear `scripts/base-datos.sh`: valida que `.env` exista y no tenga los marcadores, lo carga, ejecuta `docker compose up -d --wait sqlserver`, `dotnet tool restore`, `dotnet ef database update -p src/Infraestructura -s src/Infraestructura`, e informa; sale distinto de cero ante cualquier fallo.
-- [ ] T018 [US1] [DB] Ejecutar `./scripts/base-datos.sh` dos veces y `dotnet test --filter ContextoBlackHellHeimPruebas`: T012 y T013 en verde.
+- [ ] T017 [US1] [CI] Escribir `scripts/base-datos.sh` (comando único, sin lógica de prueba): valida que `.env` exista y no conserve los marcadores de `.env.example`, lo carga, ejecuta `docker compose up -d --wait sqlserver`, `dotnet tool restore` y `dotnet ef database update -p src/Infraestructura -s src/Infraestructura`, informa el resultado y sale distinto de cero ante cualquier fallo.
+- [ ] T018 [US1] [DB] Ejecutar `./scripts/probar-base-datos.sh` y `dotnet test --filter ContextoBlackHellHeimPruebas`: T012 y T013 en verde.
 
 **Punto de control**: US1 funciona sola.
 
@@ -87,20 +87,22 @@
 
 - [ ] T030 [P] [US4] [BE] Escribir `src/Pruebas/Api/SaludBaseDatosPruebas.cs`: con `WebApplicationFactory<Program>` y la cadena del contenedor, `/salud/base` → 200 `{"estado":"disponible"}`; con un puerto cerrado → 503 `application/problem+json` con `codigo: base_no_disponible`, `idCorrelacion`, sin cadena de conexión; y `/salud` → 200 en ambos casos. Debe fallar.
 - [ ] T031 [P] [US4] [BE] Agregar a `SaludBaseDatosPruebas.cs`: una base que no responde devuelve 503 en menos de 5 s (tiempo máximo interno 3 s) y la cabecera `X-Correlation-ID` se conserva.
+- [ ] T032 [P] [US4] [BE] Escribir en `src/Pruebas/Api/SaludBaseDatosPruebas.cs` la prueba de base real inaccesible: con el contenedor de `ContenedorSqlServer` ya sano, pausarlo (`docker pause`, con `PauseAsync` de Testcontainers si existe o ejecutando el comando) para que acepte conexiones TCP pero no responda; `GET /salud/base` debe devolver 503 `application/problem+json` con `codigo: base_no_disponible`, en un tiempo medido entre 2,5 s y 5 s (prueba que el límite de 3 s se aplica y no un rechazo inmediato); `GET /salud` sigue en 200. Al reanudar el contenedor (`unpause`), `/salud/base` vuelve a 200. Debe fallar.
+- [ ] T033 [P] [US4] [BE] Agregar a `SaludBaseDatosPruebas.cs` que la cadena de conexión no aparece ni en el cuerpo ni en las cabeceras del 503 de T032 y que dos solicitudes consecutivas con la base pausada no se acumulan (cada una termina en < 5 s).
 
 ### Implementación
 
-- [ ] T032 [US4] [BE] Crear `src/Api/Endpoints/SaludBaseDatosEndpoints.cs`: resuelve el contexto y ejecuta `CanConnectAsync` con un `CancellationTokenSource` enlazado de 3 s; 200 `{ "estado": "disponible" }` o 503 ProblemDetails (`base_no_disponible`, `idCorrelacion`) ante fallo, excepción o tiempo agotado.
-- [ ] T033 [US4] [BE] Mapear el endpoint en `src/Api/Program.cs`.
-- [ ] T034 [US4] [BE] Ejecutar `dotnet test --filter SaludBaseDatosPruebas` en verde.
+- [ ] T034 [US4] [BE] Crear `src/Api/Endpoints/SaludBaseDatosEndpoints.cs`: resuelve el contexto y ejecuta `CanConnectAsync` con un `CancellationTokenSource` enlazado de 3 s; 200 `{ "estado": "disponible" }` o 503 ProblemDetails (`base_no_disponible`, `idCorrelacion`) ante fallo, excepción o tiempo agotado.
+- [ ] T035 [US4] [BE] Mapear el endpoint en `src/Api/Program.cs`.
+- [ ] T036 [US4] [BE] Ejecutar `dotnet test --filter SaludBaseDatosPruebas` en verde (incluidas T031, T032 y T033). Si T032 falla por exceder 5 s, ajustar el endpoint de T034 (token enlazado de 3 s y `Connect Timeout`/`CommandTimeout` de la cadena) sin cambiar el contrato.
 
 ## Fase 7: Pulido y verificación final
 
-- [ ] T035 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `Dominio` y `Aplicacion` no referencian EF Core.
-- [ ] T036 [P] [DB] Probar `docker compose down -v` seguido de `./scripts/base-datos.sh`: la base se recrea y las semillas vuelven a dos filas; y persistencia entre `docker compose restart sqlserver`.
-- [ ] T037 [MANUAL] Aprobar el alcance del contrato `contratos/openapi.yaml` para que la HU4 lo alinee (versión 3.1.1) sin cambiar el comportamiento.
-- [ ] T038 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU3: Spec = `specs/003-sql-server-efcore`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
-- [ ] T039 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde (requiere Docker para las pruebas de persistencia) y `docker compose up -d --wait sqlserver` con la base sana.
+- [ ] T037 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `Dominio` y `Aplicacion` no referencian EF Core.
+- [ ] T038 [P] [DB] Probar `docker compose down -v` seguido de `./scripts/base-datos.sh`: la base se recrea y las semillas vuelven a dos filas; y persistencia entre `docker compose restart sqlserver`.
+- [ ] T039 [MANUAL] Aprobar el alcance del contrato `contratos/openapi.yaml` para que la HU4 lo alinee (versión 3.1.1) sin cambiar el comportamiento.
+- [ ] T040 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU3: Spec = `specs/003-sql-server-efcore`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
+- [ ] T041 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde (requiere Docker para las pruebas de persistencia) y `docker compose up -d --wait sqlserver` con la base sana.
 
 ## Dependencias
 
