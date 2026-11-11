@@ -1,0 +1,21 @@
+# Entorno local de BlackHellHeim. Los secretos llegan por variables de entorno (.env, ignorado por git).
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${BHH_SQL_SA_PASSWORD:?Defina BHH_SQL_SA_PASSWORD en .env}
+    ports:
+      - "1433:1433"
+    volumes:
+      - datos-sqlserver:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  datos-sqlserver:

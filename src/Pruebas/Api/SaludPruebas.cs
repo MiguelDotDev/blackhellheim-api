@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using BlackHellHeim.Pruebas.Comun;
 using Xunit;
 
 namespace BlackHellHeim.Pruebas.Api;
@@ -9,11 +10,11 @@ namespace BlackHellHeim.Pruebas.Api;
 /// Prueba en proceso de la comprobación de estado según
 /// <c>specs/002-estructura-base-api/contratos/openapi.yaml</c>.
 /// </summary>
-public class SaludPruebas : IClassFixture<WebApplicationFactory<Program>>
+public class SaludPruebas : IClassFixture<FabricaApiPruebas>
 {
     private readonly HttpClient _cliente;
 
-    public SaludPruebas(WebApplicationFactory<Program> fabrica)
+    public SaludPruebas(FabricaApiPruebas fabrica)
     {
         _cliente = fabrica.CreateClient();
     }

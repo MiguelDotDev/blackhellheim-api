@@ -14,6 +14,7 @@ public static class TraductorProblemas
         TipoError.NoEncontrado => StatusCodes.Status404NotFound,
         TipoError.Conflicto => StatusCodes.Status409Conflict,
         TipoError.Cancelado => StatusCodes.Status408RequestTimeout,
+        TipoError.NoDisponible => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status500InternalServerError
     };
 
@@ -26,6 +27,7 @@ public static class TraductorProblemas
             TipoError.NoEncontrado => ("Recurso no encontrado", error.Mensaje),
             TipoError.Conflicto => ("Conflicto", error.Mensaje),
             TipoError.Cancelado => ("Operación cancelada", error.Mensaje),
+            TipoError.NoDisponible => ("Servicio no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };
 

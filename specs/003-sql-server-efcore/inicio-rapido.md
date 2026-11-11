@@ -28,6 +28,10 @@ Resultado esperado:
 - `.env` contiene una contraseña real solo en tu máquina.
 - `.env.example` sigue versionado únicamente con marcadores.
 
+> Para usar otro archivo de configuración (por ejemplo, en pruebas automáticas), define
+> `BHH_ENV_ARCHIVO=/ruta/al/archivo` antes de ejecutar `./scripts/base-datos.sh`; por defecto
+> se usa `.env`.
+
 ## 2. Comando único
 
 ```bash

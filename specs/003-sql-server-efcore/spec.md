@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: Tareas listas
+**Estado**: En progreso (pendientes solo tareas [MANUAL]: T006, T045, T046)
 
 **Historia del backlog**: HU3 (componentes BE y DB)
 

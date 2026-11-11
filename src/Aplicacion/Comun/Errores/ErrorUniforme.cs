@@ -7,6 +7,7 @@ public enum TipoError
     NoEncontrado,
     Conflicto,
     Cancelado,
+    NoDisponible,
     Inesperado
 }
 
@@ -32,6 +33,10 @@ public sealed record ErrorUniforme(
         new(TipoError.Inesperado, "error_inesperado",
             "Ocurrió un error inesperado. Usa el identificador de correlación para dar seguimiento.",
             null, idCorrelacion);
+
+    public static ErrorUniforme BaseNoDisponible(string idCorrelacion) =>
+        new(TipoError.NoDisponible, "base_no_disponible",
+            "La base de datos no responde. Inténtalo de nuevo más tarde.", null, idCorrelacion);
 
     public static ErrorUniforme Cancelado(string idCorrelacion) =>
         new(TipoError.Cancelado, "operacion_cancelada", "La operación fue cancelada.", null, idCorrelacion);

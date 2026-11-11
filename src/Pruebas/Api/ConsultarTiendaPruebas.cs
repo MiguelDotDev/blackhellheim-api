@@ -4,17 +4,18 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using BlackHellHeim.Pruebas.Comun;
 using Xunit;
 
 namespace BlackHellHeim.Pruebas.Api;
 
 /// <summary>Pruebas en proceso de <c>GET /tiendas/{codigo}</c> (contrato de la historia 002b).</summary>
-public class ConsultarTiendaPruebas : IClassFixture<WebApplicationFactory<Program>>
+public class ConsultarTiendaPruebas : IClassFixture<FabricaApiPruebas>
 {
-    private readonly WebApplicationFactory<Program> _fabrica;
+    private readonly FabricaApiPruebas _fabrica;
     private readonly HttpClient _cliente;
 
-    public ConsultarTiendaPruebas(WebApplicationFactory<Program> fabrica)
+    public ConsultarTiendaPruebas(FabricaApiPruebas fabrica)
     {
         _fabrica = fabrica;
         _cliente = fabrica.CreateClient();

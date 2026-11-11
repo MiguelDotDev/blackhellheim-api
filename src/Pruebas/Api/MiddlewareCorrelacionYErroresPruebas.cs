@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using BlackHellHeim.Pruebas.Comun;
 using Xunit;
 
 namespace BlackHellHeim.Pruebas.Api;
@@ -16,12 +17,12 @@ namespace BlackHellHeim.Pruebas.Api;
 /// Pruebas del middleware de correlación y errores con endpoints temporales registrados
 /// desde la prueba (sin tocar <c>Program.cs</c>).
 /// </summary>
-public class MiddlewareCorrelacionYErroresPruebas : IClassFixture<WebApplicationFactory<Program>>
+public class MiddlewareCorrelacionYErroresPruebas : IClassFixture<FabricaApiPruebas>
 {
     private const string Cabecera = "X-Correlation-ID";
     private readonly HttpClient _cliente;
 
-    public MiddlewareCorrelacionYErroresPruebas(WebApplicationFactory<Program> fabrica)
+    public MiddlewareCorrelacionYErroresPruebas(FabricaApiPruebas fabrica)
     {
         _cliente = fabrica
             .WithWebHostBuilder(b => b.ConfigureServices(s => s.AddTransient<IStartupFilter, FiltroEndpointsTemporales>()))
