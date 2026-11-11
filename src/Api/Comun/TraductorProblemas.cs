@@ -1,0 +1,50 @@
+using BlackHellHeim.Aplicacion.Comun.Errores;
+
+namespace BlackHellHeim.Api.Comun;
+
+/// <summary>
+/// Traducción única de <see cref="ErrorUniforme"/> a ProblemDetails (RFC 9457). La usan el
+/// middleware y los endpoints. No incluye <c>traceId</c>, trazas ni detalles internos.
+/// </summary>
+public static class TraductorProblemas
+{
+    public static int EstadoHttp(TipoError tipo) => tipo switch
+    {
+        TipoError.Validacion => StatusCodes.Status400BadRequest,
+        TipoError.NoEncontrado => StatusCodes.Status404NotFound,
+        TipoError.Conflicto => StatusCodes.Status409Conflict,
+        TipoError.Cancelado => StatusCodes.Status408RequestTimeout,
+        _ => StatusCodes.Status500InternalServerError
+    };
+
+    public static IResult Traducir(ErrorUniforme error, string instancia)
+    {
+        var estado = EstadoHttp(error.Tipo);
+        var (titulo, detalle) = error.Tipo switch
+        {
+            TipoError.Validacion => ("La solicitud no es válida", "Revisa los campos indicados."),
+            TipoError.NoEncontrado => ("Recurso no encontrado", error.Mensaje),
+            TipoError.Conflicto => ("Conflicto", error.Mensaje),
+            TipoError.Cancelado => ("Operación cancelada", error.Mensaje),
+            _ => ("Error interno", error.Mensaje)
+        };
+
+        var cuerpo = new Dictionary<string, object?>
+        {
+            ["type"] = $"https://blackhellheim.mx/errores/{error.Codigo}",
+            ["title"] = titulo,
+            ["status"] = estado,
+            ["detail"] = detalle,
+            ["instance"] = instancia,
+            ["codigo"] = error.Codigo,
+            ["idCorrelacion"] = error.IdCorrelacion
+        };
+
+        if (error.Campos is { Count: > 0 })
+        {
+            cuerpo["errores"] = error.Campos;
+        }
+
+        return Results.Json(cuerpo, statusCode: estado, contentType: "application/problem+json");
+    }
+}

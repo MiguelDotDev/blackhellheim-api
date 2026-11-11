@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: Tareas listas
+**Estado**: Hecha
 
 **Complementa**: `specs/002-estructura-base-api` (HU2 del backlog)
 

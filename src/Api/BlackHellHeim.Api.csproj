@@ -2,6 +2,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aplicacion\BlackHellHeim.Aplicacion.csproj" />
+    <ProjectReference Include="..\Infraestructura\BlackHellHeim.Infraestructura.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup>
