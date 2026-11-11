@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.1.1
 info:
   title: BlackHellHeim API — base de datos local
   version: 0.3.0
@@ -74,6 +74,17 @@ paths:
                     instance: /salud/base
                     codigo: base_no_disponible
                     idCorrelacion: 7f3c2a9e4b1d4c8f9a0e6d5b2c1f8a7e
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   schemas:
     EstadoBaseDatos:
@@ -82,7 +93,7 @@ components:
       properties:
         estado:
           type: string
-          const: disponible
+          examples: [disponible]
           description: Indica que la base de datos respondió a la comprobación.
     ProblemDetails:
       type: object
@@ -108,3 +119,10 @@ components:
         idCorrelacion:
           type: string
           description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

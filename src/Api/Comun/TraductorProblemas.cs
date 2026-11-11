@@ -27,7 +27,7 @@ public static class TraductorProblemas
             TipoError.NoEncontrado => ("Recurso no encontrado", error.Mensaje),
             TipoError.Conflicto => ("Conflicto", error.Mensaje),
             TipoError.Cancelado => ("Operación cancelada", error.Mensaje),
-            TipoError.NoDisponible => ("Servicio no disponible", error.Mensaje),
+            TipoError.NoDisponible => ("Base de datos no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };
 

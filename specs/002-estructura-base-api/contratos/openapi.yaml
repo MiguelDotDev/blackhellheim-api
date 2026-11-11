@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.1.1
 info:
   title: BlackHellHeim API
   version: 0.1.0
@@ -24,9 +24,59 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [estado]
-                properties:
-                  estado:
-                    type: string
-                    const: ok
+                $ref: '#/components/schemas/EstadoSalud'
+              examples:
+                ok:
+                  value:
+                    estado: ok
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  schemas:
+    EstadoSalud:
+      type: object
+      required: [estado]
+      properties:
+        estado:
+          type: string
+          examples: [ok]
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

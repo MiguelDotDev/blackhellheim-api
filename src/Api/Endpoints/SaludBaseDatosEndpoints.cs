@@ -9,6 +9,9 @@ namespace BlackHellHeim.Api.Endpoints;
 /// <c>GET /salud/base</c> según <c>specs/003-sql-server-efcore/contratos/openapi.yaml</c>.
 /// <c>/salud</c> sigue siendo la comprobación de vida y no toca la base.
 /// </summary>
+/// <summary>Cuerpo de <c>GET /salud/base</c> cuando la base responde.</summary>
+public sealed record EstadoBaseDatos(string Estado);
+
 public static class SaludBaseDatosEndpoints
 {
     private static readonly TimeSpan TiempoMaximo = TimeSpan.FromSeconds(3);
@@ -21,10 +24,14 @@ public static class SaludBaseDatosEndpoints
             var disponible = await ComprobarAsync(fabricaAmbitos, cancelacion);
 
             return disponible
-                ? Results.Ok(new { estado = "disponible" })
+                ? Results.Ok(new EstadoBaseDatos("disponible"))
                 : TraductorProblemas.Traducir(
                     ErrorUniforme.BaseNoDisponible(ejecucion.IdCorrelacion), http.Request.Path.Value ?? "/salud/base");
-        });
+        })
+        .WithName("obtenerSaludBaseDatos")
+        .Produces<EstadoBaseDatos>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return rutas;
     }

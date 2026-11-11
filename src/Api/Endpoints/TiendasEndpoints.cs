@@ -15,7 +15,13 @@ public static class TiendasEndpoints
             return resultado.EsExito
                 ? Results.Ok(resultado.Valor)
                 : TraductorProblemas.Traducir(resultado.Error!, contexto.Request.Path.Value ?? "/");
-        });
+        })
+        .WithName("consultarTienda")
+        .Produces<TiendaDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status408RequestTimeout)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return rutas;
     }
