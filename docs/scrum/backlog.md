@@ -2,7 +2,7 @@
 
 Fuente: documento «BlackHellHeim: backlog Scrum y estructura SDD». Este archivo es la referencia para agentes y personas: qué historia (HU) pertenece a qué sprint, en qué repositorio se trabaja y en qué estado está.
 
-- Estado: `Pendiente`, `En progreso`, `Hecha`, `Por auditar`.
+- Estado: `Pendiente`, `Tareas listas`, `En progreso`, `Hecha`, `Por auditar`.
 - Prioridad: M = imprescindible, S = deseable, C = si sobra tiempo.
 - Rama de trabajo del sprint N: `sprint/NN` (ej. `sprint/01`).
 - Columna Spec: carpeta `specs/NNN-slug` de la HU. Llenar al crearla. Las carpetas no siguen siempre el número de HU; la tabla manda.
@@ -14,7 +14,7 @@ Meta: Backend en Docker, SDD y Jira listos. Rama: `sprint/01`.
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
 | 1 | api + web | DOC | 3 | M | Como desarrolladora, quiero la constitución y las plantillas de Spec Kit en ambos repos para que cada cambio nazca de una spec. | constitucion.md aprobada y /speckit.specify corre en los dos repos. |  | Por auditar |
-| 2 | api | BE | 9 | M | Quiero la solución .NET 10 en capas con Mediator y comportamientos de pipeline. | Compila, y una consulta de ejemplo cruza API, Aplicación y Dominio sin violar dependencias. | specs/002-estructura-base-api (parcial) | Por auditar |
+| 2 | api | BE | 9 | M | Quiero la solución .NET 10 en capas con Mediator y comportamientos de pipeline. | Compila, y una consulta de ejemplo cruza API, Aplicación y Dominio sin violar dependencias. | specs/002-estructura-base-api, specs/002b-casos-de-uso-mediator | Tareas listas |
 | 3 | api | BE DB | 8 | M | Quiero SQL Server en Compose, EF Core, migración inicial y datos semilla. | docker compose up crea la base y aplica la migración con semillas. |  | Pendiente |
 | 4 | api | BE | 4 | M | Quiero OpenAPI con Scalar y errores como ProblemDetails. | /scalar muestra el contrato y un error de validación devuelve ProblemDetails. |  | Pendiente |
 | 5 | api | BE CI | 5 | M | Quiero un Dockerfile de la API y Compose con healthchecks y secretos por variables de entorno. | API y base arrancan sanas con un comando y no hay secretos en el repo. |  | Pendiente |
