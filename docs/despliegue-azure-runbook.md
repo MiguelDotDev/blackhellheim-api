@@ -13,6 +13,7 @@ Todos los comandos se corren desde la raíz de `blackhellheim-api`, salvo que se
 | Web `bhh-web` | 0.25 vCPU / 0.5 GiB, 1 réplica | ~4 (misma lógica) |
 | Job `bhh-migraciones` | 0.25 vCPU / 0.5 GiB, ~1 min por despliegue | < 0.01 |
 | Azure SQL Database | oferta gratuita, serverless, se pausa al agotar la cuota (`AutoPause`) | 0 |
+| Cuenta de almacenamiento (Blob, `Standard_LRS`) | arte de las playeras (HU-17), pocos MB | centavos (< 0.10) |
 | Log Analytics del entorno | ingesta por defecto | 0 (5 GB/mes gratis) |
 | GHCR (imágenes) | paquetes públicos | 0 |
 | **Total estimado** | | **≈ 8–10 USD/mes**; con la cuota gratuita de Container Apps (180 000 vCPU-s, 360 000 GiB-s y 2 M peticiones al mes **por suscripción**) puede quedar entre 3 y 8 |
@@ -57,8 +58,12 @@ Si agotas los 100 000 vCore-s del mes, la base queda inaccesible hasta el mes si
 ```bash
 ./scripts/azure/crear-recursos.sh
 ```
-Crea, en este orden: proveedores → grupo `bhh-prod-rg` → entorno `bhh-prod-env` → servidor y base SQL (gratuita) → Container App `bhh-api`
-(modo multi-revisión, imagen de arranque) → job `bhh-migraciones`. Es idempotente: puedes repetirlo.
+Crea, en este orden: proveedores → grupo `bhh-prod-rg` → entorno `bhh-prod-env` → servidor y base SQL (gratuita) → cuenta de almacenamiento `bhhst<8 hex>` con el contenedor `arte` → Container App `bhh-api`
+(modo multi-revisión, imagen de arranque) → job `bhh-migraciones`. Es idempotente: puedes repetirlo. Imprime al final el nombre de la cuenta de almacenamiento.
+
+**Almacenamiento (HU-17):** cuenta `Standard_LRS`/`StorageV2`, TLS 1.2 mínimo, solo HTTPS, con clave compartida habilitada (la cadena de conexión la usa el API).
+El contenedor `arte` se crea con acceso público de lectura a blobs (`--public-access blob`): **es intencional**, porque las imágenes se muestran por URL directa.
+Solo se pueden leer blobs si se conoce la URL; no se pueden listar ni escribir sin la clave. Costo: centavos al mes.
 
 - **[MANUAL] Guarda la clave de SQL** que imprime entre `===` (se muestra una sola vez). Va a tu gestor de contraseñas, nunca al repo.
 - Si la ejecución se interrumpe, vuelve a lanzarla. Si ya se creó el servidor y perdiste la clave, restablécela:
@@ -74,7 +79,7 @@ export BHH_ADMIN_CORREO="tu-correo-admin@ejemplo.com"
 read -rs BHH_ADMIN_CLAVE;    export BHH_ADMIN_CLAVE      # contraseña fuerte del administrador inicial
 ./scripts/azure/configurar-secretos.sh
 ```
-El script falla si falta una variable. Crea los secretos `cadena-conexion`, `jwt-clave`, `admin-correo` y `admin-clave` y los enlaza por `secretref`.
+El script falla si falta una variable. Crea los secretos `cadena-conexion`, `jwt-clave`, `admin-correo` y `admin-clave` y los enlaza por `secretref`. Además, el script obtiene la cadena de la cuenta de almacenamiento con `az storage account show-connection-string` (no la imprime ni la guarda), la crea como secreto `almacenamiento` y la enlaza a `AlmacenArchivos__CadenaConexion`; también fija `AlmacenArchivos__Contenedor=arte`.
 Al terminar: `unset BHH_SQL_CLAVE BHH_JWT_CLAVE BHH_ADMIN_CORREO BHH_ADMIN_CLAVE`.
 
 ## 4. OIDC entre GitHub y Azure — **[SCRIPT]** `scripts/azure/configurar-oidc.sh` + **[MANUAL]** en GitHub
@@ -145,7 +150,7 @@ En el navegador: la web carga con candado HTTPS y las llamadas a `/api/...` resp
 
 ## 10. Apagar o destruir
 
-`./scripts/azure/destruir-recursos.sh` borra **todo** el grupo (pide escribir `bhh-prod-rg`). Úsalo si no vas a usar el entorno: es la forma de no pagar nada.
+`./scripts/azure/destruir-recursos.sh` borra **todo** el grupo (incluida la cuenta de almacenamiento y el arte subido) (pide escribir `bhh-prod-rg`). Úsalo si no vas a usar el entorno: es la forma de no pagar nada.
 
 ## 11. Errores típicos
 

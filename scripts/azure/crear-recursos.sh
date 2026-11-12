@@ -7,7 +7,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./variables.sh
 requerir_az
 
-for p in Microsoft.App Microsoft.OperationalInsights Microsoft.Sql; do az provider register -n "$p" --wait; done
+for p in Microsoft.App Microsoft.OperationalInsights Microsoft.Sql Microsoft.Storage; do az provider register -n "$p" --wait; done
 
 az group create -n "$BHH_RG" -l "$BHH_REGION" -o none
 
@@ -33,12 +33,21 @@ az sql db show -n "$BHH_SQL_DB" -s "$BHH_SQL_SERVIDOR" -g "$BHH_RG" -o none 2>/d
        --edition GeneralPurpose --family Gen5 --capacity 2 --compute-model Serverless \
        --use-free-limit true --free-limit-exhaustion-behavior "${BHH_SQL_AGOTADO:-AutoPause}" -o none
 
+# Almacenamiento del arte (HU-17). El acceso público de lectura a blobs es intencional: las imágenes se muestran por URL.
+az storage account show -n "$BHH_STORAGE" -g "$BHH_RG" -o none 2>/dev/null \
+  || az storage account create -n "$BHH_STORAGE" -g "$BHH_RG" -l "$BHH_REGION" \
+       --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --https-only true \
+       --allow-blob-public-access true --allow-shared-key-access true -o none
+# create es idempotente (si ya existe no falla). Modo key: el Owner no tiene rol de datos por defecto.
+az storage container create -n "$BHH_CONTENEDOR_ARTE" --account-name "$BHH_STORAGE" \
+  --auth-mode key --public-access blob -o none
+
 # La imagen de arranque escucha en el 80; el primer despliegue la reemplaza y mueve el puerto a 8080.
 az containerapp show -n "$BHH_APP_API" -g "$BHH_RG" -o none 2>/dev/null \
   || az containerapp create -n "$BHH_APP_API" -g "$BHH_RG" --environment "$BHH_ENTORNO" \
        --image "$BHH_IMAGEN_ARRANQUE" --ingress external --target-port 80 \
        --revisions-mode multiple --cpu "$BHH_CPU" --memory "$BHH_MEMORIA" \
-       --min-replicas 1 --max-replicas 1 \
+       --min-replicas 0 --max-replicas 1 \
        --env-vars ASPNETCORE_FORWARDEDHEADERS_ENABLED=true -o none
 
 az containerapp job show -n "$BHH_JOB_MIGRACIONES" -g "$BHH_RG" -o none 2>/dev/null \
@@ -48,4 +57,5 @@ az containerapp job show -n "$BHH_JOB_MIGRACIONES" -g "$BHH_RG" -o none 2>/dev/n
        --image "$BHH_IMAGEN_ARRANQUE" --cpu "$BHH_CPU" --memory "$BHH_MEMORIA" -o none
 
 echo "Listo. URL del API: https://$(az containerapp show -n "$BHH_APP_API" -g "$BHH_RG" --query properties.configuration.ingress.fqdn -o tsv)"
+echo "Cuenta de almacenamiento: $BHH_STORAGE · Contenedor: $BHH_CONTENEDOR_ARTE"
 echo "Servidor SQL: $BHH_SQL_SERVIDOR.database.windows.net · Base: $BHH_SQL_DB"

@@ -36,10 +36,14 @@ public class DespliegueAzurePruebas
     {
         var t = Script("crear-recursos.sh");
         Assert.Contains("--revisions-mode multiple", t);
-        Assert.Contains("--min-replicas 1", t);
+        Assert.Contains("--min-replicas 0", t);
         Assert.Contains("--use-free-limit true", t);
         Assert.Contains("ASPNETCORE_FORWARDEDHEADERS_ENABLED=true", t);
         Assert.True(Regex.Matches(t, @"\bshow -n").Count >= 4, "Cada recurso se consulta antes de crearse.");
+        Assert.Contains("az storage account create", t);
+        Assert.Contains("--allow-blob-public-access true", t);
+        Assert.Contains("--public-access blob", t);
+        Assert.Contains("Microsoft.Storage", t);
         Assert.Contains("BHH_CPU:=0.25", Script("variables.sh"));
     }
 
@@ -57,6 +61,8 @@ public class DespliegueAzurePruebas
     {
         var t = Script("configurar-secretos.sh");
         Assert.Contains("fallar \"Falta la variable", t);
+        Assert.Contains("AlmacenArchivos__CadenaConexion=secretref:almacenamiento", t);
+        Assert.Contains("show-connection-string", t);
         foreach (var s in new[] { "ConnectionStrings__BlackHellHeim=secretref:", "Jwt__Clave=secretref:", "Administrador__Contrasena=secretref:" })
         {
             Assert.Contains(s, t);

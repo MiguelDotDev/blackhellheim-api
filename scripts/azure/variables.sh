@@ -10,6 +10,7 @@ set -euo pipefail
 : "${BHH_JOB_MIGRACIONES:=bhh-migraciones}"
 : "${BHH_SQL_DB:=blackhellheim}"
 : "${BHH_SQL_ADMIN:=bhhadmin}"
+: "${BHH_CONTENEDOR_ARTE:=arte}"   # contenedor Blob del arte (HU-17)
 : "${BHH_REPO:=MiguelDotDev/blackhellheim-api}"   # propietario/repositorio de GitHub
 : "${BHH_ENTORNO_GITHUB:=produccion}"
 # Tamaños mínimos permitidos del plan de consumo (0.25 vCPU / 0.5 GiB).
@@ -27,4 +28,9 @@ requerir_az() {
 # El nombre del servidor SQL debe ser único en todo Azure: se deriva de la suscripción.
 if [[ -z "${BHH_SQL_SERVIDOR:-}" ]]; then
   BHH_SQL_SERVIDOR="bhh-sql-$(az account show --query id -o tsv 2>/dev/null | sha256sum | cut -c1-8)"
+fi
+
+# Nombre de la cuenta de almacenamiento: único en Azure, solo minúsculas y números (3-24).
+if [[ -z "${BHH_STORAGE:-}" ]]; then
+  BHH_STORAGE="bhhst$(az account show --query id -o tsv 2>/dev/null | sha256sum | cut -c1-8)"
 fi
