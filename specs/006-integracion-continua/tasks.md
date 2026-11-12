@@ -37,8 +37,8 @@
 
 - [X] T009 [US1] [CI] Crear `.github/workflows/integracion-continua.yml` según `contratos/verificaciones-ci.md` §1 y §2.1, con las acciones fijadas a SHA completo y la versión legible en comentario (`investigacion.md` D2), comentarios y nombres en español, y un comentario que explique que las pruebas de Testcontainers usan el Docker del ejecutor y que `scripts/verificar-entorno.sh` no corre aquí.
 - [X] T010 [US1] [BE] Ejecutar `dotnet test BlackHellHeim.sln --filter "FullyQualifiedName~IntegracionContinuaPruebas"` y confirmar que T008 pasa.
-- [ ] T011 [US1] [MANUAL] Habilitar GitHub Actions en el repositorio (Settings → Actions → General → permitir acciones; permisos del flujo en **Read repository contents**) según `inicio-rapido.md` Paso 5.
-- [ ] T012 [US1] [MANUAL] Tras el push a `sprint/NN`, abrir un pull request real y comprobar que `Compilación y pruebas` aparece y termina en verde, que la duración en `gh run list` es de 10 minutos o menos (incluida la descarga de la imagen de SQL Server) y que en un pull request de solo documentación el check también se ejecuta (escenarios 1 y 10 de `inicio-rapido.md`).
+- [X] T011 [US1] [MANUAL] Habilitar GitHub Actions en el repositorio (Settings → Actions → General → permitir acciones; permisos del flujo en **Read repository contents**) según `inicio-rapido.md` Paso 5.
+- [X] T012 [US1] [MANUAL] Tras el push a `sprint/NN`, abrir un pull request real y comprobar que `Compilación y pruebas` aparece y termina en verde, que la duración en `gh run list` es de 10 minutos o menos (incluida la descarga de la imagen de SQL Server) y que en un pull request de solo documentación el check también se ejecuta (escenarios 1 y 10 de `inicio-rapido.md`).
 
 **Punto de control**: US1 funciona y se valida por separado; es el MVP.
 
@@ -55,7 +55,7 @@
 ### Implementación
 
 - [X] T014 [US2] [CI] Revisar que `.env` sigue ignorado y que `.env.example` solo contiene marcadores; ejecutar `git grep -nEi "(sonar_token|api[_-]?key|secret|password)\s*[:=]\s*['\"]?[A-Za-z0-9+/_-]{16,}" -- . ':!specs' ':!src/Pruebas'` y `git log -p --all -S"SONAR_TOKEN" -- .` y confirmar que no aparece ningún valor; anotar el resultado en `specs/006-integracion-continua/inicio-rapido.md` solo si se encontró algo que corregir.
-- [ ] T015 [US2] [MANUAL] Abrir un pull request desde una bifurcación (o simularlo sin acceso a secretos) y comprobar que `Compilación y pruebas` y `CodeQL (C#)` corren y que `SonarQube Cloud` se omite de forma visible; revisar los registros de una ejecución y confirmar que ningún valor sensible aparece (escenarios 6 y 8 de `inicio-rapido.md`).
+- [ ] T015 [US2] [MANUAL] Abrir un pull request desde una bifurcación (o simularlo sin acceso a secretos) y comprobar que `Compilación y pruebas` y `CodeQL (C#)` corren y que `SonarQube Cloud` se omite de forma visible; revisar los registros de una ejecución y confirmar que ningún valor sensible aparece (escenarios 6 y 8 de `inicio-rapido.md`). **Aplazada: SonarQube Cloud sin configurar; se completa en un sprint posterior**.
 
 ## Fase 5: Historia 3 — Análisis de seguridad con CodeQL (P3)
 
@@ -71,8 +71,8 @@
 
 - [X] T017 [US3] [CI] Crear `.github/workflows/codeql.yml` según `contratos/verificaciones-ci.md` §2.2 y `investigacion.md` D3, con acciones fijadas a SHA y comentarios en español.
 - [X] T018 [US3] [BE] Ejecutar `dotnet test BlackHellHeim.sln --filter "FullyQualifiedName~CodeQlPruebas"` y confirmar que T016 pasa.
-- [ ] T019 [US3] [MANUAL] Desactivar la configuración predeterminada de CodeQL (Settings → Code security → Code scanning) para que el flujo avanzado sea el único (`inicio-rapido.md` Paso 3).
-- [ ] T020 [US3] [MANUAL] En el pull request real comprobar que `CodeQL (C#)` termina en verde y que sus resultados aparecen en Security → Code scanning; opcionalmente introducir un patrón vulnerable en una rama de prueba y ver el hallazgo con severidad y ubicación (escenario 4).
+- [X] T019 [US3] [MANUAL] Desactivar la configuración predeterminada de CodeQL (Settings → Code security → Code scanning) para que el flujo avanzado sea el único (`inicio-rapido.md` Paso 3).
+- [X] T020 [US3] [MANUAL] En el pull request real comprobar que `CodeQL (C#)` termina en verde y que sus resultados aparecen en Security → Code scanning; opcionalmente introducir un patrón vulnerable en una rama de prueba y ver el hallazgo con severidad y ubicación (escenario 4).
 
 ## Fase 6: Historia 4 — Análisis de calidad con SonarQube Cloud (P4)
 
@@ -82,8 +82,8 @@
 
 ### Configuración externa
 
-- [ ] T021 [US4] [MANUAL] Crear la cuenta/organización en SonarQube Cloud, importar el repositorio `blackhellheim-api`, anotar **Organization key** y **Project key**, desactivar **Automatic Analysis** y revisar la compuerta **Sonar way** (`inicio-rapido.md` Paso 1).
-- [ ] T022 [US4] [MANUAL] Generar el token de análisis de proyecto en SonarQube Cloud y guardarlo con `gh secret set SONAR_TOKEN` (nunca en un archivo del repositorio); crear las variables `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` con `gh variable set` (`inicio-rapido.md` Paso 2).
+- [ ] T021 [US4] [MANUAL] Crear la cuenta/organización en SonarQube Cloud, importar el repositorio `blackhellheim-api`, anotar **Organization key** y **Project key**, desactivar **Automatic Analysis** y revisar la compuerta **Sonar way** (`inicio-rapido.md` Paso 1). **Aplazada: SonarQube Cloud sin configurar; se completa en un sprint posterior**.
+- [ ] T022 [US4] [MANUAL] Generar el token de análisis de proyecto en SonarQube Cloud y guardarlo con `gh secret set SONAR_TOKEN` (nunca en un archivo del repositorio); crear las variables `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` con `gh variable set` (`inicio-rapido.md` Paso 2). **Aplazada: SonarQube Cloud sin configurar; se completa en un sprint posterior**.
 
 ### Pruebas primero
 
@@ -93,16 +93,16 @@
 
 - [X] T024 [US4] [CI] Crear `.github/workflows/calidad-sonar.yml` según `contratos/verificaciones-ci.md` §2.3 y `investigacion.md` D4, D5 y D8, con acciones fijadas a SHA y el token pasado solo por variable de entorno.
 - [X] T025 [US4] [BE] Ejecutar `dotnet test BlackHellHeim.sln --filter "FullyQualifiedName~CalidadSonarPruebas"` y confirmar que T023 pasa.
-- [ ] T026 [US4] [MANUAL] En el pull request real comprobar que `SonarQube Cloud` evalúa la compuerta y termina en verde, que la cobertura se publica y que, sin `SONAR_TOKEN`, el job queda omitido de forma visible (escenarios 1, 5 y 8 de `inicio-rapido.md`).
+- [ ] T026 [US4] [MANUAL] En el pull request real comprobar que `SonarQube Cloud` evalúa la compuerta y termina en verde, que la cobertura se publica y que, sin `SONAR_TOKEN`, el job queda omitido de forma visible (escenarios 1, 5 y 8 de `inicio-rapido.md`). **Aplazada: SonarQube Cloud sin configurar; se completa en un sprint posterior**.
 
 ## Fase 7: Cierre y verificación transversal
 
 - [X] T027 [BE] Ejecutar `dotnet restore BlackHellHeim.sln --locked-mode`, `dotnet build BlackHellHeim.sln --configuration Release --no-restore` y `dotnet test BlackHellHeim.sln --no-build --configuration Release` completos (con Docker) y confirmar que T013 (`FlujosSinSecretosPruebas`) pasa con los tres flujos presentes.
 - [X] T028 [CI] Repetir `./scripts/probar-imagen.sh` (o los dos `docker build --target ...`) para confirmar que ningún cambio de esta historia rompió el `Dockerfile` con `--locked-mode`.
 - [X] T029 [CI] Actualizar `specs/006-integracion-continua/inicio-rapido.md` y `investigacion.md` solo si la implementación difiere de lo planeado (nombres de checks, versiones, tiempos medidos) y mantener `contratos/verificaciones-ci.md` en sincronía con los nombres reales de los jobs.
-- [ ] T030 [MANUAL] Prueba negativa: en una rama de prueba romper algo a propósito (un error de compilación y, por separado, una aserción de prueba) y confirmar que `Compilación y pruebas` queda en rojo en el pull request y que el detalle muestra el fallo (escenarios 2 y 3 de `inicio-rapido.md`); que el cambio no pueda fusionarse se comprueba en T032, cuando la protección ya esté activa; luego descartar la rama de prueba.
-- [ ] T031 [MANUAL] Activar la protección de `main` (Settings → Branches/Rules) exigiendo pull request y las verificaciones `Compilación y pruebas`, `CodeQL (C#)` y `SonarQube Cloud`, rama actualizada, sin force push ni eliminación (`inicio-rapido.md` Paso 4); opcionalmente repetir la regla en `release` y `developer`.
-- [ ] T032 [MANUAL] Con la protección de `main` activa, abrir (sin fusionar) un pull request de prueba hacia `main` con una verificación en rojo y confirmar que el botón de fusión queda bloqueado. La ejecución de los tres flujos en el push a `main` (escenario 7) se verifica cuando el sprint se fusione a `main` por el flujo de `AGENTS.md`; no bloquea T033.
+- [X] T030 [MANUAL] Prueba negativa: en una rama de prueba romper algo a propósito (un error de compilación y, por separado, una aserción de prueba) y confirmar que `Compilación y pruebas` queda en rojo en el pull request y que el detalle muestra el fallo (escenarios 2 y 3 de `inicio-rapido.md`); que el cambio no pueda fusionarse se comprueba en T032, cuando la protección ya esté activa; luego descartar la rama de prueba.
+- [X] T031 [MANUAL] Activar la protección de `main` (Settings → Branches/Rules) exigiendo pull request y las verificaciones `Compilación y pruebas`, `CodeQL (C#)` y `SonarQube Cloud`, rama actualizada, sin force push ni eliminación (`inicio-rapido.md` Paso 4); opcionalmente repetir la regla en `release` y `developer`.
+- [X] T032 [MANUAL] Con la protección de `main` activa, abrir (sin fusionar) un pull request de prueba hacia `main` con una verificación en rojo y confirmar que el botón de fusión queda bloqueado. La ejecución de los tres flujos en el push a `main` (escenario 7) se verifica cuando el sprint se fusione a `main` por el flujo de `AGENTS.md`; no bloquea T033.
 - [ ] T033 [BE] Cuando T012, T020, T026, T030 y T032 estén hechas (el push a `main` del escenario 7 queda para después de la aprobación del sprint), actualizar la fila de HU-6 en `docs/scrum/backlog.md` (Spec y Estado = Hecha) y hacer commit `HU-6: Integración continua del API`; después detenerse y avisar con el mensaje que pide `AGENTS.md`.
 
 ## Dependencias y orden de ejecución
