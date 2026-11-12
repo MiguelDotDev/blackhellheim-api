@@ -58,6 +58,7 @@ app.MapearDisenosAdmin();
 app.MapearArteAdmin();
 app.MapearPreciosAdmin();
 app.MapearCatalogo();
+app.MapearWebhooks();
 app.MapearSaludBaseDatos();
 
 if (!app.Environment.IsProduction())

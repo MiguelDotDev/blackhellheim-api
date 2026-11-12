@@ -1,5 +1,4 @@
 openapi: 3.1.1
-x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
 info:
   title: BlackHellHeim API — webhooks de Printful
   version: 0.6.0
@@ -59,4 +58,32 @@ components:
   schemas:
     ProblemDetails:
       type: object
-      description: Copia del esquema común (specs/004-openapi-scalar); al implementar, igualar a las demás copias.
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

@@ -2,6 +2,7 @@ using BlackHellHeim.Dominio.Autenticacion;
 using BlackHellHeim.Dominio.Disenos;
 using BlackHellHeim.Dominio.Precios;
 using BlackHellHeim.Dominio.Tiendas;
+using BlackHellHeim.Dominio.Webhooks;
 using BlackHellHeim.Infraestructura.Identidad;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -21,6 +22,8 @@ public class ContextoBlackHellHeim(DbContextOptions<ContextoBlackHellHeim> opcio
     public DbSet<ArchivoArte> ArchivosArte => Set<ArchivoArte>();
     public DbSet<TipoCambioDiario> TiposCambioDiarios => Set<TipoCambioDiario>();
     public DbSet<ParametrosPrecio> ParametrosPrecio => Set<ParametrosPrecio>();
+
+    public DbSet<EventoWebhook> EventosWebhook => Set<EventoWebhook>();
 
     protected override void OnModelCreating(ModelBuilder constructor)
     {

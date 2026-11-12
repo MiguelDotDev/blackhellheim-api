@@ -353,6 +353,58 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                         });
                 });
 
+            modelBuilder.Entity("BlackHellHeim.Dominio.Webhooks.EventoWebhook", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Cuerpo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("IdExterno")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset?>("ProcesadoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTimeOffset>("RecibidoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Estado", "RecibidoUtc");
+
+                    b.HasIndex("Proveedor", "IdExterno")
+                        .IsUnique();
+
+                    b.ToTable("EventosWebhook", "dbo");
+                });
+
             modelBuilder.Entity("BlackHellHeim.Infraestructura.Identidad.Usuario", b =>
                 {
                     b.Property<Guid>("Id")
