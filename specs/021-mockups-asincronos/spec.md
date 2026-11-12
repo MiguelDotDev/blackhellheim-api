@@ -14,7 +14,7 @@
 3. Diseño sin arte o sin variantes → `400`; diseño inexistente → `404`; sin rol Administrador → `403`.
 
 ### HU 2 — Recibir el resultado (P1)
-1. **Dado** un evento `mockup_task_finished` verificado (HU-22), **entonces** la tarea pasa a `Completada`, las imágenes se descargan y se copian al almacén de archivos, y se registran por diseño y color.
+1. **Dado** un evento `mockup_task_finished` verificado (HU-22), **entonces** la tarea pasa a `Completada`, las imágenes se descargan y se copian al almacén de archivos, y se registran por tarea (del diseño), color y posición; si Printful devuelve un mockup de una variante que no existe en la base local, se descarta.
 2. El mismo evento repetido no duplica imágenes. Una tarea fallida en Printful queda `Fallida` con motivo.
 
 ### HU 3 — Polling de respaldo (P1)
@@ -25,20 +25,22 @@
 `GET /admin/disenos/{id}/mockups` lista tareas e imágenes (URL del almacén, color, posición).
 
 ### Casos límite
-Descarga de imagen que falla (se reintenta; la tarea sigue pendiente hasta agotar intentos); imagen no PNG/JPEG o >20 MB (se descarta); URLs temporales de Printful que caducan; límite de peticiones de Printful (429, usa el reintento de HU-15); almacén caído (503, la tarea sigue pendiente).
+Descarga de imagen que falla (la tarea sigue pendiente y se reintenta en cada ciclo de polling hasta el tiempo máximo); imagen no PNG/JPEG o >20 MB (se descarta); URLs temporales de Printful que caducan; límite de peticiones de Printful (429, usa el reintento de HU-15); almacén caído (503, la tarea sigue pendiente).
 
 ## Requisitos funcionales
 - **RF-001** `POST /admin/disenos/{id}/mockups` (202) y `GET /admin/disenos/{id}/mockups`.
-- **RF-002** Extensión del puerto `IProveedorImpresion` para crear y consultar tareas de mockup.
+- **RF-002** Extensión del puerto `IProveedorImpresion` para crear y consultar tareas de mockup y para descargar sus imágenes (los proveedores externos solo se acceden por puertos).
 - **RF-003** Manejador del evento `mockup_task_finished` registrado en el despacho de HU-22.
 - **RF-004** Servicio en segundo plano de polling con intervalo y tiempo máximo configurables.
 - **RF-005** Copia de imágenes con `IAlmacenArchivos`; nombres generados por el servidor.
 - **RF-006** Finalización idempotente (evento y polling comparten el mismo caso de uso).
 - **RF-007** Pruebas con dobles de Printful y almacén; nunca red real.
+- **RF-008** La descarga de imágenes solo acepta URL https de hosts de una lista configurable (por omisión `files.cdn.printful.com`, sin verificar), hasta 20 MB y PNG/JPEG por su firma binaria.
 
 ## Criterios de éxito
-- **CE-001** El 100 % de las tareas terminan en `Completada` o `Fallida` (ninguna queda pendiente más de 30 min).
+- **CE-001** El 100 % de las tareas terminan en `Completada` o `Fallida` (ninguna queda pendiente más de 30 min más un intervalo de polling).
 - **CE-002** 10 finalizaciones concurrentes de la misma tarea dejan un solo conjunto de imágenes.
 
 ## Supuestos y fuera de alcance
+Riesgo heredado de HU-22: si Printful no envía un `id` de evento, HU-22 rechaza el evento con 400 y solo el polling completa la tarea; por eso el polling es obligatorio y se prueba sin evento. La URL del arte debe ser pública para que Printful la lea (en local con Azurite no lo es).
 Rutas, campos y variantes de mockup de Printful v2 se confirman en T002 (`[MANUAL]` con token). Mostrar la galería en la web (HU-23) y agregar las imágenes al catálogo público se hacen al integrarlas; esta HU solo las deja disponibles.

@@ -19,22 +19,68 @@ paths:
             format: uuid
       responses:
         '202':
-          description: Tarea creada (Pendiente)
+          description: Tarea creada (Pendiente); el resultado llega por evento o por polling
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TareaMockup'
         '400':
-          description: Diseño sin arte o sin variantes
+          description: Diseño sin arte o sin variantes activas
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '401':
           description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '403':
           description: Se requiere el rol Administrador
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '404':
           description: Diseño inexistente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '409':
-          description: Ya hay una tarea pendiente
+          description: Ya hay una tarea pendiente para el diseño
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '502':
           description: Printful no pudo crear la tarea
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Printful saturado o base de datos no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '504':
+          description: Printful no respondió a tiempo
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     get:
       operationId: listarMockups
-      summary: Tareas e imágenes de mockup del diseño
+      summary: Tareas e imágenes de mockup del diseño (más recientes primero)
       security:
         - bearer: []
       parameters:
@@ -47,12 +93,112 @@ paths:
       responses:
         '200':
           description: Tareas con sus imágenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TareaMockup'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '404':
           description: Diseño inexistente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   securitySchemes:
     bearer:
       type: http
       scheme: bearer
       bearerFormat: JWT
-# Esquemas de respuesta (TareaMockupDto, ImagenMockupDto) y errores uniformes: se completan al implementar, igualando el documento publicado.
+  schemas:
+    TareaMockup:
+      type: object
+      required: [id, disenoId, estado, creadaUtc, imagenes]
+      properties:
+        id:
+          type: string
+          format: uuid
+        disenoId:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          enum: [Pendiente, Completada, Fallida]
+        motivo:
+          type: string
+          description: Solo cuando la tarea quedó Fallida.
+        creadaUtc:
+          type: string
+          format: date-time
+        finalizadaUtc:
+          type: string
+          format: date-time
+        imagenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImagenMockup'
+    ImagenMockup:
+      type: object
+      required: [id, color, posicion, url]
+      properties:
+        id:
+          type: string
+          format: uuid
+        color:
+          type: string
+        posicion:
+          type: string
+        url:
+          type: string
+          format: uri
+          description: URL en el almacén de archivos.
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string
