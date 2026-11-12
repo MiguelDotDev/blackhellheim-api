@@ -1,0 +1,130 @@
+# Despliegue continuo a Azure Container Apps (HU-25). Corre tras una CI verde en main o a mano.
+# Autenticación con OIDC (sin secretos de Azure). Migraciones antes de mover tráfico.
+name: Despliegue
+
+on:
+  workflow_run:
+    workflows: ["Integración continua"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: despliegue-produccion
+  cancel-in-progress: false
+
+env:
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+  RG: bhh-prod-rg
+  APP: bhh-api
+  JOB: bhh-migraciones
+
+jobs:
+  publicar:
+    name: Publicar imágenes en GHCR
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          persist-credentials: false
+      - name: Construir y publicar API y migraciones
+        env:
+          TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          base="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          echo "$TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          for par in "final:blackhellheim-api" "migraciones:blackhellheim-migraciones"; do
+            docker build --target "${par%%:*}" --build-arg VERSION="$SHA" --build-arg REVISION="$SHA" \
+              --label "org.opencontainers.image.source=https://github.com/$REPO" \
+              -t "$base/${par##*:}:$SHA" .
+            docker push "$base/${par##*:}:$SHA"
+          done
+
+  desplegar:
+    name: Migrar y desplegar
+    needs: publicar
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: produccion
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Aplicar migraciones (antes de mover tráfico)
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          base="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          az containerapp job update -n "$JOB" -g "$RG" --image "$base/blackhellheim-migraciones:$SHA" -o none
+          ejecucion="$(az containerapp job start -n "$JOB" -g "$RG" --query name -o tsv)"
+          for _ in $(seq 1 60); do
+            estado="$(az containerapp job execution show -n "$JOB" -g "$RG" --job-execution-name "$ejecucion" --query properties.status -o tsv)"
+            echo "Migraciones: $estado"
+            case "$estado" in
+              Succeeded) exit 0 ;;
+              Failed|Stopped|Degraded) echo "::error::Las migraciones fallaron ($estado). La revisión nueva no se crea."; exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Las migraciones no terminaron a tiempo."; exit 1
+
+      - name: Crear revisión nueva sin tráfico
+        env:
+          NUMERO: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          base="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          anterior="$(az containerapp ingress traffic show -n "$APP" -g "$RG" --query "[?weight==\`100\`].revisionName | [0]" -o tsv)"
+          az containerapp ingress update -n "$APP" -g "$RG" --target-port 8080 -o none
+          # Fijar el tráfico en la revisión actual para que la nueva nazca con 0 %.
+          if [ -n "$anterior" ]; then
+            az containerapp ingress traffic set -n "$APP" -g "$RG" --revision-weight "$anterior=100" -o none
+          fi
+          nueva="$APP--r${NUMERO}-${SHA:0:7}"
+          az containerapp update -n "$APP" -g "$RG" --image "$base/blackhellheim-api:$SHA" \
+            --revision-suffix "r${NUMERO}-${SHA:0:7}" -o none
+          echo "ANTERIOR=$anterior" >> "$GITHUB_ENV"
+          echo "NUEVA=$nueva" >> "$GITHUB_ENV"
+
+      - name: Verificar salud de la revisión nueva
+        run: |
+          set -euo pipefail
+          fqdn="$(az containerapp revision show -n "$APP" -g "$RG" --revision "$NUEVA" --query properties.fqdn -o tsv)"
+          for _ in $(seq 1 30); do
+            if curl -fsS --max-time 10 "https://$fqdn/salud" >/dev/null; then echo "Revisión sana."; exit 0; fi
+            sleep 10
+          done
+          echo "::error::$NUEVA no pasó /salud. El tráfico sigue en ${ANTERIOR:-ninguna revisión}."
+          az containerapp revision deactivate -n "$APP" -g "$RG" --revision "$NUEVA" -o none || true
+          exit 1
+
+      - name: Mover el 100 % del tráfico y limpiar revisiones
+        run: |
+          set -euo pipefail
+          az containerapp ingress traffic set -n "$APP" -g "$RG" --revision-weight "$NUEVA=100" -o none
+          url="https://$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          curl -fsS --retry 5 --retry-delay 5 --max-time 15 "$url/salud" >/dev/null
+          # Se conservan las 3 últimas revisiones activas.
+          for r in $(az containerapp revision list -n "$APP" -g "$RG" \
+              --query "reverse(sort_by([?properties.active], &properties.createdTime))[3:].name" -o tsv); do
+            az containerapp revision deactivate -n "$APP" -g "$RG" --revision "$r" -o none
+          done
