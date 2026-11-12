@@ -1,0 +1,224 @@
+openapi: 3.1.1
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
+info:
+  title: BlackHellHeim API — pedidos
+  version: 0.8.0
+paths:
+  /pedidos:
+    post:
+      operationId: crearPedido
+      summary: Crea un pedido de forma idempotente; el servidor calcula los montos
+      security:
+        - bearer: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Clave de 1 a 64 caracteres; la misma clave y el mismo cuerpo devuelven el mismo pedido.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearPedidoSolicitud'
+      responses:
+        '200':
+          description: Repetición idempotente; se devuelve el pedido ya creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDto'
+        '201':
+          description: Pedido creado en PendientePago
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDto'
+        '400':
+          description: Sin clave, sin líneas, cantidad fuera de rango, variante inexistente o inactiva, método de envío ya no disponible o domicilio inválido
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Misma clave de idempotencia con un cuerpo distinto
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Sin tipo de cambio o Printful no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /pedidos/{id}:
+    get:
+      operationId: obtenerPedido
+      summary: Pedido de la clienta
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDto'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Pedido inexistente o de otra clienta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DomicilioSolicitud:
+      type: object
+      required: [destinatario, telefono, calle, ciudad, estado, codigoPostal]
+      properties:
+        destinatario:
+          type: string
+        telefono:
+          type: string
+        calle:
+          type: string
+        ciudad:
+          type: string
+        estado:
+          type: string
+        codigoPostal:
+          type: string
+          description: Cinco dígitos.
+    LineaPedidoSolicitud:
+      type: object
+      required: [varianteId, cantidad]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        cantidad:
+          type: integer
+          format: int32
+          description: De 1 a 10.
+    CrearPedidoSolicitud:
+      type: object
+      required: [lineas, domicilio, metodoEnvioId]
+      properties:
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaPedidoSolicitud'
+        domicilio:
+          $ref: '#/components/schemas/DomicilioSolicitud'
+        metodoEnvioId:
+          type: string
+          description: Id de un método devuelto por la cotización de envío (HU-26).
+    LineaPedidoDto:
+      type: object
+      required: [varianteId, cantidad, precioUnitarioMxn]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        cantidad:
+          type: integer
+          format: int32
+        precioUnitarioMxn:
+          type: number
+    PedidoDto:
+      type: object
+      required: [id, estado, lineas, subtotalMxn, envioMxn, totalMxn, domicilio, metodoEnvioNombre, creadoUtc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          description: PendientePago, Pagado, EnProduccion, Enviado, Entregado, Cancelado o Reembolsado.
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaPedidoDto'
+        subtotalMxn:
+          type: number
+        envioMxn:
+          type: number
+        totalMxn:
+          type: number
+        domicilio:
+          $ref: '#/components/schemas/DomicilioSolicitud'
+        metodoEnvioNombre:
+          type: string
+        creadoUtc:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string
