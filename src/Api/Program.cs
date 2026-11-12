@@ -57,6 +57,7 @@ app.MapearPrintfulAdmin();
 app.MapearDisenosAdmin();
 app.MapearArteAdmin();
 app.MapearPreciosAdmin();
+app.MapearCatalogo();
 app.MapearSaludBaseDatos();
 
 if (!app.Environment.IsProduction())

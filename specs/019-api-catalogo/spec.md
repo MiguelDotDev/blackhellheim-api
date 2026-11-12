@@ -1,6 +1,6 @@
 # Especificación 019: API de catálogo
 
-**Historia**: HU-19 (Sprint 5) · **Repos**: api · **Estado**: Plan cerrado · **Creada**: 2026-11-11
+**Historia**: HU-19 (Sprint 5) · **Repos**: api · **Estado**: Hecha · **Creada**: 2026-11-11
 
 **Entrada**: «Como visitante, quiero que la API de catálogo liste, filtre y detalle las playeras. Criterio: listado paginado con filtros; el detalle trae imágenes, colores y tallas.»
 

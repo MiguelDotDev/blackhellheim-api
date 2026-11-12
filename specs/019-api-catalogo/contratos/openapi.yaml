@@ -1,41 +1,270 @@
-openapi: 3.1.0
-x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
-info: { title: BlackHellHeim API · Catálogo, version: 0.1.0 }
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — catálogo público
+  version: 0.5.0
+  description: >
+    Contrato de la historia 019: listado paginado con filtros y detalle por slug de las playeras
+    publicadas. Público (sin sesión). Los precios los calcula el motor de la historia 020 y son
+    null si no hay tipo de cambio disponible. Respuestas con ETag y Cache-Control public, max-age=60;
+    If-None-Match responde 304. Nunca se expone costo base, margen ni ids de Printful.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
 paths:
   /catalogo/playeras:
     get:
+      operationId: listarPlayeras
       summary: Lista paginada de playeras publicadas
       parameters:
-        - { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
-        - { name: tamano, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 12 } }
-        - { name: texto, in: query, schema: { type: string, maxLength: 100 } }
-        - { name: color, in: query, schema: { type: string } }
-        - { name: talla, in: query, schema: { type: string } }
-        - { name: precioMin, in: query, schema: { type: number, minimum: 0 } }
-        - { name: precioMax, in: query, schema: { type: number, minimum: 0 } }
-        - { name: orden, in: query, schema: { type: string, enum: [novedad, precio_asc, precio_desc, nombre], default: novedad } }
+        - name: pagina
+          in: query
+          description: Página, desde 1 (por omisión 1).
+          schema:
+            type: integer
+            format: int32
+        - name: tamano
+          in: query
+          description: Tamaño de página, de 1 a 50 (por omisión 12).
+          schema:
+            type: integer
+            format: int32
+        - name: texto
+          in: query
+          description: Texto en nombre o descripción, hasta 100 caracteres; sin distinguir mayúsculas ni acentos.
+          schema:
+            type: string
+        - name: color
+          in: query
+          description: Color de una variante activa.
+          schema:
+            type: string
+        - name: talla
+          in: query
+          description: Talla de una variante activa (la misma variante cumple color y talla).
+          schema:
+            type: string
+        - name: precioMin
+          in: query
+          description: Precio mínimo en MXN (>= 0).
+          schema:
+            type: number
+            format: double
+        - name: precioMax
+          in: query
+          description: Precio máximo en MXN (>= precioMin).
+          schema:
+            type: number
+            format: double
+        - name: orden
+          in: query
+          description: novedad (por omisión), precio_asc, precio_desc o nombre.
+          schema:
+            type: string
       responses:
-        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaPlayeras' } } } }
-        '400': { description: Parámetros inválidos, content: { application/problem+json: { schema: { type: object } } } }
+        '200':
+          description: Página de playeras
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaPlayerasDto'
+        '304':
+          description: Sin cambios (If-None-Match coincide con el ETag)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+        '400':
+          description: Parámetros inválidos (tamano fuera de 1–50, orden desconocido, precioMin > precioMax, texto > 100)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /catalogo/playeras/{slug}:
     get:
-      summary: Detalle de una playera
-      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      operationId: obtenerPlayera
+      summary: Detalle de una playera publicada
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200': { description: Detalle, content: { application/json: { schema: { $ref: '#/components/schemas/PlayeraDetalle' } } } }
-        '404': { description: No existe o no está publicada, content: { application/problem+json: { schema: { type: object } } } }
+        '200':
+          description: Detalle
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayeraDetalleDto'
+        '304':
+          description: Sin cambios (If-None-Match coincide con el ETag)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+        '404':
+          description: No existe, no está publicada o no tiene variantes activas
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   schemas:
-    Color: { type: object, properties: { nombre: { type: string }, codigo: { type: string } } }
-    PlayeraResumen:
+    ColorDto:
       type: object
-      properties: { slug: { type: string }, nombre: { type: string }, imagenUrl: { type: string }, precioDesdeMxn: { type: [number, 'null'] }, colores: { type: array, items: { $ref: '#/components/schemas/Color' } } }
-    PaginaPlayeras:
+      required: [nombre, codigo]
+      properties:
+        nombre:
+          type: string
+        codigo:
+          type: string
+    PlayeraResumenDto:
       type: object
-      properties: { elementos: { type: array, items: { $ref: '#/components/schemas/PlayeraResumen' } }, pagina: { type: integer }, tamano: { type: integer }, total: { type: integer } }
-    VarianteCatalogo:
+      required: [slug, nombre, imagenUrl, precioDesdeMxn, colores]
+      properties:
+        slug:
+          type: string
+        nombre:
+          type: string
+        imagenUrl:
+          type: [string, 'null']
+        precioDesdeMxn:
+          type: [number, 'null']
+          format: double
+        colores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColorDto'
+    PaginaPlayerasDto:
       type: object
-      properties: { color: { type: string }, codigoColor: { type: string }, talla: { type: string }, precioMxn: { type: [number, 'null'] }, disponible: { type: boolean } }
-    PlayeraDetalle:
+      required: [elementos, pagina, tamano, total]
+      properties:
+        elementos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayeraResumenDto'
+        pagina:
+          type: integer
+          format: int32
+        tamano:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+    VarianteCatalogoDto:
       type: object
-      properties: { slug: { type: string }, nombre: { type: string }, descripcion: { type: string }, imagenes: { type: array, items: { type: string } }, colores: { type: array, items: { $ref: '#/components/schemas/Color' } }, tallas: { type: array, items: { type: string } }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteCatalogo' } } }
+      required: [color, codigoColor, talla, precioMxn, disponible]
+      properties:
+        color:
+          type: string
+        codigoColor:
+          type: string
+        talla:
+          type: string
+        precioMxn:
+          type: [number, 'null']
+          format: double
+        disponible:
+          type: boolean
+    PlayeraDetalleDto:
+      type: object
+      required: [slug, nombre, descripcion, imagenes, colores, tallas, variantes]
+      properties:
+        slug:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: [string, 'null']
+        imagenes:
+          type: array
+          items:
+            type: string
+        colores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColorDto'
+        tallas:
+          type: array
+          items:
+            type: string
+        variantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianteCatalogoDto'
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

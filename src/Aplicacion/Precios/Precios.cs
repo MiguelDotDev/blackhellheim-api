@@ -116,23 +116,39 @@ public sealed record DesglosePrecioDto(
     decimal CostoBaseUsd, decimal ImpresionExtraUsd, decimal TipoCambio, DateOnly TipoCambioFecha, bool TipoCambioObsoleto,
     decimal ColchonCambiario, decimal Margen, decimal ComisionPasarela, decimal CostoMxn, decimal PrecioBrutoMxn, decimal PrecioFinalMxn);
 
+/// <summary>Cálculo ya preparado con el tipo de cambio y los parámetros de una petición (sin más consultas).</summary>
+public interface ICalculoDePrecios
+{
+    DesglosePrecioDto Calcular(decimal costoBaseUsd);
+}
+
 /// <summary>Puerto de consumo para catálogo (HU-19) y pedidos (HU-26/28): el precio siempre lo calcula el backend.</summary>
 public interface ICalculadoraPrecios
 {
-    /// <summary>Null si no hay tipo de cambio disponible (el llamador responde 503 y no inventa un precio).</summary>
-    Task<DesglosePrecioDto?> CalcularAsync(decimal costoBaseUsd, CancellationToken cancelacion);
+    /// <summary>Null si no hay tipo de cambio disponible (el llamador responde 503 o deja el precio en null; no inventa uno).</summary>
+    Task<ICalculoDePrecios?> PrepararAsync(CancellationToken cancelacion);
+
+    async Task<DesglosePrecioDto?> CalcularAsync(decimal costoBaseUsd, CancellationToken cancelacion) =>
+        (await PrepararAsync(cancelacion))?.Calcular(costoBaseUsd);
 }
 
 public sealed class ServicioPrecios(ServicioTipoCambio tipoCambio, IRepositorioPrecios repositorio) : ICalculadoraPrecios
 {
-    public async Task<DesglosePrecioDto?> CalcularAsync(decimal costoBaseUsd, CancellationToken cancelacion)
+    public async Task<ICalculoDePrecios?> PrepararAsync(CancellationToken cancelacion)
     {
         var tasa = await tipoCambio.ObtenerDelDiaAsync(cancelacion);
         if (tasa is null) return null;
-        var p = await repositorio.ObtenerParametrosVigentesAsync(cancelacion);
-        var d = CalculadoraPrecios.Calcular(costoBaseUsd, p.ImpresionExtraUsd, tasa.Valor, p.ColchonCambiario, p.Margen, p.ComisionPasarela);
-        return new(costoBaseUsd, p.ImpresionExtraUsd, tasa.Valor, tasa.Fecha, tasa.EsReserva, p.ColchonCambiario, p.Margen,
-            p.ComisionPasarela, d.CostoMxn, d.PrecioBrutoMxn, d.PrecioFinalMxn);
+        return new Calculo(tasa, await repositorio.ObtenerParametrosVigentesAsync(cancelacion));
+    }
+
+    private sealed class Calculo(TipoCambioResultado tasa, ParametrosPrecio p) : ICalculoDePrecios
+    {
+        public DesglosePrecioDto Calcular(decimal costoBaseUsd)
+        {
+            var d = CalculadoraPrecios.Calcular(costoBaseUsd, p.ImpresionExtraUsd, tasa.Valor, p.ColchonCambiario, p.Margen, p.ComisionPasarela);
+            return new(costoBaseUsd, p.ImpresionExtraUsd, tasa.Valor, tasa.Fecha, tasa.EsReserva, p.ColchonCambiario, p.Margen,
+                p.ComisionPasarela, d.CostoMxn, d.PrecioBrutoMxn, d.PrecioFinalMxn);
+        }
     }
 }
 
