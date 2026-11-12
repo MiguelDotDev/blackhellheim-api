@@ -88,7 +88,7 @@ public class DespliegueAzurePruebas
         var texto = Pasos(desplegar).Select(p => Cadena(p, "run") ?? "").ToList();
         var iMigrar = texto.FindIndex(r => r.Contains("job start"));
         var iRevision = texto.FindIndex(r => r.Contains("containerapp update"));
-        var iSalud = texto.FindIndex(r => r.Contains("/salud") && r.Contains("revision show"));
+        var iSalud = texto.FindIndex(r => r.Contains("/salud") && r.Contains("revision label add"));
         var iTrafico = texto.FindIndex(r => r.Contains("--revision-weight \"$NUEVA=100\""));
         Assert.True(0 <= iMigrar && iMigrar < iRevision && iRevision < iSalud && iSalud < iTrafico);
     }
