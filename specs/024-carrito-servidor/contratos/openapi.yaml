@@ -1,0 +1,267 @@
+openapi: 3.1.1
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
+info:
+  title: BlackHellHeim API — carrito
+  version: 0.7.0
+paths:
+  /carrito:
+    get:
+      operationId: obtenerCarrito
+      summary: Carrito de la clienta con precios calculados por el servidor
+      security:
+        - bearer: []
+      responses:
+        '200':
+          description: Carrito actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarritoDto'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: No hay tipo de cambio disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: vaciarCarrito
+      summary: Vacía el carrito
+      security:
+        - bearer: []
+      responses:
+        '204':
+          description: Carrito vacío
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /carrito/lineas/{varianteId}:
+    put:
+      operationId: fijarLineaCarrito
+      summary: Crea, actualiza (1 a 10) o elimina (0) la línea de una variante
+      security:
+        - bearer: []
+      parameters:
+        - name: varianteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FijarLineaSolicitud'
+      responses:
+        '200':
+          description: Carrito resultante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarritoDto'
+        '400':
+          description: Variante inexistente, inactiva o de un diseño no publicado, cantidad fuera de rango o más de 20 líneas
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: No hay tipo de cambio disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /carrito/fusionar:
+    post:
+      operationId: fusionarCarrito
+      summary: Suma al carrito del servidor el carrito del navegador
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FusionarSolicitud'
+      responses:
+        '200':
+          description: Carrito resultante y líneas omitidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FusionResultadoDto'
+        '400':
+          description: Solicitud mal formada o más de 20 líneas
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: No hay tipo de cambio disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    FijarLineaSolicitud:
+      type: object
+      required: [cantidad]
+      properties:
+        cantidad:
+          type: integer
+          format: int32
+          description: De 0 (elimina) a 10.
+    LineaFusionSolicitud:
+      type: object
+      required: [varianteId, cantidad]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        cantidad:
+          type: integer
+          format: int32
+    FusionarSolicitud:
+      type: object
+      required: [lineas]
+      properties:
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaFusionSolicitud'
+    LineaCarritoDto:
+      type: object
+      required: [varianteId, disenoSlug, disenoNombre, color, talla, cantidad, disponible]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        disenoSlug:
+          type: string
+        disenoNombre:
+          type: string
+        color:
+          type: string
+        talla:
+          type: string
+        cantidad:
+          type: integer
+          format: int32
+        disponible:
+          type: boolean
+        precioUnitarioMxn:
+          type: [number, 'null']
+        subtotalMxn:
+          type: [number, 'null']
+    CarritoDto:
+      type: object
+      required: [lineas, totalMxn]
+      properties:
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaCarritoDto'
+        totalMxn:
+          type: number
+    LineaOmitidaDto:
+      type: object
+      required: [varianteId, motivo]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+    FusionResultadoDto:
+      type: object
+      required: [carrito, omitidas]
+      properties:
+        carrito:
+          $ref: '#/components/schemas/CarritoDto'
+        omitidas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaOmitidaDto'
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string
