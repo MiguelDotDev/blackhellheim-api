@@ -136,4 +136,4 @@ imagen del SDK.
   (SHA-256), incluido `*.deps.json`.
 - **Arranque sin red (C5)**: no probado; una reconstrucción con `--build` sin red puede fallar al
   restaurar NuGet si las capas no están en caché. Limitación documentada en `plan.md`.
-- **arm64**: no verificado (T047 pendiente de la desarrolladora; el `Dockerfile` mapea `TARGETARCH`).
+- **arm64**: **no se verificó** (T047). No se dispone de una máquina `linux/arm64`; el `Dockerfile` mapea `TARGETARCH` pero la construcción en arm64 no se ha probado.

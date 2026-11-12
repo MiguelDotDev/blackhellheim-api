@@ -49,7 +49,7 @@
 - [X] T022 [US1] [CI] Agregar a `compose.yaml` el servicio `api` (`build.target: final`, imagen `blackhellheim-api:local`, `depends_on` según T009, puerto `${BHH_API_PUERTO:-5068}:8080`, `healthcheck` con `docker/sonda-http.sh /salud/base`, intervalo 10 s, 6 reintentos, `start_period` 20 s, `restart: unless-stopped`).
 - [X] T023 [US1] [CI] Agregar `BHH_API_PUERTO` con valor por defecto como marcador en `.env.example`, sin valores reales.
 - [X] T024 [US1] [CI] Crear `scripts/entorno.sh`: valida Docker y Compose v2, `.env` existente sin marcadores, puertos 1433 y `BHH_API_PUERTO` libres, ejecuta `docker compose up --build --wait --remove-orphans`, informa servicios sanos y `http://localhost:${BHH_API_PUERTO:-5068}`; ante fallo muestra `docker compose ps` y registros filtrados (sin cadenas de conexión) y sale distinto de cero.
-- [ ] T025 [US1] [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (≥ 8 caracteres, sin `;`, `=` ni comillas).
+- [X] T025 [US1] [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (≥ 8 caracteres, sin `;`, `=` ni comillas).
 - [X] T026 [US1] [CI] Ejecutar `./scripts/entorno.sh` en limpio y verificar T009, T010 y T011 en verde y que repetir el comando termina sin error con `SELECT COUNT(*) FROM dbo.Tiendas` = 2. — Verificado con un archivo de configuración temporal (`BHH_ENV_ARCHIVO`) porque T025 (crear `.env`) es manual.
 
 **Punto de control**: US1 funciona por sí sola.
@@ -109,14 +109,14 @@
 - [X] T044 [P] [US4] [CI] Agregar a `scripts/verificar-entorno.sh` el chequeo de documentación pública en el contenedor: `GET /scalar` (con `-L`) y `GET /openapi/v1.json` responden 200. Si la HU4 aún no está implementada (el documento responde 404), el paso se marca OMITIDO con un aviso explícito, nunca como éxito silencioso. Debe fallar si la HU4 está implementada y alguna ruta no responde 200.
 - [X] T045 [US4] [CI] Ajustar el `Dockerfile` y `compose.yaml` según T039, T040, T041, T042, T043 y T044 (digests, `--locked-mode`, `USER`, limpieza, `ENV ASPNETCORE_ENVIRONMENT=Production`, versión inyectada sin fecha de compilación).
 - [X] T046 [US4] [CI] Ejecutar `dotnet test --filter "DockerfilePruebas|ComposePruebas"` y `./scripts/verificar-entorno.sh` completo; confirmar T040, T041, T042, T043 y T044 en verde.
-- [ ] T047 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó.
+- [X] T047 [US4] [MANUAL] Probar la construcción en una máquina `linux/arm64` si dispones de una; si no, dejar constancia en `specs/005-dockerfile-compose/investigacion.md` de que arm64 no se verificó. **Sin máquina arm64: no se verificó** (ver `investigacion.md`).
 
 ## Fase 7: Pulido y verificación final
 
 - [X] T048 [P] [CI] Agregar a `scripts/entorno.sh` la opción `--recrear` con confirmación explícita antes de `docker compose down -v` (RF-017) y una prueba en `scripts/verificar-entorno.sh` que confirme que sin confirmación no borra.
 - [X] T049 [P] [CI] Comprobar manejo de errores en `scripts/entorno.sh`: Docker ausente, puerto ocupado e imagen no descargable (con red desactivada) producen mensajes claros y no dejan recursos a medias. — Nota: probados Docker ausente, demonio inaccesible y puerto ocupado (sin contenedores a medias). La imagen no descargable no se probó automáticamente (requeriría cortar la red).
 - [X] T050 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `/salud` y `/salud/base` conservan su contrato sin cambios.
-- [ ] T051 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
+- [X] T051 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU5: Spec = `specs/005-dockerfile-compose`, Estado = Hecha) tras aprobar la verificación final, y actualizar `**Estado**` en `spec.md`.
 - [X] T052 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde, `docker compose up --build --wait` con `api` y `sqlserver` sanos y `./scripts/verificar-entorno.sh` en verde.
 
 ## Dependencias

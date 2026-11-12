@@ -15,7 +15,7 @@
 - [X] T003 [P] [BE] Agregar `Testcontainers.MsSql` 4.16.0 (MIT) a `src/Pruebas/BlackHellHeim.Pruebas.csproj` y confirmar su licencia en `investigacion.md`.
 - [X] T004 [P] [DB] Crear `.config/dotnet-tools.json` con `dotnet-ef` 10.0.15 (MIT) como herramienta local.
 - [X] T005 [P] [CI] Agregar `.env` al `.gitignore` de la raíz y crear `.env.example` con solo marcadores: `BHH_SQL_SA_PASSWORD='__DEFINIR_CLAVE_LOCAL__'` y `ConnectionStrings__BlackHellHeim='Server=localhost,1433;Database=BlackHellHeim;User Id=sa;Password=__DEFINIR_CLAVE_LOCAL__;Encrypt=True;TrustServerCertificate=True'`.
-- [ ] T006 [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (política de SQL Server: ≥ 8 caracteres con mayúsculas, minúsculas, dígitos y símbolos).
+- [X] T006 [MANUAL] Crear `.env` local a partir de `.env.example` con una contraseña propia (política de SQL Server: ≥ 8 caracteres con mayúsculas, minúsculas, dígitos y símbolos).
 - [X] T007 [BE] Ejecutar `dotnet restore` y `dotnet build BlackHellHeim.sln`: compila sin advertencias nuevas.
 
 ## Fase 2: Base de persistencia (bloquea las historias)
@@ -106,8 +106,8 @@
 
 - [X] T043 [P] [BE] Confirmar que `src/Pruebas/Arquitectura` sigue esperando cinco proyectos y que `Dominio` y `Aplicacion` no referencian EF Core.
 - [X] T044 [P] [DB] Probar `docker compose down -v` seguido de `./scripts/base-datos.sh`: la base se recrea y las semillas vuelven a dos filas; y persistencia entre `docker compose restart sqlserver`.
-- [ ] T045 [MANUAL] Aprobar el alcance del contrato `contratos/openapi.yaml` para que la HU4 lo alinee (versión 3.1.1) sin cambiar el comportamiento.
-- [ ] T046 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU3: Spec = `specs/003-sql-server-efcore`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
+- [X] T045 [MANUAL] Aprobar el alcance del contrato `contratos/openapi.yaml` para que la HU4 lo alinee (versión 3.1.1) sin cambiar el comportamiento.
+- [X] T046 [MANUAL] Actualizar `docs/scrum/backlog.md` (fila de la HU3: Spec = `specs/003-sql-server-efcore`, Estado = Hecha) tras aprobar la verificación final, y el `**Estado**` de `spec.md`.
 - [X] T047 [BE] Verificación final: `dotnet build BlackHellHeim.sln` sin advertencias nuevas, `dotnet test BlackHellHeim.sln` en verde (requiere Docker para las pruebas de persistencia) y `docker compose up -d --wait sqlserver` con la base sana.
 
 ## Dependencias

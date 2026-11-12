@@ -4,7 +4,7 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: En progreso (pendientes solo tareas [MANUAL]: T025, T047, T051)
+**Estado**: Hecha
 
 **Historia del backlog**: HU5 (componentes BE y CI)
 

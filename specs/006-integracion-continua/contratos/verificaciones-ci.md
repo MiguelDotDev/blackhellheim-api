@@ -11,8 +11,8 @@ protección de rama y la documentación dependen de ellos.
 
 | Evento | Ramas | Flujos que se ejecutan |
 |--------|-------|------------------------|
-| `pull_request` | base `main` | los tres |
-| `push` | `main` | los tres |
+| `pull_request` | base `main`, `release`, `developer` o `sprint/**` | los tres |
+| `push` | `main`, `release`, `developer` y `sprint/**` | los tres |
 
 No se usan `paths-ignore` ni `paths`: todo cambio, incluida la documentación, pasa por
 las verificaciones. No hay `schedule` ni `workflow_dispatch` en esta historia.
@@ -35,11 +35,18 @@ las verificaciones. No hay `schedule` ni `workflow_dispatch` en esta historia.
 Pasos:
 
 1. `actions/checkout` con `persist-credentials: false`.
-2. `actions/setup-dotnet` con `dotnet-version: 10.0.x`, `cache: true` y
-   `cache-dependency-path: '**/*.csproj'`.
-3. `dotnet restore BlackHellHeim.sln`.
+2. `actions/setup-dotnet` con `global-json-file: global.json`, `cache: true` y
+   `cache-dependency-path: '**/packages.lock.json'`.
+3. `dotnet restore BlackHellHeim.sln --locked-mode`.
 4. `dotnet build BlackHellHeim.sln --no-restore --configuration Release`.
 5. `dotnet test BlackHellHeim.sln --no-build --configuration Release`.
+
+Pruebas con contenedores: el paso 5 incluye las pruebas de persistencia que usan
+Testcontainers (SQL Server 2022). El ejecutor `ubuntu-latest` ya tiene Docker, por lo que
+no se agregan pasos, `services:` ni credenciales; el contenedor y su contraseña los crea
+la propia prueba. Si Docker no está disponible el paso falla, no se omite. Los scripts
+`scripts/verificar-entorno.sh` (completo), `probar-base-datos.sh` y `probar-imagen.sh`
+no forman parte de este flujo.
 
 Resultado esperado: la solución completa compila y todas las pruebas pasan. Un error de
 compilación o una prueba fallida termina el job con estado fallido y el pull request
@@ -61,10 +68,11 @@ muestra el check en rojo.
 Pasos:
 
 1. `actions/checkout` con `persist-credentials: false`.
-2. `actions/setup-dotnet` con `dotnet-version: 10.0.x` y caché de NuGet.
+2. `actions/setup-dotnet` con `global-json-file: global.json` y caché de NuGet
+   (`**/packages.lock.json`).
 3. `github/codeql-action/init` con `languages: csharp` y
    `queries: security-extended`.
-4. `dotnet restore BlackHellHeim.sln`.
+4. `dotnet restore BlackHellHeim.sln --locked-mode`.
 5. `dotnet build BlackHellHeim.sln --no-restore --configuration Release`.
 6. `github/codeql-action/analyze` con categoría `/language:csharp`.
 
@@ -85,6 +93,7 @@ está permitida porque el evento es `pull_request`, sin secretos del repositorio
 | Secretos | `SONAR_TOKEN` |
 | Variables | `SONAR_ORGANIZATION`, `SONAR_PROJECT_KEY` |
 | Tiempo máximo | 10 minutos por job |
+| Docker | Requerido por las pruebas con contenedores (preinstalado en `ubuntu-latest`) |
 
 Job `detectar-token`:
 
@@ -96,9 +105,12 @@ Job `analizar`:
 
 - Se ejecuta solo si `needs.detectar-token.outputs.disponible == 'true'`.
 - Pasos: checkout con `fetch-depth: 0` (historial completo para el análisis de SCM);
-  `actions/setup-dotnet` con caché; `actions/setup-java` con Temurin 21;
-  `dotnet tool restore`; `dotnet sonarscanner begin`; `dotnet build` en `Release`;
-  `dotnet test --no-build --collect:"XPlat Code Coverage"`; `dotnet sonarscanner end`.
+  `actions/setup-dotnet` con `global-json-file: global.json` y caché; `actions/setup-java`
+  con Temurin 21; `dotnet tool restore` (el manifiesto incluye `dotnet-ef` y
+  `dotnet-sonarscanner`); `dotnet sonarscanner begin`;
+  `dotnet restore --locked-mode`; `dotnet build` en `Release`;
+  `dotnet test --no-build --collect:"XPlat Code Coverage"` (incluye las pruebas con
+  Testcontainers, que usan el Docker del ejecutor); `dotnet sonarscanner end`.
 - El token se pasa por variable de entorno tanto en `begin` como en `end`; el scanner
   no lo conserva en ningún archivo versionado.
 
@@ -109,7 +121,7 @@ Propiedades del scanner:
 | `sonar.host.url` | `https://sonarcloud.io` |
 | `sonar.organization` | `${{ vars.SONAR_ORGANIZATION }}` |
 | `sonar.projectKey` | `${{ vars.SONAR_PROJECT_KEY }}` |
-| `sonar.token` | `${{ secrets.SONAR_TOKEN }}` |
+| `sonar.token` | No se pasa como argumento: el scanner lee la variable de entorno `SONAR_TOKEN` (`env: SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}` en los pasos `begin` y `end`) |
 | `sonar.cs.cobertura.reportsPaths` | `**/TestResults/**/coverage.cobertura.xml` |
 | `sonar.qualitygate.wait` | `true` |
 | `sonar.qualitygate.timeout` | `300` |
@@ -139,7 +151,8 @@ Reglas de validación:
 
 ## 4. Contrato con la protección de rama
 
-Verificaciones requeridas en `main`:
+Verificaciones requeridas en `main` (los flujos también se ejecutan en `release`,
+`developer` y `sprint/**`; esas ramas pueden reutilizar la misma lista de requeridas):
 
 | Verificación requerida | Flujo | Job | Resultado cuando se omite |
 |------------------------|-------|-----|---------------------------|
@@ -182,6 +195,6 @@ Reglas:
 | Pull request con hallazgo de seguridad | Exitoso | Exitoso con hallazgo visible | Según compuerta |
 | Pull request de solo documentación | Exitoso | Exitoso | Exitoso u omitido |
 | Pull request desde bifurcación sin token | Exitoso | Exitoso | Omitido visible |
-| Push a `main` | Exitoso o fallido visible | Exitoso o fallido visible | Exitoso, fallido u omitido visible |
+| Push a `main`, `release`, `developer` o `sprint/**` | Exitoso o fallido visible | Exitoso o fallido visible | Exitoso, fallido u omitido visible |
 | Token vencido o revocado | Exitoso | Exitoso | Fallido visible |
 | Ejecución cancelada por un commit nuevo | No cuenta | No cuenta | No cuenta |
