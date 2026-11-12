@@ -26,7 +26,7 @@ Meta: CI del backend, esqueleto Vue con ambientes, cliente y mock. Rama: `sprint
 
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
-| 6 | api | CI | 8 | M | Quiero CI del backend con build, pruebas, SonarQube Cloud y CodeQL. | Cada push corre todo y falla si hay problemas bloqueantes. | specs/006-integracion-continua (en curso) | Por auditar |
+| 6 | api | CI | 8 | M | Quiero CI del backend con build, pruebas, SonarQube Cloud y CodeQL. | Cada push corre todo y falla si hay problemas bloqueantes. | specs/006-integracion-continua. Pendientes: SonarQube Cloud (T021, T022, T026) y prueba desde bifurcación (T015) | Hecha |
 | 7 | web | FE | 9 | M | Quiero el esqueleto Vue 3 con TypeScript, Vite, Pinia, Router, Tailwind y capas FSD. | npm run lint falla si una capa importa de otra superior. |  | Pendiente |
 | 8 | web | FE | 3 | M | Quiero ambientes de desarrollo, prueba y producción. | La URL del API cambia según .env.development, .env.test y .env.production. | specs/003-sql-server-efcore | En progreso |
 | 9 | web | FE | 6 | M | Quiero un cliente API tipado generado desde OpenAPI y un servidor mock. | El cliente se regenera con un comando y el mock responde un endpoint de ejemplo. |  | Pendiente |
