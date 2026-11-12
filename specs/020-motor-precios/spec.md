@@ -1,25 +1,25 @@
 # Especificación 020: Motor de precios
 
-**Historia**: HU-20 (Sprint 5) · **Repos**: api · **Estado**: Plan cerrado · **Creada**: 2026-11-11
+**Historia**: HU-20 (Sprint 5) · **Repos**: api · **Estado**: Hecha · **Creada**: 2026-11-11
 
-**Entrada**: «Quiero un motor de precios con tipo de cambio, colchón y margen estático. Criterio: para entradas dadas, el precio coincide con la fórmula y termina en 9 o 90; el tipo de cambio se guarda por día.»
+**Entrada**: «Quiero un motor de precios con tipo de cambio, colchón y margen estático. Criterio: para entradas dadas, el precio coincide con la fórmula y termina en 9 (decisión posterior: entero terminado en 9); el tipo de cambio se guarda por día.»
 
 **Bloqueado por**: HU-16 (costo base USD por variante). Token de Banxico: `[MANUAL]`. Alimenta a HU-19 (catálogo), HU-26 y HU-28 (precio congelado al pagar).
 
 ## Fórmula (constitución V)
 `costo_mxn = (costo_base_usd + impresion_extra_usd) × tipo_cambio × (1 + colchon_cambiario)`
-`precio = redondeo(costo_mxn ÷ (1 − margen − comision_pasarela))`, terminado en **9 o 90**.
+`precio = redondeo(costo_mxn ÷ (1 − margen − comision_pasarela))`, terminado en **9** (entero, siempre hacia arriba; ver HU 2).
 
 ## Escenarios de uso y pruebas
 
 ### HU 1 — Calcular el precio de una variante (P1)
-1. **Dados** costo base 10.00 USD, extra 0, tipo de cambio 18.00, colchón 3 %, margen 40 %, comisión 3.6 %, **cuando** se calcula, **entonces** el resultado coincide con la fórmula aplicada con decimales exactos y termina en 9 o 90.
+1. **Dados** costo base 10.00 USD, extra 0, tipo de cambio 18.00, colchón 3 %, margen 40 %, comisión 3.6 %, **cuando** se calcula, **entonces** el resultado coincide con la fórmula aplicada con decimales exactos y termina en 9.
 2. **Dados** parámetros inválidos (margen+comisión ≥ 1, costo negativo, tipo de cambio ≤ 0), **entonces** error de validación sin calcular.
 3. El cálculo es determinista: mismas entradas, mismo precio.
 4. El cliente nunca envía precios; solo el backend los calcula (regla 5 de AGENTS).
 
 ### HU 2 — Redondeo comercial (P1)
-1. **Lectura adoptada del criterio «9 o 90»**: el precio final es el menor valor ≥ precio bruto cuya terminación sea **…9 pesos enteros** (419, 429…) o, alternativamente, **…9.90** (419.90) según el parámetro `FormatoTerminacion` (`Entero9` por omisión, `Centavos90`). Ejemplos con `Entero9`: 412.30 → 419; 449.01 → 459; 489.99 → 499; 490.00 → 499; 499.00 → 499; 499.01 → 509. Con `Centavos90`: 412.30 → 419.90; 419.90 → 419.90; 419.91 → 429.90. `[MANUAL]` confirmar la lectura.
+1. **Decisión de producto (2026-11-11)**: el precio final es un **entero terminado en 9**, redondeado **siempre hacia arriba**: el menor entero que termina en 9 y es ≥ precio bruto. Ejemplos: 412.30 → 419; 449.01 → 459; 489.99 → 499; 490.00 → 499; 499.00 → 499; 499.01 → 509; 0 → 9. No hay parámetro de formato (se descartó la terminación en .90).
 2. Nunca por debajo del precio bruto (no se vende con pérdida de margen).
 3. Fronteras exactas probadas (límites de cada decena y centena).
 
@@ -39,7 +39,7 @@ Costo 0; decimales largos (decimal de 28 dígitos, sin `double`); redondeo en ca
 
 ## Requisitos funcionales
 - **RF-001** Calculadora pura en Dominio con `decimal`.
-- **RF-002** Redondeo a 9/90 según HU 2.
+- **RF-002** Redondeo a entero terminado en 9 según HU 2.
 - **RF-003** Puerto `IProveedorTipoCambio` + adaptador Banxico (SIE API, token) y doble para pruebas.
 - **RF-004** Tabla de tipos de cambio por día con fecha única.
 - **RF-005** Reglas de reserva (último valor, rango ±20 %).
@@ -49,7 +49,7 @@ Costo 0; decimales largos (decimal de 28 dígitos, sin `double`); redondeo en ca
 
 ## Criterios de éxito
 - **CE-001** Tabla de ≥20 casos de entrada/salida (incluidos límites) pasa al 100 %.
-- **CE-002** El 100 % de los precios terminan en el formato de terminación elegido.
+- **CE-002** El 100 % de los precios terminan en 9.
 - **CE-003** Una sola fila de tipo de cambio por día aun con concurrencia.
 
 ## Supuestos y fuera de alcance

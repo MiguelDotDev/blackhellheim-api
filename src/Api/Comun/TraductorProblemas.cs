@@ -47,6 +47,7 @@ public static class TraductorProblemas
             TipoError.ArchivoNoSoportado => ("Archivo no soportado", error.Mensaje),
             TipoError.ArchivoDemasiadoGrande => ("Archivo demasiado grande", error.Mensaje),
             TipoError.NoDisponible when error.Codigo == "almacen_no_disponible" => ("Almacenamiento no disponible", error.Mensaje),
+            TipoError.NoDisponible when error.Codigo == "tipo_cambio_no_disponible" => ("Tipo de cambio no disponible", error.Mensaje),
             TipoError.NoDisponible => ("Base de datos no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };

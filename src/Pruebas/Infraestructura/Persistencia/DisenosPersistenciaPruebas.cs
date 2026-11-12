@@ -31,7 +31,7 @@ public class DisenosPersistenciaPruebas(ContenedorSqlServer sql)
         await using var contexto = new ContextoBlackHellHeim(new DbContextOptionsBuilder<ContextoBlackHellHeim>().UseSqlServer(cadena).Options);
         var migrador = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions
             .GetInfrastructure(contexto).GetRequiredService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>();
-        var anterior = contexto.Database.GetMigrations().Reverse().Skip(1).First();
+        var anterior = contexto.Database.GetMigrations().First(m => m.EndsWith("_AgregarIdentidad"));
         await migrador.MigrateAsync(anterior); // hasta AgregarIdentidad
         await sql.ConsultarEscalarAsync<int>(cadena, "INSERT INTO dbo.Tiendas (Codigo, Nombre, Moneda) VALUES ('XYZ','Prueba','MXN'); SELECT 1");
 

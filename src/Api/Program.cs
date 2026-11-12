@@ -22,6 +22,7 @@ builder.Services.AgregarIdentidad(builder.Configuration);
 builder.Services.AgregarAutenticacionJwt();
 builder.Services.AgregarPrintful(builder.Configuration);
 builder.Services.AgregarArte(builder.Configuration);
+builder.Services.AgregarPrecios(builder.Configuration);
 builder.Services.AddHostedService<SembradoAdministrador>();
 
 builder.Services.AddProblemDetails(opciones => opciones.CustomizeProblemDetails = OpcionesProblemDetails.Configurar);
@@ -55,6 +56,7 @@ app.MapearAuth();
 app.MapearPrintfulAdmin();
 app.MapearDisenosAdmin();
 app.MapearArteAdmin();
+app.MapearPreciosAdmin();
 app.MapearSaludBaseDatos();
 
 if (!app.Environment.IsProduction())

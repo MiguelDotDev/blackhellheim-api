@@ -66,6 +66,9 @@ public sealed record ErrorUniforme(
     public static ErrorUniforme Arte(TipoError tipo, string codigo, string mensaje, string idCorrelacion) =>
         new(tipo, codigo, mensaje, null, idCorrelacion);
 
+    public static ErrorUniforme TipoCambioNoDisponible(string idCorrelacion) =>
+        new(TipoError.NoDisponible, "tipo_cambio_no_disponible", "No hay tipo de cambio disponible; no se puede calcular el precio.", null, idCorrelacion);
+
     public static ErrorUniforme AlmacenNoDisponible(string idCorrelacion) =>
         new(TipoError.NoDisponible, "almacen_no_disponible", "El almacenamiento de archivos no respondió. Intenta de nuevo más tarde.", null, idCorrelacion);
 
