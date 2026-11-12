@@ -9,7 +9,7 @@ Todos los comandos se corren desde la raíz de `blackhellheim-api`, salvo que se
 | Recurso | Tamaño elegido (el más barato) | Costo mensual aprox. (USD) |
 |---|---|---|
 | Container Apps, entorno de consumo | sin perfil dedicado | 0 (sin cargo propio) |
-| API `bhh-api` | 0.25 vCPU / 0.5 GiB, 1 réplica fija | ~4 si está casi siempre ociosa (tarifa *idle*), hasta ~15 con tráfico constante |
+| API `bhh-api` | 0.25 vCPU / 0.5 GiB, 0 a 1 réplicas (escala a cero) | ~4 si está casi siempre ociosa (tarifa *idle*), hasta ~15 con tráfico constante |
 | Web `bhh-web` | 0.25 vCPU / 0.5 GiB, 1 réplica | ~4 (misma lógica) |
 | Job `bhh-migraciones` | 0.25 vCPU / 0.5 GiB, ~1 min por despliegue | < 0.01 |
 | Azure SQL Database | oferta gratuita, serverless, se pausa al agotar la cuota (`AutoPause`) | 0 |
