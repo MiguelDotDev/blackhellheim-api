@@ -23,6 +23,10 @@ Fuentes: [facturación de Container Apps](https://learn.microsoft.com/azure/cont
 (activo ≈ 0.000024 USD/vCPU-s y 0.000003 USD/GiB-s; *idle* ≈ 0.000003 USD en ambos). Confírmalas en la
 [calculadora](https://azure.microsoft.com/pricing/calculator/?service=container-apps) antes de depender de ellas.**
 
+Validado contra la documentación vigente de Microsoft (nov 2026): el plan de consumo permite desde 0.25 vCPU (la CLI acepta 0.25–2.0 y el script usa 0.25 / 0.5 Gi, el mínimo);
+la base gratuita se crea con `--edition GeneralPurpose --family Gen5 --capacity 2 --compute-model Serverless --use-free-limit true --free-limit-exhaustion-behavior AutoPause`
+(hasta 10 bases gratuitas por suscripción, solo bases nuevas). Para abaratar más, `--min-replicas 0` elimina el costo *idle* a cambio de arranque en frío.
+
 Consecuencia de la base gratuita: se pausa tras 15 min sin uso; la primera petición tarda ~1 min en despertarla (por eso la cadena lleva `Connect Timeout=90`).
 Si agotas los 100 000 vCore-s del mes, la base queda inaccesible hasta el mes siguiente. Para evitarlo: `export BHH_SQL_AGOTADO=BillOverUsage` antes del paso 4 (genera cargos).
 
@@ -33,6 +37,7 @@ Si agotas los 100 000 vCore-s del mes, la base queda inaccesible hasta el mes si
    alcance = tu suscripción, monto mensual **15 USD**, alertas al 50 %, 80 % y 100 % (real) y 100 % (previsto) a tu correo.
 3. **[MANUAL]** Instala Azure CLI (<https://learn.microsoft.com/cli/azure/install-azure-cli>), `openssl`, `curl` y Docker. Comprueba: `az version`.
 4. **[MANUAL]** Instala la extensión de Container Apps: `az extension add --name containerapp --upgrade`
+   (los comandos `az containerapp …` dependen de esta extensión; los `az sql`, `az ad`, `az group` y `az role` vienen con la CLI base. Validado con Azure CLI 2.90.0 y extensión containerapp 1.3.0b6. `az containerapp revision label` y `ingress traffic set --label-weight` requieren una versión reciente de la extensión.)
 5. **[MANUAL]** Inicia sesión y fija la suscripción:
    ```bash
    az login
@@ -102,7 +107,7 @@ Repite con `blackhellheim-migraciones` (y con los de la web). Las imágenes no c
    **Opción B (primer intento, recomendada)**: GitHub → *Actions → Despliegue → Run workflow* sobre `main`.
 3. Si el job *Migrar y desplegar* falla por no poder descargar la imagen: haz públicos los paquetes (paso 5) y relanza con *Re-run failed jobs*.
 4. El flujo hace: publicar imágenes (`:<sha>`) → actualizar y ejecutar el job de migraciones (detiene todo si falla) → crear revisión nueva con 0 % de tráfico
-   → probar `/salud` en su URL de revisión → mover 100 % del tráfico → conservar las 3 últimas revisiones.
+   → probar `/salud` en la URL de la etiqueta `nueva` (`bhh-api---nueva.<dominio>`; una revisión con 0 % solo es accesible por etiqueta, según la documentación de Container Apps) → mover 100 % del tráfico → conservar las 3 últimas revisiones.
 
 ## 7. Web — **[MANUAL]** (el contenido vive en `blackhellheim-web`)
 

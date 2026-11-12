@@ -21,6 +21,7 @@ env:
   RG: bhh-prod-rg
   APP: bhh-api
   JOB: bhh-migraciones
+  ENTORNO: bhh-prod-env
 
 jobs:
   publicar:
@@ -108,7 +109,10 @@ jobs:
       - name: Verificar salud de la revisión nueva
         run: |
           set -euo pipefail
-          fqdn="$(az containerapp revision show -n "$APP" -g "$RG" --revision "$NUEVA" --query properties.fqdn -o tsv)"
+          # Una revisión con 0 % solo es alcanzable por la URL de una etiqueta: <app>---<etiqueta>.<dominio>.
+          az containerapp revision label add -n "$APP" -g "$RG" --label nueva --revision "$NUEVA" --yes -o none
+          dominio="$(az containerapp env show -n "$ENTORNO" -g "$RG" --query properties.defaultDomain -o tsv)"
+          fqdn="$APP---nueva.$dominio"
           for _ in $(seq 1 30); do
             if curl -fsS --max-time 10 "https://$fqdn/salud" >/dev/null; then echo "Revisión sana."; exit 0; fi
             sleep 10
