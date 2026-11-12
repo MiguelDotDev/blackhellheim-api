@@ -25,7 +25,30 @@ public interface IProveedorImpresion
     /// <summary>Variantes con la técnica indicada y disponibles para el país. Null si el producto no existe.</summary>
     Task<IReadOnlyList<VariantePrintfulDto>?> ListarVariantesAsync(
         int productoId, string tecnica, string pais, CancellationToken cancelacion);
+
+    /// <summary>Crea una tarea de mockups y devuelve su id en el proveedor.</summary>
+    Task<string> CrearTareaMockupAsync(SolicitudMockup solicitud, CancellationToken cancelacion);
+
+    /// <summary>Estado de la tarea; null si el proveedor no la conoce.</summary>
+    Task<ResultadoTareaMockup?> ConsultarTareaMockupAsync(string tareaId, CancellationToken cancelacion);
+
+    /// <summary>
+    /// Descarga una imagen generada. Null si la URL no es https de un host permitido o si excede el máximo
+    /// (se descarta); un fallo transitorio llega como <see cref="Comun.Errores.ExcepcionCasoDeUso"/>.
+    /// </summary>
+    Task<byte[]?> DescargarImagenAsync(Uri url, long maxBytes, CancellationToken cancelacion);
 }
+
+public sealed record ProductoMockup(int ProductoId, IReadOnlyList<int> VarianteIds);
+
+public sealed record SolicitudMockup(IReadOnlyList<ProductoMockup> Productos, string ArteUrl, string Posicion, string Tecnica);
+
+public enum EstadoMockupProveedor { Pendiente, Completada, Fallida }
+
+public sealed record MockupGenerado(int VarianteId, string Posicion, Uri Url);
+
+public sealed record ResultadoTareaMockup(
+    string Id, EstadoMockupProveedor Estado, string? Motivo, IReadOnlyList<MockupGenerado> Mockups);
 
 public static class ValoresImpresion
 {

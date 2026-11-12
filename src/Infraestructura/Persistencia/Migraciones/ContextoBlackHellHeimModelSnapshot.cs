@@ -238,6 +238,87 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                     b.ToTable("Variantes", "dbo");
                 });
 
+            modelBuilder.Entity("BlackHellHeim.Dominio.Mockups.ImagenMockup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("NombreBlob")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Posicion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid>("TareaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TareaId", "Color", "Posicion")
+                        .IsUnique();
+
+                    b.ToTable("ImagenesMockup", "dbo");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Mockups.TareaMockup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreadaUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DisenoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<DateTimeOffset?>("FinalizadaUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Motivo")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("PrintfulTaskId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisenoId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TareasMockup_DisenoId_Pendiente")
+                        .HasFilter("[Estado] = 'Pendiente'");
+
+                    b.HasIndex("PrintfulTaskId")
+                        .IsUnique();
+
+                    b.HasIndex("Estado", "CreadaUtc");
+
+                    b.ToTable("TareasMockup", "dbo");
+                });
+
             modelBuilder.Entity("BlackHellHeim.Dominio.Precios.ParametrosPrecio", b =>
                 {
                     b.Property<Guid>("Id")
@@ -666,6 +747,24 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                     b.Navigation("ProductoBase");
                 });
 
+            modelBuilder.Entity("BlackHellHeim.Dominio.Mockups.ImagenMockup", b =>
+                {
+                    b.HasOne("BlackHellHeim.Dominio.Mockups.TareaMockup", null)
+                        .WithMany("Imagenes")
+                        .HasForeignKey("TareaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Mockups.TareaMockup", b =>
+                {
+                    b.HasOne("BlackHellHeim.Dominio.Disenos.Diseno", null)
+                        .WithMany()
+                        .HasForeignKey("DisenoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DisenosVariantes", b =>
                 {
                     b.HasOne("BlackHellHeim.Dominio.Disenos.Diseno", null)
@@ -730,6 +829,11 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Mockups.TareaMockup", b =>
+                {
+                    b.Navigation("Imagenes");
                 });
 #pragma warning restore 612, 618
         }

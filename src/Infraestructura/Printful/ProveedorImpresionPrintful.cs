@@ -4,6 +4,7 @@ using System.Text.Json;
 using BlackHellHeim.Aplicacion.Comun.Correlacion;
 using BlackHellHeim.Aplicacion.Comun.Errores;
 using BlackHellHeim.Aplicacion.Impresion;
+using BlackHellHeim.Aplicacion.Mockups;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -11,10 +12,111 @@ namespace BlackHellHeim.Infraestructura.Printful;
 
 /// <summary>Adaptador HTTP de la API v2 de catálogo de Printful (rutas verificadas el 2026-11-11, T002).</summary>
 public sealed class ProveedorImpresionPrintful(
-    HttpClient http, IOptions<OpcionesPrintful> opciones, IMemoryCache cache, TimeProvider reloj, IContextoEjecucion contexto)
+    HttpClient http, IOptions<OpcionesPrintful> opciones, IMemoryCache cache, TimeProvider reloj, IContextoEjecucion contexto,
+    OpcionesMockups? mockups = null)
     : IProveedorImpresion
 {
     private readonly OpcionesPrintful _opciones = opciones.Value;
+    private readonly OpcionesMockups _mockups = mockups ?? new OpcionesMockups();
+
+    // Mockups (HU-21): rutas y campos de Printful v2 SIN verificar con token real ([MANUAL]); ver specs/021-mockups-asincronos/research.md.
+    public async Task<string> CrearTareaMockupAsync(SolicitudMockup solicitud, CancellationToken cancelacion)
+    {
+        var cuerpo = new
+        {
+            format = "png",
+            products = solicitud.Productos.Select(p => new
+            {
+                source = "catalog",
+                catalog_product_id = p.ProductoId,
+                catalog_variant_ids = p.VarianteIds,
+                placements = new[]
+                {
+                    new
+                    {
+                        placement = solicitud.Posicion,
+                        technique = solicitud.Tecnica,
+                        layers = new[] { new { type = "file", url = solicitud.ArteUrl } }
+                    }
+                }
+            })
+        };
+        var raiz = await ObtenerAsync("/v2/mockup-tasks", cancelacion, HttpMethod.Post, System.Net.Http.Json.JsonContent.Create(cuerpo));
+        var primero = raiz is null ? default : Datos(raiz.Value).FirstOrDefault();
+        var id = primero.ValueKind == JsonValueKind.Object && primero.TryGetProperty("id", out var i)
+            ? i.ValueKind == JsonValueKind.String ? i.GetString() : i.ValueKind == JsonValueKind.Number ? i.GetRawText() : null
+            : null;
+        return string.IsNullOrWhiteSpace(id) || id.Length > 60 ? throw Fallo() : id;
+    }
+
+    public async Task<ResultadoTareaMockup?> ConsultarTareaMockupAsync(string tareaId, CancellationToken cancelacion)
+    {
+        var raiz = await ObtenerAsync($"/v2/mockup-tasks?id={Uri.EscapeDataString(tareaId)}", cancelacion);
+        var t = raiz is null ? default : Datos(raiz.Value).FirstOrDefault();
+        if (t.ValueKind != JsonValueKind.Object) return null;
+        var estado = Texto(t, "status").ToLowerInvariant() switch
+        {
+            "completed" => EstadoMockupProveedor.Completada,
+            "failed" => EstadoMockupProveedor.Fallida,
+            _ => EstadoMockupProveedor.Pendiente
+        };
+        var motivo = t.TryGetProperty("failure_reasons", out var f) && f.ValueKind is JsonValueKind.Array or JsonValueKind.Object
+            ? f.GetRawText() : null;
+        var mockups = new List<MockupGenerado>();
+        if (t.TryGetProperty("catalog_variant_mockups", out var porVariante) && porVariante.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var v in porVariante.EnumerateArray())
+            {
+                if (!v.TryGetProperty("catalog_variant_id", out var vid) || vid.ValueKind != JsonValueKind.Number
+                    || !v.TryGetProperty("mockups", out var lista) || lista.ValueKind != JsonValueKind.Array) continue;
+                foreach (var m in lista.EnumerateArray())
+                {
+                    if (Uri.TryCreate(Texto(m, "mockup_url"), UriKind.Absolute, out var url))
+                        mockups.Add(new MockupGenerado(vid.GetInt32(), Texto(m, "placement"), url));
+                }
+            }
+        }
+
+        return new ResultadoTareaMockup(tareaId, estado, motivo, mockups);
+    }
+
+    public async Task<byte[]?> DescargarImagenAsync(Uri url, long maxBytes, CancellationToken cancelacion)
+    {
+        if (url.Scheme != Uri.UriSchemeHttps || !_mockups.HostsDescargaPermitidos.Contains(url.Host, StringComparer.OrdinalIgnoreCase))
+            return null;
+        // Sin Authorization: el token de Printful nunca viaja al CDN.
+        using var solicitud = new HttpRequestMessage(HttpMethod.Get, url);
+        HttpResponseMessage respuesta;
+        try
+        {
+            respuesta = await http.SendAsync(solicitud, HttpCompletionOption.ResponseHeadersRead, cancelacion);
+        }
+        catch (TimeoutException)
+        {
+            throw new ExcepcionCasoDeUso(ErrorUniforme.ProveedorTiempoAgotado(contexto.IdCorrelacion));
+        }
+        catch (HttpRequestException)
+        {
+            throw Fallo();
+        }
+
+        using (respuesta)
+        {
+            if (!respuesta.IsSuccessStatusCode) throw Fallo(); // p. ej. URL temporal caducada: transitorio
+            if (respuesta.Content.Headers.ContentLength > maxBytes) return null;
+            await using var flujo = await respuesta.Content.ReadAsStreamAsync(cancelacion);
+            using var memoria = new MemoryStream();
+            var buffer = new byte[81920];
+            int n;
+            while ((n = await flujo.ReadAsync(buffer, cancelacion)) > 0)
+            {
+                if (memoria.Length + n > maxBytes) return null;
+                memoria.Write(buffer, 0, n);
+            }
+
+            return memoria.ToArray();
+        }
+    }
 
     public Task<IReadOnlyList<ProductoPrintfulDto>> ListarProductosAsync(
         string categoria, int pagina, int tamano, CancellationToken cancelacion) =>
@@ -123,14 +225,14 @@ public sealed class ProveedorImpresionPrintful(
     }
 
     /// <summary>GET autenticado. Null en 404; el resto de fallos se traducen a errores uniformes sin exponer el token.</summary>
-    private async Task<JsonElement?> ObtenerAsync(string ruta, CancellationToken cancelacion)
+    private async Task<JsonElement?> ObtenerAsync(string ruta, CancellationToken cancelacion, HttpMethod? metodo = null, HttpContent? cuerpo = null)
     {
         if (string.IsNullOrWhiteSpace(_opciones.Token))
         {
             throw new ExcepcionCasoDeUso(ErrorUniforme.ProveedorFallo(contexto.IdCorrelacion));
         }
 
-        using var solicitud = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(_opciones.UrlBase), ruta));
+        using var solicitud = new HttpRequestMessage(metodo ?? HttpMethod.Get, new Uri(new Uri(_opciones.UrlBase), ruta)) { Content = cuerpo };
         solicitud.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _opciones.Token);
         HttpResponseMessage respuesta;
         try

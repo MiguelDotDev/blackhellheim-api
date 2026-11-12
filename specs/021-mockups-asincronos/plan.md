@@ -33,7 +33,7 @@
 9. **Consulta**: `GET` devuelve tareas (más recientes primero) con sus imágenes; sin paginación (pocas tareas por diseño).
 
 ## Estructura
-`Dominio/Mockups`, `Aplicacion/Mockups` (casos de uso, manejador de evento, `IRepositorioMockups`, opciones), `Infraestructura/Mockups` (repositorio, polling) y `Infraestructura/Printful` (adaptador), `Api/Endpoints/MockupsAdminEndpoints.cs`, `Api/Comun/RegistroMockups.cs`.
+`Dominio/Mockups`, `Aplicacion/Mockups` (casos de uso, manejador de evento, `IRepositorioMockups`, opciones), `Infraestructura/Mockups` (repositorio), `Api/Comun` (registro y polling) y `Infraestructura/Printful` (adaptador), `Api/Endpoints/MockupsAdminEndpoints.cs`, `Api/Comun/RegistroMockups.cs`.
 
 ## Pruebas
 Casos de uso con dobles (éxito, repetido, falla de descarga, tipo/tamaño inválido, almacén caído, Printful `failed`, tiempo agotado); polling con reloj falso (espera mínima, completa, agotado, no pisa lo finalizado); endpoints (202/400/401/403/404/409/502); SQL Server real (10 finalizaciones concurrentes → un solo conjunto de imágenes; índice filtrado); contrato.

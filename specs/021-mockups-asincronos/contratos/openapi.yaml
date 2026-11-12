@@ -1,5 +1,4 @@
 openapi: 3.1.1
-x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
 info:
   title: BlackHellHeim API — mockups (administración)
   version: 0.6.0
@@ -23,7 +22,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TareaMockup'
+                $ref: '#/components/schemas/TareaMockupDto'
         '400':
           description: Diseño sin arte o sin variantes activas
           content:
@@ -98,7 +97,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TareaMockup'
+                  $ref: '#/components/schemas/TareaMockupDto'
         '401':
           description: Sin sesión
           content:
@@ -130,9 +129,9 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    TareaMockup:
+    TareaMockupDto:
       type: object
-      required: [id, disenoId, estado, creadaUtc, imagenes]
+      required: [id, disenoId, estado, motivo, creadaUtc, finalizadaUtc, imagenes]
       properties:
         id:
           type: string
@@ -142,21 +141,21 @@ components:
           format: uuid
         estado:
           type: string
-          enum: [Pendiente, Completada, Fallida]
+          description: Pendiente, Completada o Fallida.
         motivo:
-          type: string
+          type: [string, 'null']
           description: Solo cuando la tarea quedó Fallida.
         creadaUtc:
           type: string
           format: date-time
         finalizadaUtc:
-          type: string
+          type: [string, 'null']
           format: date-time
         imagenes:
           type: array
           items:
-            $ref: '#/components/schemas/ImagenMockup'
-    ImagenMockup:
+            $ref: '#/components/schemas/ImagenMockupDto'
+    ImagenMockupDto:
       type: object
       required: [id, color, posicion, url]
       properties:
@@ -169,7 +168,6 @@ components:
           type: string
         url:
           type: string
-          format: uri
           description: URL en el almacén de archivos.
     ProblemDetails:
       type: object

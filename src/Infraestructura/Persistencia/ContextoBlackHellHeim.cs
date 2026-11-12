@@ -1,5 +1,6 @@
 using BlackHellHeim.Dominio.Autenticacion;
 using BlackHellHeim.Dominio.Disenos;
+using BlackHellHeim.Dominio.Mockups;
 using BlackHellHeim.Dominio.Precios;
 using BlackHellHeim.Dominio.Tiendas;
 using BlackHellHeim.Dominio.Webhooks;
@@ -24,6 +25,8 @@ public class ContextoBlackHellHeim(DbContextOptions<ContextoBlackHellHeim> opcio
     public DbSet<ParametrosPrecio> ParametrosPrecio => Set<ParametrosPrecio>();
 
     public DbSet<EventoWebhook> EventosWebhook => Set<EventoWebhook>();
+    public DbSet<TareaMockup> TareasMockup => Set<TareaMockup>();
+    public DbSet<ImagenMockup> ImagenesMockup => Set<ImagenMockup>();
 
     protected override void OnModelCreating(ModelBuilder constructor)
     {
