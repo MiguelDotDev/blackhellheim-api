@@ -1,4 +1,5 @@
 openapi: 3.1.0
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
 info: { title: BlackHellHeim API · Catálogo, version: 0.1.0 }
 paths:
   /catalogo/playeras:
