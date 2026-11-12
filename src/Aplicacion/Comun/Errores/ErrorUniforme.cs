@@ -8,6 +8,9 @@ public enum TipoError
     Conflicto,
     Cancelado,
     NoDisponible,
+    NoAutenticado,
+    Bloqueado,
+    Prohibido,
     Inesperado
 }
 
@@ -28,6 +31,20 @@ public sealed record ErrorUniforme(
 {
     public static ErrorUniforme NoEncontrado(string mensaje, string idCorrelacion) =>
         new(TipoError.NoEncontrado, "recurso_no_encontrado", mensaje, null, idCorrelacion);
+
+    public static ErrorUniforme Conflicto(string mensaje, string idCorrelacion) =>
+        new(TipoError.Conflicto, "conflicto", mensaje, null, idCorrelacion);
+
+    /// <summary>Mensaje único: no distingue correo inexistente de contraseña errónea.</summary>
+    public static ErrorUniforme NoAutenticado(string idCorrelacion) =>
+        new(TipoError.NoAutenticado, "no_autenticado", "Credenciales inválidas o sesión no válida.", null, idCorrelacion);
+
+    public static ErrorUniforme Prohibido(string idCorrelacion) =>
+        new(TipoError.Prohibido, "acceso_prohibido", "No tienes permiso para este recurso.", null, idCorrelacion);
+
+    public static ErrorUniforme Bloqueado(string idCorrelacion) =>
+        new(TipoError.Bloqueado, "cuenta_bloqueada",
+            "La cuenta está bloqueada temporalmente por demasiados intentos. Intenta más tarde.", null, idCorrelacion);
 
     public static ErrorUniforme Inesperado(string idCorrelacion) =>
         new(TipoError.Inesperado, "error_inesperado",

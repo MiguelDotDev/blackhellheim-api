@@ -1,0 +1,307 @@
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — autenticación
+  version: 0.3.0
+  description: >
+    Contrato de la historia 013: registro, inicio de sesión, refresh rotativo y cierre de
+    sesión. El acceso es un JWT de unos 15 minutos que viaja en el cuerpo; el refresh es un
+    token opaco que solo viaja en la cookie HttpOnly, Secure y SameSite=Lax llamada
+    `refresh` (nunca en el cuerpo). Reutilizar un refresh ya rotado revoca toda la familia.
+    Los errores son ProblemDetails; no se distingue entre correo inexistente y contraseña
+    errónea.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
+paths:
+  /auth/registro:
+    post:
+      operationId: registrar
+      summary: Registra un cliente (rol Cliente siempre)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredencialesSolicitud'
+      responses:
+        '201':
+          description: Cuenta creada; la cookie de refresh se establece
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionDto'
+        '400':
+          description: Datos inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: El correo ya está registrado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/inicio-sesion:
+    post:
+      operationId: iniciarSesion
+      summary: Inicia sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredencialesSolicitud'
+      responses:
+        '200':
+          description: Sesión iniciada; la cookie de refresh se establece
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionDto'
+        '400':
+          description: Datos inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Credenciales inválidas
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '423':
+          description: Cuenta bloqueada por demasiados intentos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/renovar:
+    post:
+      operationId: renovarSesion
+      summary: Rota el refresh (cookie) y entrega un acceso nuevo
+      responses:
+        '200':
+          description: Acceso nuevo y refresh nuevo en la cookie
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionDto'
+        '401':
+          description: Refresh ausente, caducado, inexistente o reutilizado; la cookie se borra
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/cerrar-sesion:
+    post:
+      operationId: cerrarSesion
+      summary: Revoca la familia del refresh y borra la cookie (idempotente)
+      responses:
+        '204':
+          description: Sesión cerrada
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/yo:
+    get:
+      operationId: obtenerPerfil
+      summary: Perfil de la sesión actual
+      security:
+        - bearer: []
+      responses:
+        '200':
+          description: Perfil
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerfilDto'
+        '401':
+          description: Acceso ausente, inválido o caducado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CredencialesSolicitud:
+      type: object
+      properties:
+        correo:
+          type: [string, 'null']
+          description: Correo electrónico; se normaliza a minúsculas.
+        contrasena:
+          type: [string, 'null']
+          description: Entre 10 y 128 caracteres, con letras y números (en el registro).
+    SesionDto:
+      type: object
+      required: [tokenAcceso, expiraEnSegundos, rol]
+      properties:
+        tokenAcceso:
+          type: string
+        expiraEnSegundos:
+          type: integer
+          format: int32
+        rol:
+          type: string
+          description: Cliente o Administrador.
+    PerfilDto:
+      type: object
+      required: [id, correo, rol]
+      properties:
+        id:
+          type: string
+          format: uuid
+        correo:
+          type: string
+        rol:
+          type: string
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

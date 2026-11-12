@@ -41,13 +41,17 @@ public partial class ConfiguracionSinSecretosPruebas
             .Where(l => !string.IsNullOrWhiteSpace(l) && !l.TrimStart().StartsWith('#'))
             .ToArray();
 
-        // Contraseña y cadena de conexión con marcador (HU3) y el puerto opcional del API (HU5).
-        Assert.Equal(3, lineas.Length);
+        // Contraseña y cadena de conexión con marcador (HU3), puerto opcional del API (HU5) y
+        // clave JWT con marcador y administrador inicial vacío (HU13).
+        Assert.Equal(6, lineas.Length);
         Assert.StartsWith("BHH_SQL_SA_PASSWORD=", lineas[0]);
         Assert.Contains(Marcador, lineas[0]);
         Assert.StartsWith("ConnectionStrings__BlackHellHeim=", lineas[1]);
         Assert.Contains($"Password={Marcador}", lineas[1]);
         Assert.Equal("BHH_API_PUERTO='5068'", lineas[2]);
+        Assert.Equal("BHH_JWT_CLAVE='__DEFINIR_CLAVE_JWT__'", lineas[3]);
+        Assert.Equal("BHH_ADMIN_CORREO=''", lineas[4]);
+        Assert.Equal("BHH_ADMIN_CONTRASENA=''", lineas[5]);
     }
 
     [Fact]

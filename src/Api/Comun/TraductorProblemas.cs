@@ -15,6 +15,9 @@ public static class TraductorProblemas
         TipoError.Conflicto => StatusCodes.Status409Conflict,
         TipoError.Cancelado => StatusCodes.Status408RequestTimeout,
         TipoError.NoDisponible => StatusCodes.Status503ServiceUnavailable,
+        TipoError.NoAutenticado => StatusCodes.Status401Unauthorized,
+        TipoError.Bloqueado => StatusCodes.Status423Locked,
+        TipoError.Prohibido => StatusCodes.Status403Forbidden,
         _ => StatusCodes.Status500InternalServerError
     };
 
@@ -27,6 +30,9 @@ public static class TraductorProblemas
             TipoError.NoEncontrado => ("Recurso no encontrado", error.Mensaje),
             TipoError.Conflicto => ("Conflicto", error.Mensaje),
             TipoError.Cancelado => ("Operación cancelada", error.Mensaje),
+            TipoError.NoAutenticado => ("No autenticado", error.Mensaje),
+            TipoError.Bloqueado => ("Cuenta bloqueada", error.Mensaje),
+            TipoError.Prohibido => ("Acceso prohibido", error.Mensaje),
             TipoError.NoDisponible => ("Base de datos no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };
