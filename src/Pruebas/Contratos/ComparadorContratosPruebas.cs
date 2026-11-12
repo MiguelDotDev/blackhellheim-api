@@ -44,7 +44,7 @@ public class ComparadorContratosPruebas
             ComparadorContratos.Proyectar(ComparadorContratos.Componer([new("a", a)])),
             ComparadorContratos.Proyectar(ComparadorContratos.Componer([new("b", b)])));
 
-        Assert.Empty(diferencias);
+        Assert.NotEmpty(diferencias);
     }
 
     [Fact]
