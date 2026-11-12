@@ -1,0 +1,154 @@
+openapi: 3.1.1
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
+info:
+  title: BlackHellHeim API — cotización de envío
+  version: 0.7.0
+paths:
+  /envios/cotizar:
+    post:
+      operationId: cotizarEnvio
+      summary: Cotiza los métodos de envío de un domicilio mexicano y unas líneas
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CotizarEnvioSolicitud'
+      responses:
+        '200':
+          description: Métodos de envío (puede ser una lista vacía si no hay ninguno)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetodoEnvioDto'
+        '400':
+          description: Domicilio incompleto, código postal inválido, sin líneas, cantidad fuera de rango o variante inexistente o inactiva
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '502':
+          description: Printful no pudo cotizar
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Printful saturado o sin tipo de cambio disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '504':
+          description: Printful no respondió a tiempo
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DomicilioEnvioSolicitud:
+      type: object
+      required: [estado, ciudad, codigoPostal]
+      properties:
+        estado:
+          type: string
+        ciudad:
+          type: string
+        codigoPostal:
+          type: string
+          description: Cinco dígitos.
+    LineaCotizarSolicitud:
+      type: object
+      required: [varianteId, cantidad]
+      properties:
+        varianteId:
+          type: string
+          format: uuid
+        cantidad:
+          type: integer
+          format: int32
+          description: De 1 a 10.
+    CotizarEnvioSolicitud:
+      type: object
+      required: [domicilio, lineas]
+      properties:
+        domicilio:
+          $ref: '#/components/schemas/DomicilioEnvioSolicitud'
+        lineas:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaCotizarSolicitud'
+    MetodoEnvioDto:
+      type: object
+      required: [id, nombre, diasMinimos, diasMaximos, costoMxn, avisoAduanal]
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        diasMinimos:
+          type: integer
+          format: int32
+        diasMaximos:
+          type: integer
+          format: int32
+        costoMxn:
+          type: integer
+          format: int32
+          description: Pesos enteros, redondeado hacia arriba.
+        avisoAduanal:
+          type: [string, 'null']
+          description: Texto del aviso de posibles cargos aduanales; null si no aplica.
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string
