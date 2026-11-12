@@ -10,7 +10,7 @@ Validador en Aplicación (puro, sobre un flujo y metadatos), puerto `IAlmacenArc
 |---|---|---|
 | `Azure.Storage.Blobs` | MIT | Cliente oficial. |
 | `Testcontainers.Azurite` (opcional) | MIT | Pruebas con Azurite real; alternativa: doble en memoria. |
-| Decodificador PNG | **Decisión** | `ImageSharp` NO: licencia dividida (Six Labors Split License, comercial para uso en proyectos con ingresos). Se usa **`SkiaSharp`** (MIT) o, para solo leer cabecera/alfa, un lector PNG propio de ~120 líneas sobre `System.IO.Compression` (ChunkIHDR + IDAT). Candidatas libres: lector propio de cabecera PNG (IHDR) y/o `SkiaSharp` (MIT, con `NativeAssets.Linux.NoDependencies` si hace falta). **Decisión pendiente: se resuelve en T002.** |
+| Decodificador PNG | **Decisión** | `ImageSharp` NO: licencia dividida (Six Labors Split License, comercial para uso en proyectos con ingresos). Se usa **`SkiaSharp`** (MIT) o, para solo leer cabecera/alfa, un lector PNG propio de ~120 líneas sobre `System.IO.Compression` (ChunkIHDR + IDAT). Candidatas libres: lector propio de cabecera PNG (IHDR) y/o `SkiaSharp` (MIT, con `NativeAssets.Linux.NoDependencies` si hace falta). **Decisión (T002): cabecera por lector propio; píxeles con `SkiaSharp` (MIT) porque la spec pide medir la transparencia real.** |
 
 ## Decisiones
 1. Validar en este orden barato→caro: tamaño (streaming con tope) → firma PNG → IHDR (tipo de color con alfa, dimensiones) → muestreo de transparencia.

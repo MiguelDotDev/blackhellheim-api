@@ -15,6 +15,8 @@ public enum TipoError
     ProveedorFallo,
     ProveedorSaturado,
     ProveedorTiempoAgotado,
+    ArchivoNoSoportado,
+    ArchivoDemasiadoGrande,
     Inesperado
 }
 
@@ -60,6 +62,12 @@ public sealed record ErrorUniforme(
 
     public static ErrorUniforme ProveedorTiempoAgotado(string idCorrelacion) =>
         new(TipoError.ProveedorTiempoAgotado, "proveedor_tiempo_agotado", "El proveedor de impresión tardó demasiado en responder.", null, idCorrelacion);
+
+    public static ErrorUniforme Arte(TipoError tipo, string codigo, string mensaje, string idCorrelacion) =>
+        new(tipo, codigo, mensaje, null, idCorrelacion);
+
+    public static ErrorUniforme AlmacenNoDisponible(string idCorrelacion) =>
+        new(TipoError.NoDisponible, "almacen_no_disponible", "El almacenamiento de archivos no respondió. Intenta de nuevo más tarde.", null, idCorrelacion);
 
     public static ErrorUniforme Prohibido(string idCorrelacion) =>
         new(TipoError.Prohibido, "acceso_prohibido", "No tienes permiso para este recurso.", null, idCorrelacion);

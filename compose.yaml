@@ -18,6 +18,16 @@ services:
       retries: 12
       start_period: 20s
 
+  # Almacén de archivos local (historia 017). Solo puerto Blob; --skipApiVersionCheck porque el SDK
+  # suele ir por delante de la versión de Azurite.
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "10000:10000"
+    volumes:
+      - datos-azurite:/data
+
   # Contenedor de un solo uso: aplica las migraciones y las semillas con el bundle de EF Core.
   migraciones:
     build:
@@ -44,6 +54,8 @@ services:
       Administrador__Contrasena: ${BHH_ADMIN_CONTRASENA:-}
       # Printful (historia 015): opcional; sin token los endpoints de catálogo responden 502.
       Printful__Token: ${BHH_PRINTFUL_TOKEN:-}
+      # Almacén de arte (historia 017): por omisión Azurite del compose; en producción, la cadena de la Storage Account.
+      AlmacenArchivos__CadenaConexion: ${BHH_ALMACEN_CADENA:-UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://azurite}
     ports:
       - "${BHH_API_PUERTO:-5068}:8080"
     depends_on:
@@ -61,3 +73,4 @@ services:
 
 volumes:
   datos-sqlserver:
+  datos-azurite:

@@ -1,6 +1,6 @@
 # Especificación 017: Subida de arte a Azure Blob con validaciones
 
-**Historia**: HU-17 (Sprint 4) · **Repos**: api · **Estado**: Plan cerrado · **Creada**: 2026-11-11
+**Historia**: HU-17 (Sprint 4) · **Repos**: api · **Estado**: Hecha · **Creada**: 2026-11-11
 
 **Entrada**: «Como administradora, quiero subir el arte a Azure Blob con validaciones. Criterio: rechaza lo que no sea PNG con fondo transparente, menor de 200 MB y de resolución mínima; devuelve URL pública.»
 
