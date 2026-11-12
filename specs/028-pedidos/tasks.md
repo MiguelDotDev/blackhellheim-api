@@ -8,7 +8,7 @@ Etiquetas: [BE] [DB] [MANUAL]. Pruebas primero (constitución III). Formato: `- 
 
 ## Fase 2: Base común
 - [ ] T003 [DB] Dominio `src/Dominio/Pedidos`: `Pedido` con líneas, `EstadoPedido` (`PendientePago, Pagado, EnProduccion, Enviado, Entregado, Cancelado, Reembolsado`) y transiciones válidas (`PendientePago→Pagado|Cancelado`, `Pagado→EnProduccion|Reembolsado`, `EnProduccion→Enviado|Reembolsado`, `Enviado→Entregado`) y `MensajeSalida`; `Pagado` hace inmutables líneas, envío y total.
-- [ ] T004 [DB] Configuración EF y migración `AgregarPedidos` con las tablas de `modelo-datos.md`: `Pedidos` (Estado varchar(16), ClaveIdempotencia varchar(64), HuellaCuerpo char(64), montos decimal(18,2), CodigoPostal char(5), único (UsuarioId, ClaveIdempotencia), índice (UsuarioId, CreadoUtc)), `LineasPedido` (Cantidad tinyint entre 1 y 10, único (PedidoId, VarianteId), FK en cascada) y `MensajesSalida` (Tipo varchar(60), Error varchar(500) nullable, índice (ProcesadoUtc, CreadoUtc)); actualizar la prueba que cuenta migraciones.
+- [ ] T004 [DB] Configuración EF y migración `AgregarPedidos` con las tablas de `modelo-datos.md`: `Pedidos` (Estado varchar(16), ClaveIdempotencia varchar(64), HuellaCuerpo char(64), montos decimal(18,2), CodigoPostal char(5), único (UsuarioId, ClaveIdempotencia), índice (UsuarioId, CreadoUtc)), `LineasPedido` (Cantidad tinyint entre 1 y 10, único (PedidoId, VarianteId), FK en cascada) y `MensajesSalida` (Tipo varchar(60), ProximoIntentoUtc datetimeoffset nullable, Error varchar(500) nullable, índice (ProcesadoUtc, CreadoUtc)); actualizar la prueba que cuenta migraciones.
 - [ ] T005 [BE] Puerto `IRepositorioPedidos` en `src/Aplicacion/Pedidos` y registro en `src/Api/Comun/RegistroPedidos.cs`.
 
 ## Fase 3: US1 crear el pedido (P1)
