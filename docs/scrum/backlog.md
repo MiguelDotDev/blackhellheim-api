@@ -70,7 +70,7 @@ Meta: Webhooks, mockups y catálogo visible en la web. Rama: `sprint/06`.
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
 | 22 | api | BE | 8 | M | Quiero un endpoint de webhooks de Printful con firma verificada. | Una firma inválida se rechaza; un evento repetido no se procesa dos veces. | specs/022-webhooks-printful | Tareas listas |
-| 21 | api | BE | 12 | M | Quiero mockups asíncronos de Printful. | Se pide la tarea, llega mockup_task_finished, hay polling de respaldo y las imágenes se copian a Blob. |  | Pendiente |
+| 21 | api | BE | 12 | M | Quiero mockups asíncronos de Printful. | Se pide la tarea, llega mockup_task_finished, hay polling de respaldo y las imágenes se copian a Blob. | specs/021-mockups-asincronos | Tareas listas |
 | 23 | web | FE | 16 | M | Como visitante, quiero ver el catálogo y el detalle con galería, color, talla, precio, Agregar al carrito y Comprar ahora. | Todo se ve sin cuenta; los botones respetan la variante elegida; Comprar ahora lleva al checkout. |  | Pendiente |
 
 ## Sprint 7 · 30 oct–5 nov · 33 h

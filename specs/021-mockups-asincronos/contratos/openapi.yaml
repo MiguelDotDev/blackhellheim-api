@@ -1,0 +1,58 @@
+openapi: 3.1.1
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
+info:
+  title: BlackHellHeim API — mockups (administración)
+  version: 0.6.0
+paths:
+  /admin/disenos/{id}/mockups:
+    post:
+      operationId: pedirMockups
+      summary: Crea una tarea de mockups en Printful (asíncrona)
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Tarea creada (Pendiente)
+        '400':
+          description: Diseño sin arte o sin variantes
+        '401':
+          description: Sin sesión
+        '403':
+          description: Se requiere el rol Administrador
+        '404':
+          description: Diseño inexistente
+        '409':
+          description: Ya hay una tarea pendiente
+        '502':
+          description: Printful no pudo crear la tarea
+    get:
+      operationId: listarMockups
+      summary: Tareas e imágenes de mockup del diseño
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tareas con sus imágenes
+        '404':
+          description: Diseño inexistente
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+# Esquemas de respuesta (TareaMockupDto, ImagenMockupDto) y errores uniformes: se completan al implementar, igualando el documento publicado.
