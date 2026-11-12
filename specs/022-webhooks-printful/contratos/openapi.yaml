@@ -1,0 +1,62 @@
+openapi: 3.1.1
+x-pendiente: true  # historia aún no implementada; la prueba de contrato la omite (quitar al implementar)
+info:
+  title: BlackHellHeim API — webhooks de Printful
+  version: 0.6.0
+  description: Recibe eventos de Printful con firma HMAC-SHA256 sobre el cuerpo crudo. Idempotente por id de evento.
+paths:
+  /webhooks/printful:
+    post:
+      operationId: recibirWebhookPrintful
+      summary: Recibe un evento de Printful
+      parameters:
+        - name: X-Printful-Signature
+          in: header
+          required: true
+          description: Firma HMAC-SHA256 hexadecimal del cuerpo (nombre configurable).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Evento aceptado (o repetido, ya procesado)
+        '400':
+          description: Cuerpo no JSON o sin id/tipo de evento
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Firma ausente o inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '413':
+          description: Cuerpo mayor a 1 MB
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Secreto de webhook no configurado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Un consumidor falló; el proveedor puede reintentar
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  schemas:
+    ProblemDetails:
+      type: object
+      description: Copia del esquema común (specs/004-openapi-scalar); al implementar, igualar a las demás copias.
