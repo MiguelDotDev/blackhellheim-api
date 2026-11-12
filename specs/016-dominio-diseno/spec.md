@@ -18,7 +18,7 @@
 5. **Dado** un diseño, **cuando** asocio un archivo de arte (ya subido en HU-17), **entonces** el diseño referencia exactamente un arte principal; un arte inexistente da 400.
 
 ### HU 2 — Estados y reglas (P1)
-1. Un diseño pasa de `Borrador` a `Publicado` solo si tiene arte y al menos una variante activa; si no, 409/400 con el motivo.
+1. Un diseño pasa de `Borrador` a `Publicado` solo si tiene arte y al menos una variante activa; si no, 409 ProblemDetails con el motivo.
 2. `Publicado` → `Archivado` y viceversa permitidos; `Archivado` no aparece en catálogo (HU-19).
 3. Nombres y slugs únicos sin distinguir mayúsculas; nombre 3–80 caracteres.
 4. Prohibido usar nombres o logos de terceros (constitución X): se valida contra una lista de términos bloqueados configurable `[MANUAL]` de curar, y avisa sin impedir si hay coincidencia parcial (mensaje, no bloqueo).

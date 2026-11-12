@@ -20,10 +20,12 @@ Azure Container Apps (consumo) con imágenes en GHCR; el flujo `despliegue.yml` 
 Sin paquetes NuGet nuevos. Herramientas del flujo: `az` CLI (MIT), `azure/login` (MIT), `docker/login-action`, `docker/build-push-action`, `docker/setup-buildx-action` (Apache-2.0), `actions/checkout` (MIT) fijadas a SHA completo (verificar con `gh api` en T002). Servicios de Azure son de pago/gratuitos pero no se agregan al código.
 
 ## Estructura
+El primer `crear-recursos.sh` usa una imagen de arranque pública (`mcr.microsoft.com/k8se/quickstart`) para la app y el job, porque las imágenes de GHCR aún no existen o son privadas; el primer despliegue las reemplaza.
+
 `scripts/azure/{variables.sh,crear-recursos.sh,configurar-oidc.sh,configurar-secretos.sh,revertir.sh,destruir-recursos.sh}`, `.github/workflows/{despliegue.yml,revertir.yml}`, `src/Pruebas/Entorno/DespliegueAzurePruebas.cs`, ajustes en `src/Api/Program.cs` (cabeceras reenviadas) y `specs/025-despliegue-azure/inicio-rapido.md`.
 
 ## Orden del despliegue (despliegue.yml)
-1. Job `ci`: reutiliza `integracion-continua.yml` con `workflow_call` (o `needs` sobre el mismo SHA).
+1. Disparo: `workflow_run` del flujo «Integración continua» con `conclusion == success` en `main` (más `workflow_dispatch`); evita ejecutar la CI dos veces y no modifica `integracion-continua.yml`. Todos los jobs hacen checkout de `github.event.workflow_run.head_sha`.
 2. Job `publicar`: login en GHCR con `GITHUB_TOKEN` (`packages: write`), build+push de ambas imágenes con etiqueta SHA.
 3. Job `desplegar` (`environment: produccion`, `id-token: write`): `azure/login` (OIDC) → actualizar imagen del job y `az containerapp job start --wait` (falla si exit ≠ 0) → `az containerapp update --revision-suffix sha-<corto>` con tráfico 0 % → sonda `/salud` por la URL de la etiqueta de revisión → `ingress traffic set --revision-weight <nueva>=100` → desactivar revisiones antiguas salvo las 3 últimas.
 4. `concurrency: despliegue-produccion` con `cancel-in-progress: false`.

@@ -1,49 +1,431 @@
-openapi: 3.1.0
-info: { title: BlackHellHeim API · Catálogo Printful (admin), version: 0.1.0 }
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — catálogo de Printful (administración)
+  version: 0.4.0
+  description: >
+    Contrato de la historia 015. Consulta de solo lectura del catálogo de Printful para la
+    administración: productos base, y variantes filtradas por técnica y país. Los 429 de
+    Printful se reintentan respetando Retry-After; si el límite persiste, 503 con retryAfter.
+    Nunca se expone el token del proveedor.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
 paths:
   /admin/printful/productos:
     get:
-      summary: Lista productos base de Printful (playeras)
-      security: [{ bearer: [] }]
+      operationId: listarProductosPrintful
+      summary: Lista productos base de Printful
+      security:
+        - bearer: []
       parameters:
-        - { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
-        - { name: tamano, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - name: categoria
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: tamano
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
       responses:
-        '200': { description: Página, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductoCatalogo' } } } } }
-        '401': { $ref: '#/components/responses/Problema' }
-        '403': { $ref: '#/components/responses/Problema' }
-        '503': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Correcto
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductoPrintfulDto'
+        '400':
+          description: Parámetros inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '502':
+          description: Respuesta inválida o error del proveedor
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: El proveedor limita las solicitudes (incluye retryAfter)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '504':
+          description: El proveedor no respondió a tiempo
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /admin/printful/productos/{id}:
     get:
+      operationId: obtenerProductoPrintful
       summary: Detalle de un producto base
-      security: [{ bearer: [] }]
-      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
-        '200': { description: Producto, content: { application/json: { schema: { $ref: '#/components/schemas/ProductoCatalogo' } } } }
-        '404': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Correcto
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoPrintfulDto'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: El producto no existe
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '502':
+          description: Respuesta inválida o error del proveedor
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: El proveedor limita las solicitudes (incluye retryAfter)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '504':
+          description: El proveedor no respondió a tiempo
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /admin/printful/productos/{id}/variantes:
     get:
+      operationId: listarVariantesPrintful
       summary: Variantes filtradas por técnica y país
-      security: [{ bearer: [] }]
+      security:
+        - bearer: []
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer } }
-        - { name: tecnica, in: query, required: true, schema: { type: string, example: dtg } }
-        - { name: pais, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 2, example: MX } }
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: tecnica
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pais
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
-        '200': { description: Variantes, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/VarianteCatalogo' } } } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '502': { $ref: '#/components/responses/Problema' }
-        '503': { $ref: '#/components/responses/Problema' }
-        '504': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Correcto
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VariantePrintfulDto'
+        '400':
+          description: Parámetros inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: El producto no existe
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '502':
+          description: Respuesta inválida o error del proveedor
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: El proveedor limita las solicitudes (incluye retryAfter)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '504':
+          description: El proveedor no respondió a tiempo
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
-  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
-  responses:
-    Problema: { description: ProblemDetails, content: { application/problem+json: { schema: { type: object } } } }
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
-    ProductoCatalogo:
+    ProductoPrintfulDto:
       type: object
-      properties: { id: { type: integer }, nombre: { type: string }, tipo: { type: string }, tecnicas: { type: array, items: { type: string } } }
-    VarianteCatalogo:
+      required: [id, nombre, tipo, tecnicas]
+      properties:
+        id:
+          type: integer
+          format: int32
+        nombre:
+          type: string
+        tipo:
+          type: string
+        tecnicas:
+          type: array
+          items:
+            type: string
+    VariantePrintfulDto:
       type: object
-      properties: { id: { type: integer }, productoId: { type: integer }, color: { type: string }, codigoColor: { type: string }, talla: { type: string }, costoBaseUsd: { type: number }, tecnica: { type: string }, disponiblePais: { type: boolean } }
+      required: [id, productoId, color, codigoColor, talla, costoBaseUsd, tecnica, disponiblePais]
+      properties:
+        id:
+          type: integer
+          format: int32
+        productoId:
+          type: integer
+          format: int32
+        color:
+          type: string
+        codigoColor:
+          type: string
+        talla:
+          type: string
+        costoBaseUsd:
+          type: number
+          format: double
+        tecnica:
+          type: string
+        disponiblePais:
+          type: boolean
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

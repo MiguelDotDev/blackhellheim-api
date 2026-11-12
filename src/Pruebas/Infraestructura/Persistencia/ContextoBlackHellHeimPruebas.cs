@@ -77,7 +77,7 @@ public class ContextoBlackHellHeimPruebas(ContenedorSqlServer sql)
     }
 
     [Fact]
-    public async Task ElHistorialContieneSoloLaMigracionInicialYQuedaVacioAlRevertir()
+    public async Task ElHistorialContieneLasMigracionesEnOrdenYQuedaVacioAlRevertir()
     {
         var cadena = await sql.CrearBaseAsync();
         await using var contexto = CrearContexto(cadena);
@@ -85,8 +85,11 @@ public class ContextoBlackHellHeimPruebas(ContenedorSqlServer sql)
         await contexto.Database.MigrateAsync();
         var aplicadas = await sql.ConsultarEscalarAsync<string>(cadena,
             "SELECT STRING_AGG(MigrationId, '|') FROM dbo.__EFMigrationsHistory");
-        Assert.EndsWith("_MigracionInicial", aplicadas);
-        Assert.DoesNotContain("|", aplicadas);
+        var ids = aplicadas.Split('|').Order().ToArray();
+        Assert.Equal(3, ids.Length);
+        Assert.EndsWith("_MigracionInicial", ids[0]);
+        Assert.EndsWith("_AgregarIdentidad", ids[1]);
+        Assert.EndsWith("_AgregarDominioDisenos", ids[2]);
 
         await contexto.GetInfrastructure().GetRequiredService<IMigrator>().MigrateAsync("0");
         Assert.Equal(0, await sql.ConsultarEscalarAsync<int>(cadena, "SELECT COUNT(*) FROM dbo.__EFMigrationsHistory"));

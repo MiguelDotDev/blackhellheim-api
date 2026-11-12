@@ -33,5 +33,7 @@ public class FabricaApiPruebas : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Pruebas");
         builder.UseSetting("ConnectionStrings:BlackHellHeim", _cadena);
+        // Clave de firma aleatoria por fábrica: nunca hay un valor fijo versionado.
+        builder.UseSetting("Jwt:Clave", Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)));
     }
 }

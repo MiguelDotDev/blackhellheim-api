@@ -1,60 +1,472 @@
-openapi: 3.1.0
-info: { title: BlackHellHeim API · Diseños (admin), version: 0.1.0 }
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — diseños (administración)
+  version: 0.5.0
+  description: >
+    Contrato de la historia 016: alta, edición y consulta de diseños con su producto base,
+    variantes de Printful y archivo de arte. Un diseño nace en Borrador y solo se publica con
+    arte y al menos una variante activa. La edición usa control optimista: el cuerpo y la
+    cabecera ETag traen la versión y el PUT la exige en If-Match (412 si ya cambió). El
+    precio nunca se guarda en el diseño.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
 paths:
   /admin/disenos:
     get:
-      summary: Lista diseños
-      security: [{ bearer: [] }]
+      operationId: listarDisenos
+      summary: Lista diseños paginados
+      security:
+        - bearer: []
       parameters:
-        - { name: estado, in: query, schema: { type: string, enum: [Borrador, Publicado, Archivado] } }
-        - { name: pagina, in: query, schema: { type: integer, default: 1 } }
-        - { name: tamano, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: tamano
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
       responses:
-        '200': { description: Página, content: { application/json: { schema: { $ref: '#/components/schemas/PaginaDisenos' } } } }
-        '401': { $ref: '#/components/responses/Problema' }
-        '403': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Página de diseños
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaDisenosDto'
+        '400':
+          description: Datos inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     post:
-      summary: Crea un diseño en borrador
-      security: [{ bearer: [] }]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoSolicitud' } } } }
+      operationId: crearDiseno
+      summary: Crea un diseño (por omisión en Borrador)
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisenoSolicitud'
       responses:
-        '201': { description: Creado, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        '201':
+          description: Diseño creado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisenoDto'
+        '400':
+          description: Datos inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Conflicto con una regla de negocio (nombre repetido, publicar sin arte o variantes…)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /admin/disenos/{id}:
-    parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
     get:
-      security: [{ bearer: [] }]
+      operationId: obtenerDiseno
+      summary: Detalle de un diseño
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200': { description: Diseño, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
-        '404': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Diseño
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisenoDto'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: El diseño no existe
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     put:
-      summary: Edita un diseño (If-Match con la versión)
-      security: [{ bearer: [] }]
-      parameters: [{ name: If-Match, in: header, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoSolicitud' } } } }
+      operationId: editarDiseno
+      summary: Edita un diseño (requiere If-Match con la versión)
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: If-Match
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisenoSolicitud'
       responses:
-        '200': { description: Editado, content: { application/json: { schema: { $ref: '#/components/schemas/DisenoRespuesta' } } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
-        '412': { $ref: '#/components/responses/Problema' }
+        '200':
+          description: Diseño editado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisenoDto'
+        '400':
+          description: Datos inválidos
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: El diseño no existe
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Conflicto con una regla de negocio (nombre repetido, publicar sin arte o variantes…)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '412':
+          description: La versión (If-Match) ya no coincide
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
-  securitySchemes: { bearer: { type: http, scheme: bearer, bearerFormat: JWT } }
-  responses:
-    Problema: { description: ProblemDetails, content: { application/problem+json: { schema: { type: object } } } }
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
-    VarianteDto:
+    VarianteDisenoDto:
       type: object
-      required: [printfulVarianteId, printfulProductoId, color, codigoColor, talla, costoBaseUsd]
-      properties: { printfulVarianteId: { type: integer }, printfulProductoId: { type: integer }, nombreProducto: { type: string }, color: { type: string }, codigoColor: { type: string }, talla: { type: string }, costoBaseUsd: { type: number } }
+      required: [printfulVarianteId, printfulProductoId, nombreProducto, color, codigoColor, talla, costoBaseUsd]
+      properties:
+        printfulVarianteId:
+          type: integer
+          format: int32
+        printfulProductoId:
+          type: integer
+          format: int32
+        nombreProducto:
+          type: [string, 'null']
+        color:
+          type: string
+        codigoColor:
+          type: string
+        talla:
+          type: string
+        costoBaseUsd:
+          type: number
+          format: double
     DisenoSolicitud:
       type: object
-      required: [nombre]
-      properties: { nombre: { type: string, minLength: 3, maxLength: 80 }, descripcion: { type: string, maxLength: 2000 }, archivoArteId: { type: string, format: uuid }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteDto' } }, estado: { type: string, enum: [Borrador, Publicado, Archivado] } }
-    DisenoRespuesta:
+      properties:
+        nombre:
+          type: [string, 'null']
+        descripcion:
+          type: [string, 'null']
+        archivoArteId:
+          type: [string, 'null']
+          format: uuid
+        variantes:
+          type: [array, 'null']
+          items:
+            $ref: '#/components/schemas/VarianteDisenoDto'
+        estado:
+          type: [string, 'null']
+    DisenoDto:
       type: object
-      properties: { id: { type: string, format: uuid }, nombre: { type: string }, slug: { type: string }, descripcion: { type: string }, estado: { type: string }, archivoArteUrl: { type: string }, variantes: { type: array, items: { $ref: '#/components/schemas/VarianteDto' } }, version: { type: string }, avisos: { type: array, items: { type: string } } }
-    PaginaDisenos:
+      required: [id, nombre, slug, descripcion, estado, archivoArteUrl, variantes, version, avisos]
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+        slug:
+          type: string
+        descripcion:
+          type: [string, 'null']
+        estado:
+          type: string
+        archivoArteUrl:
+          type: [string, 'null']
+        variantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianteDisenoDto'
+        version:
+          type: string
+        avisos:
+          type: array
+          items:
+            type: string
+    PaginaDisenosDto:
       type: object
-      properties: { elementos: { type: array, items: { $ref: '#/components/schemas/DisenoRespuesta' } }, pagina: { type: integer }, tamano: { type: integer }, total: { type: integer } }
+      required: [elementos, pagina, tamano, total]
+      properties:
+        elementos:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisenoDto'
+        pagina:
+          type: integer
+          format: int32
+        tamano:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

@@ -26,7 +26,7 @@ Se verificará la licencia en NuGet al agregarlas (regla 8 de AGENTS.md). Sin Me
 2. **Rotación atómica**: `UPDATE ... WHERE UsadoUtc IS NULL` (ExecuteUpdate); 0 filas ⇒ reuso ⇒ revocar familia.
 3. **Config por entorno**: `Jwt__Clave` (≥32 bytes), `Jwt__Emisor`, `Jwt__Audiencia`, `Administrador__Correo`, `Administrador__Contrasena`. Sin valores en el repo; `compose.yaml` los toma de variables; la API falla al arrancar si falta `Jwt__Clave` fuera de Pruebas.
 4. **HS256** con clave simétrica (un solo emisor/validador); `ClockSkew = 0`.
-5. **Detrás de proxy**: `UseForwardedHeaders` para que `Secure` se evalúe con HTTPS real (coordinada con HU-25).
+5. **Cookie `Secure` y proxy**: las cabeceras reenviadas las configura la HU-25 (T012, dueña única); aquí las pruebas simulan HTTPS con la fábrica de pruebas. En desarrollo local por HTTP (`ASPNETCORE_ENVIRONMENT=Development`) `Secure` se relaja solo en ese entorno; en cualquier otro siempre está activo (prueba incluida).
 6. **Límite de intentos**: bloqueo de Identity (5 fallos / 15 min); no se agrega limitador de tasa en esta HU.
 
 ## Pruebas

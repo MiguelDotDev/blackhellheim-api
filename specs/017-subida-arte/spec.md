@@ -1,6 +1,6 @@
 # Especificación 017: Subida de arte a Azure Blob con validaciones
 
-**Historia**: HU-17 (Sprint 4) · **Repos**: api · **Estado**: Plan cerrado · **Creada**: 2026-11-11
+**Historia**: HU-17 (Sprint 4) · **Repos**: api · **Estado**: Hecha · **Creada**: 2026-11-11
 
 **Entrada**: «Como administradora, quiero subir el arte a Azure Blob con validaciones. Criterio: rechaza lo que no sea PNG con fondo transparente, menor de 200 MB y de resolución mínima; devuelve URL pública.»
 
@@ -9,7 +9,7 @@
 ## Escenarios de uso y pruebas
 
 ### HU 1 — Subir un arte válido (P1)
-1. **Dado** un PNG con canal alfa y fondo realmente transparente (al menos 5 % de píxeles transparentes incluyendo las 4 esquinas), de resolución mínima 4500×5400 px (configurable) y ≤200 MB, **cuando** lo subo, **entonces** se guarda en el contenedor público de arte con nombre generado, se registra en `ArchivosArte` y recibo `201` con id, URL pública, ancho, alto y tamaño.
+1. **Dado** un PNG con canal alfa y fondo realmente transparente (al menos 5 % de píxeles transparentes incluyendo las 4 esquinas), de resolución mínima configurable (valor propuesto 4500×5400 px, **a confirmar** `[MANUAL]`, T003a) y ≤200 MB, **cuando** lo subo, **entonces** se guarda en el contenedor público de arte con nombre generado, se registra en `ArchivosArte` y recibo `201` con id, URL pública, ancho, alto y tamaño.
 2. **Dado** el mismo contenido subido dos veces (mismo SHA-256), **entonces** se reutiliza el existente y no se duplica el blob.
 
 ### HU 2 — Rechazos con motivo claro (P1)
@@ -23,7 +23,7 @@ Cada rechazo es `400`/`413`/`415` ProblemDetails con un código estable:
 
 ### HU 3 — Seguridad (P1)
 1. El nombre del blob lo genera el servidor (GUID); el nombre original nunca forma la ruta (sin path traversal).
-2. Los metadatos del PNG no se confían; la imagen se decodifica de forma segura con límites de memoria y de dimensiones máximas (p. ej. 20 000 px por lado) para evitar bombas de descompresión.
+2. Los metadatos del PNG no se confían; la imagen se decodifica de forma segura con límites de memoria y de dimensiones máximas (por omisión 100 megapíxeles en total, configurable; con 24 MP de mínimo, un PNG de 20 000 px por lado ocuparía unos 1,6 GB) para evitar bombas de descompresión.
 3. El almacenamiento solo lo accede el API por el puerto `IAlmacenArchivos`; la cadena de conexión viene de configuración.
 
 ### Casos límite

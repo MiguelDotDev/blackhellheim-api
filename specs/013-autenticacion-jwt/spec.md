@@ -21,7 +21,7 @@ Como visitante quiero crear una cuenta con correo y contraseña para poder compr
 ### HU 2 — Inicio de sesión (P1)
 1. **Dado** credenciales correctas, **cuando** inicio sesión, **entonces** recibo acceso (vida ~15 min) y refresh en cookie HttpOnly, Secure, SameSite=Lax.
 2. **Dado** credenciales incorrectas o correo inexistente, **cuando** inicio sesión, **entonces** recibo 401 con el mismo mensaje en ambos casos.
-3. **Dados** 5 intentos fallidos seguidos, **cuando** intento otra vez, **entonces** la cuenta se bloquea 15 minutos y recibo 429/423 ProblemDetails.
+3. **Dados** 5 intentos fallidos seguidos, **cuando** intento otra vez, **entonces** la cuenta se bloquea 15 minutos y recibo 423 ProblemDetails (coherente con el contrato).
 
 ### HU 3 — Renovación rotativa y detección de reuso (P1)
 1. **Dado** un refresh vigente, **cuando** pido renovar, **entonces** recibo un acceso nuevo y un refresh nuevo, y el anterior queda inutilizable.
