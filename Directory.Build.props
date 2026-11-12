@@ -1,0 +1,10 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Construcción reproducible (historia 005): dependencias bloqueadas y salida determinista. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>

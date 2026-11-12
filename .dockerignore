@@ -1,0 +1,15 @@
+# Mantiene el contexto de construcción mínimo y sin secretos.
+.git
+.env
+.env.*
+!.env.example
+**/bin
+**/obj
+specs/
+docs/
+.claude/
+.specify/
+.vs/
+.vscode/
+.idea/
+*.user

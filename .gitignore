@@ -17,3 +17,6 @@ packages/
 Thumbs.db
 *.tmp
 *.swp
+
+# Secretos locales (nunca versionar)
+.env

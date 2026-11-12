@@ -1,0 +1,35 @@
+# Compila la solución y ejecuta todas las pruebas en cada cambio.
+# Las pruebas de persistencia usan Testcontainers con el Docker que ya trae
+# ubuntu-latest; no hay servicios ni secretos. scripts/verificar-entorno.sh no corre aquí.
+name: Integración continua
+
+on:
+  pull_request:
+    branches: [main, release, developer, "sprint/**"]
+  push:
+    branches: [main, release, developer, "sprint/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compilar-y-probar:
+    name: Compilación y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - run: dotnet restore BlackHellHeim.sln --locked-mode
+      - run: dotnet build BlackHellHeim.sln --no-restore --configuration Release
+      - run: dotnet test BlackHellHeim.sln --no-build --configuration Release
