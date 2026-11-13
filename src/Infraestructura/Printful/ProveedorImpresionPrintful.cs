@@ -20,12 +20,17 @@ public sealed class ProveedorImpresionPrintful(
         string categoria, int pagina, int tamano, CancellationToken cancelacion) =>
         Cacheado($"productos|{categoria}|{pagina}|{tamano}", async () =>
         {
-            // Printful pagina con limit/offset; el filtro de categoría se resuelve por nombre de tipo.
-            var raiz = await ObtenerAsync($"/v2/catalog-products?limit={tamano}&offset={(pagina - 1) * tamano}", cancelacion);
+            // "playeras" y los ids numéricos se filtran en Printful (category_ids), antes de paginar.
+            var ids = categoria.Equals("playeras", StringComparison.OrdinalIgnoreCase)
+                ? string.Join(',', _opciones.CategoriasPlayeras)
+                : categoria.All(c => char.IsAsciiDigit(c) || c == ',') ? categoria : null;
+            var ruta = $"/v2/catalog-products?limit={tamano}&offset={(pagina - 1) * tamano}"
+                + (ids is null ? "" : $"&category_ids={ids}");
+            var raiz = await ObtenerAsync(ruta, cancelacion);
             if (raiz is null) return [];
-            var filtro = categoria.ToLowerInvariant();
+            // shortcut: texto libre se filtra en memoria tras paginar (puede dar páginas vacías); usar ids de categoría.
             return (IReadOnlyList<ProductoPrintfulDto>)Datos(raiz.Value).Select(Producto)
-                .Where(p => filtro == "playeras" ? EsPlayera(p) : p.Tipo.Contains(filtro, StringComparison.OrdinalIgnoreCase))
+                .Where(p => ids is not null || p.Tipo.Contains(categoria, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         });
 
@@ -73,10 +78,6 @@ public sealed class ProveedorImpresionPrintful(
         cache.Set(clave, (IReadOnlyList<VariantePrintfulDto>)resultado, TimeSpan.FromMinutes(_opciones.MinutosCache));
         return resultado;
     }
-
-    private static bool EsPlayera(ProductoPrintfulDto p) =>
-        p.Tipo.Contains("t-shirt", StringComparison.OrdinalIgnoreCase) || p.Nombre.Contains("t-shirt", StringComparison.OrdinalIgnoreCase)
-        || p.Tipo.Contains("tee", StringComparison.OrdinalIgnoreCase);
 
     private static bool DisponiblePara(JsonElement disponibilidad, string tecnica, string[] regiones) =>
         disponibilidad.TryGetProperty("techniques", out var tecnicas)
