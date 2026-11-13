@@ -1,0 +1,180 @@
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — subida de arte (administración)
+  version: 0.5.0
+  description: >
+    Contrato de la historia 017: sube un PNG con fondo transparente al almacén de archivos,
+    lo valida (firma, canal alfa, transparencia real, resolución mínima, tamaño máximo y
+    dimensiones máximas) y devuelve su URL pública. El mismo contenido (SHA-256) se reutiliza.
+servers:
+  - url: http://localhost:5068
+    description: Entorno de desarrollo local
+paths:
+  /admin/arte:
+    post:
+      operationId: subirArte
+      summary: Sube un arte PNG
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArchivoSubida'
+      responses:
+        '201':
+          description: Arte guardado (o reutilizado si ya existía el mismo contenido)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArteDto'
+        '400':
+          description: Rechazo de validación (arte-sin-transparencia, arte-resolucion-insuficiente, arte-ilegible) o falta el campo archivo
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Sin sesión o acceso inválido
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Se requiere el rol Administrador
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '413':
+          description: Archivo mayor al máximo (arte-demasiado-grande)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '415':
+          description: No es PNG o no es multipart (arte-no-png)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Almacenamiento de archivos no disponible (almacen_no_disponible)
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Error no controlado
+          headers:
+            X-Correlation-ID:
+              description: Identificador de correlación de la ejecución.
+              schema:
+                type: string
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ArchivoSubida:
+      type: object
+      required: [archivo]
+      properties:
+        archivo:
+          $ref: '#/components/schemas/IFormFile'
+    IFormFile:
+      type: string
+      format: binary
+    ArteDto:
+      type: object
+      required: [id, url, ancho, alto, tamanoBytes, reutilizado]
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        ancho:
+          type: integer
+          format: int32
+        alto:
+          type: integer
+          format: int32
+        tamanoBytes:
+          type: integer
+          format: int64
+        reutilizado:
+          type: boolean
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

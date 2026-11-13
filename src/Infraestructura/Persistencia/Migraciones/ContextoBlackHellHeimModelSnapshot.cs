@@ -66,6 +66,254 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                     b.ToTable("TokensRefresco", "dbo");
                 });
 
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.ArchivoArte", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Alto")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Ancho")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreadoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("HashSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("NombreBlob")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long>("TamanoBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoContenido")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HashSha256")
+                        .IsUnique();
+
+                    b.ToTable("ArchivosArte", "dbo");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.Diseno", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ActualizadoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ArchivoArteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreadoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArchivoArteId");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("Estado", "CreadoUtc");
+
+                    b.ToTable("Disenos", "dbo");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.ProductoBase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PrintfulProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrintfulProductoId")
+                        .IsUnique();
+
+                    b.ToTable("ProductosBase", "dbo");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.Variante", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CodigoColor")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<decimal>("CostoBaseUsd")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("PrintfulVarianteId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ProductoBaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Talla")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrintfulVarianteId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductoBaseId");
+
+                    b.ToTable("Variantes", "dbo");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Precios.ParametrosPrecio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("ColchonCambiario")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<decimal>("ComisionPasarela")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<decimal>("ImpresionExtraUsd")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("Margen")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<DateTimeOffset>("VigenteDesdeUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VigenteDesdeUtc");
+
+                    b.ToTable("ParametrosPrecio", "dbo");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0b7f3c1e-5a0d-4a53-9c1e-7d0f6b2a4e11"),
+                            ActualizadoPor = "semilla",
+                            ColchonCambiario = 0.03m,
+                            ComisionPasarela = 0.036m,
+                            ImpresionExtraUsd = 0m,
+                            Margen = 0.40m,
+                            VigenteDesdeUtc = new DateTimeOffset(new DateTime(2026, 11, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Precios.TipoCambioDiario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Fuente")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("ObtenidoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha")
+                        .IsUnique();
+
+                    b.ToTable("TiposCambioDiarios", "dbo");
+                });
+
             modelBuilder.Entity("BlackHellHeim.Dominio.Tiendas.Tienda", b =>
                 {
                     b.Property<string>("Codigo")
@@ -172,6 +420,21 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("DisenosVariantes", b =>
+                {
+                    b.Property<Guid>("DisenoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VarianteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("DisenoId", "VarianteId");
+
+                    b.HasIndex("VarianteId");
+
+                    b.ToTable("DisenosVariantes", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -327,6 +590,42 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.Diseno", b =>
+                {
+                    b.HasOne("BlackHellHeim.Dominio.Disenos.ArchivoArte", "ArchivoArte")
+                        .WithMany()
+                        .HasForeignKey("ArchivoArteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ArchivoArte");
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Disenos.Variante", b =>
+                {
+                    b.HasOne("BlackHellHeim.Dominio.Disenos.ProductoBase", "ProductoBase")
+                        .WithMany()
+                        .HasForeignKey("ProductoBaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductoBase");
+                });
+
+            modelBuilder.Entity("DisenosVariantes", b =>
+                {
+                    b.HasOne("BlackHellHeim.Dominio.Disenos.Diseno", null)
+                        .WithMany()
+                        .HasForeignKey("DisenoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlackHellHeim.Dominio.Disenos.Variante", null)
+                        .WithMany()
+                        .HasForeignKey("VarianteId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

@@ -18,6 +18,12 @@ public static class TraductorProblemas
         TipoError.NoAutenticado => StatusCodes.Status401Unauthorized,
         TipoError.Bloqueado => StatusCodes.Status423Locked,
         TipoError.Prohibido => StatusCodes.Status403Forbidden,
+        TipoError.PrecondicionFallida => StatusCodes.Status412PreconditionFailed,
+        TipoError.ProveedorFallo => StatusCodes.Status502BadGateway,
+        TipoError.ProveedorSaturado => StatusCodes.Status503ServiceUnavailable,
+        TipoError.ProveedorTiempoAgotado => StatusCodes.Status504GatewayTimeout,
+        TipoError.ArchivoNoSoportado => StatusCodes.Status415UnsupportedMediaType,
+        TipoError.ArchivoDemasiadoGrande => StatusCodes.Status413PayloadTooLarge,
         _ => StatusCodes.Status500InternalServerError
     };
 
@@ -26,6 +32,7 @@ public static class TraductorProblemas
         var estado = EstadoHttp(error.Tipo);
         var (titulo, detalle) = error.Tipo switch
         {
+            TipoError.Validacion when error.Codigo.StartsWith("arte-", StringComparison.Ordinal) => ("Arte rechazado", error.Mensaje),
             TipoError.Validacion => ("La solicitud no es válida", "Revisa los campos indicados."),
             TipoError.NoEncontrado => ("Recurso no encontrado", error.Mensaje),
             TipoError.Conflicto => ("Conflicto", error.Mensaje),
@@ -33,6 +40,14 @@ public static class TraductorProblemas
             TipoError.NoAutenticado => ("No autenticado", error.Mensaje),
             TipoError.Bloqueado => ("Cuenta bloqueada", error.Mensaje),
             TipoError.Prohibido => ("Acceso prohibido", error.Mensaje),
+            TipoError.PrecondicionFallida => ("Versión desactualizada", error.Mensaje),
+            TipoError.ProveedorFallo => ("Proveedor de impresión con fallo", error.Mensaje),
+            TipoError.ProveedorSaturado => ("Proveedor de impresión saturado", error.Mensaje),
+            TipoError.ProveedorTiempoAgotado => ("Proveedor de impresión sin respuesta", error.Mensaje),
+            TipoError.ArchivoNoSoportado => ("Archivo no soportado", error.Mensaje),
+            TipoError.ArchivoDemasiadoGrande => ("Archivo demasiado grande", error.Mensaje),
+            TipoError.NoDisponible when error.Codigo == "almacen_no_disponible" => ("Almacenamiento no disponible", error.Mensaje),
+            TipoError.NoDisponible when error.Codigo == "tipo_cambio_no_disponible" => ("Tipo de cambio no disponible", error.Mensaje),
             TipoError.NoDisponible => ("Base de datos no disponible", error.Mensaje),
             _ => ("Error interno", error.Mensaje)
         };
@@ -47,6 +62,11 @@ public static class TraductorProblemas
             ["codigo"] = error.Codigo,
             ["idCorrelacion"] = error.IdCorrelacion
         };
+
+        if (error.ReintentarEnSegundos is { } segundos)
+        {
+            cuerpo["retryAfter"] = segundos;
+        }
 
         if (error.Campos is { Count: > 0 })
         {

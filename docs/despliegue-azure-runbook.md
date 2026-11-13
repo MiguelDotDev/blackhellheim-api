@@ -1,7 +1,7 @@
 # Runbook: primer despliegue completo de BlackHellHeim en Azure (API + web)
 
 Guía en orden, con comandos exactos. **[MANUAL]** = lo haces tú; **[SCRIPT]** = lo ejecuta un script del repo
-(pero tú lo lanzas). Nada de esto se ha ejecutado todavía: al seguirla por primera vez, anota cualquier diferencia.
+(pero tú lo lanzas). Se ejecutó por primera vez el 13 nov 2026 (ver «Lo que pasó en el primer despliegue»); anota cualquier diferencia al repetirla.
 Todos los comandos se corren desde la raíz de `blackhellheim-api`, salvo que se indique.
 
 ## 0. Qué se crea y cuánto cuesta
@@ -45,7 +45,7 @@ Si agotas los 100 000 vCore-s del mes, la base queda inaccesible hasta el mes si
    az account set --subscription "<SUBSCRIPTION_ID>"
    az account show --query "{nombre:name, id:id}" -o table
    ```
-6. **[MANUAL]** Confirma la región (por defecto `southcentralus`, la más cercana a México con Container Apps; cámbiala exportando `BHH_REGION`).
+6. **[MANUAL]** Confirma la región (por defecto `southcentralus`, pero el primer despliegue real usó `westus3`; la más cercana a México con Container Apps; cámbiala exportando `BHH_REGION`).
    Debe aparecer en ambas listas; si no, elige otra:
    ```bash
    az provider show -n Microsoft.App --query "resourceTypes[?resourceType=='managedEnvironments'].locations[]" -o tsv
@@ -170,3 +170,10 @@ En el navegador: la web carga con candado HTTPS y las llamadas a `/api/...` resp
 | `MissingSubscriptionRegistration` | Proveedor sin registrar | `az provider register -n Microsoft.App --wait` (el script ya lo hace) |
 | Cuota o región no disponible para SQL gratuito | Ya existe otra base gratuita con otra región en la suscripción o la región no la ofrece | Cambia `BHH_REGION` o usa la región de la primera base gratuita |
 | Dos despliegues seguidos | Se serializan (`concurrency`), no se cancelan | Espera; no es un error |
+
+## Lo que pasó en el primer despliegue
+Ejecutado el 13 nov 2026. El CD desplegó el API y `/salud` responde.
+
+1. **Región**: `southcentralus` y `eastus2` rechazaron servidores SQL nuevos (`RegionDoesNotAllowProvisioning`). La región final es `westus3`.
+2. **OIDC**: hubo que actualizar el sujeto de la credencial federada al formato con IDs numéricos de GitHub: `repo:MiguelDotDev@201974453/blackhellheim-api@1453202675:environment:produccion`.
+3. **Base serverless pausada**: hace fallar el job de migraciones. Se reintenta con *Re-run failed jobs*. Mejora pendiente: abrir la base antes de migrar o subir `replica-retry-limit`.

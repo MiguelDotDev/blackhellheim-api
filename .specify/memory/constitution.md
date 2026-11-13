@@ -1,6 +1,6 @@
 # Constitución de blackhellheim-api
 
-Versión 1.0.0 · Ratificada 2026-11-05 · Última modificación 2026-11-05
+Versión 1.2.0 · Ratificada 2026-11-05 · Última modificación 2026-11-12
 
 Tienda de playeras Print-On-Demand para México (MXN, español). Este repositorio es la API (.NET 10). El frontend vive en `blackhellheim-web`.
 
@@ -19,7 +19,7 @@ Toda regla de negocio tiene pruebas unitarias de caso exitoso, caso de error y v
 No se usan MediatR 13+, AutoMapper, FluentAssertions ni otras dependencias de licencia comercial. Toda dependencia nueva requiere verificar su licencia y anotarla en el plan.
 
 ### V. El precio lo calcula siempre el backend
-El cliente nunca envía precios. Fórmula: `costo_mxn = (costo_base_usd + impresion_extra_usd) × tipo_cambio × (1 + colchon_cambiario)`; `precio = redondeo(costo_mxn ÷ (1 − margen − comision_pasarela))`, terminado en 9 o 90. El precio se congela en el pedido al confirmarse el pago.
+El cliente nunca envía precios. Fórmula: `costo_mxn = (costo_base_usd + impresion_extra_usd) × tipo_cambio × (1 + colchon_cambiario)`; `precio = redondeo(costo_mxn ÷ (1 − margen − comision_pasarela))`, en precios enteros terminados en 9, redondeando siempre hacia arriba. El precio se congela en el pedido al confirmarse el pago.
 
 ### VI. Pedidos idempotentes y webhooks verificados
 La creación de pedidos usa tabla outbox. Todo webhook (Stripe, Printful) verifica firma y es idempotente ante reintentos.
@@ -47,3 +47,7 @@ Especificaciones, código, commits y documentación en español. Marca escrita *
 
 ## Gobernanza
 Esta constitución prevalece sobre otras prácticas. Cambiarla exige actualizar la versión y justificar el cambio en el commit.
+
+## Registro de versiones
+- 1.0.0 (2026-11-05): ratificación inicial.
+- 1.2.0 (2026-11-12): principio V — el redondeo comercial pasa de «terminado en 9 o 90» a «precios enteros terminados en 9, redondeando hacia arriba» (decisión vigente, ya implementada en `RedondeoComercial`).
