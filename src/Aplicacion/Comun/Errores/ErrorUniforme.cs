@@ -11,6 +11,12 @@ public enum TipoError
     NoAutenticado,
     Bloqueado,
     Prohibido,
+    PrecondicionFallida,
+    ProveedorFallo,
+    ProveedorSaturado,
+    ProveedorTiempoAgotado,
+    ArchivoNoSoportado,
+    ArchivoDemasiadoGrande,
     Inesperado
 }
 
@@ -29,6 +35,9 @@ public sealed record ErrorUniforme(
     IReadOnlyDictionary<string, string[]>? Campos,
     string IdCorrelacion)
 {
+    /// <summary>Segundos sugeridos para reintentar; solo en saturación del proveedor.</summary>
+    public int? ReintentarEnSegundos { get; init; }
+
     public static ErrorUniforme NoEncontrado(string mensaje, string idCorrelacion) =>
         new(TipoError.NoEncontrado, "recurso_no_encontrado", mensaje, null, idCorrelacion);
 
@@ -38,6 +47,27 @@ public sealed record ErrorUniforme(
     /// <summary>Mensaje único: no distingue correo inexistente de contraseña errónea.</summary>
     public static ErrorUniforme NoAutenticado(string idCorrelacion) =>
         new(TipoError.NoAutenticado, "no_autenticado", "Credenciales inválidas o sesión no válida.", null, idCorrelacion);
+
+    public static ErrorUniforme PrecondicionFallida(string idCorrelacion) =>
+        new(TipoError.PrecondicionFallida, "version_desactualizada",
+            "El recurso cambió desde que lo leíste. Vuelve a cargarlo antes de editar.", null, idCorrelacion);
+
+    public static ErrorUniforme ProveedorFallo(string idCorrelacion) =>
+        new(TipoError.ProveedorFallo, "proveedor_fallo", "El proveedor de impresión no pudo atender la solicitud.", null, idCorrelacion);
+
+    public static ErrorUniforme ProveedorSaturado(int segundos, string idCorrelacion) =>
+        new(TipoError.ProveedorSaturado, "proveedor_saturado",
+            "El proveedor de impresión está limitando las solicitudes. Intenta de nuevo en unos segundos.", null, idCorrelacion)
+        { ReintentarEnSegundos = segundos };
+
+    public static ErrorUniforme ProveedorTiempoAgotado(string idCorrelacion) =>
+        new(TipoError.ProveedorTiempoAgotado, "proveedor_tiempo_agotado", "El proveedor de impresión tardó demasiado en responder.", null, idCorrelacion);
+
+    public static ErrorUniforme Arte(TipoError tipo, string codigo, string mensaje, string idCorrelacion) =>
+        new(tipo, codigo, mensaje, null, idCorrelacion);
+
+    public static ErrorUniforme AlmacenNoDisponible(string idCorrelacion) =>
+        new(TipoError.NoDisponible, "almacen_no_disponible", "El almacenamiento de archivos no respondió. Intenta de nuevo más tarde.", null, idCorrelacion);
 
     public static ErrorUniforme Prohibido(string idCorrelacion) =>
         new(TipoError.Prohibido, "acceso_prohibido", "No tienes permiso para este recurso.", null, idCorrelacion);
