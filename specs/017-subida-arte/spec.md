@@ -9,7 +9,7 @@
 ## Escenarios de uso y pruebas
 
 ### HU 1 — Subir un arte válido (P1)
-1. **Dado** un PNG con canal alfa y fondo realmente transparente (al menos 5 % de píxeles transparentes incluyendo las 4 esquinas), de resolución mínima configurable (valor propuesto 4500×5400 px, **a confirmar** `[MANUAL]`, T003a) y ≤200 MB, **cuando** lo subo, **entonces** se guarda en el contenedor público de arte con nombre generado, se registra en `ArchivosArte` y recibo `201` con id, URL pública, ancho, alto y tamaño.
+1. **Dado** un PNG con canal alfa y fondo realmente transparente (al menos 5 % de píxeles transparentes incluyendo las 4 esquinas), de resolución mínima configurable (valor confirmado 1800×2400 px, T003a) y ≤200 MB, **cuando** lo subo, **entonces** se guarda en el contenedor público de arte con nombre generado, se registra en `ArchivosArte` y recibo `201` con id, URL pública, ancho, alto y tamaño.
 2. **Dado** el mismo contenido subido dos veces (mismo SHA-256), **entonces** se reutiliza el existente y no se duplica el blob.
 
 ### HU 2 — Rechazos con motivo claro (P1)
@@ -34,7 +34,7 @@ Subida cancelada a mitad (no queda blob huérfano); falla del almacenamiento (50
 - **RF-002** Validador de arte (firma PNG, alfa, transparencia, resolución mínima, tamaño, dimensiones máximas).
 - **RF-003** `POST /admin/arte` multipart; devuelve DTO con URL pública.
 - **RF-004** Deduplicación por SHA-256.
-- **RF-005** Límites configurables (`Arte__MinAncho`, `MinAlto`, `MaxBytes`).
+- **RF-005** Límites configurables (`Arte__MinAncho`, `MinAlto`, `MaxBytes`). Resolución mínima confirmada: **1800×2400 px** (150 DPI en el área de impresión de 12×16 pulgadas). Fuente: guía de Printful sobre archivos de impresión (mínimo 150 DPI para DTG; 300 DPI ideal; área de 12×16 pulgadas, 15×18 en algunos productos).
 - **RF-006** Registro en `ArchivosArte` (HU-16) sin migración propia.
 - **RF-007** Nada de secretos en el repo; Azurite local con su clave pública de desarrollo documentada, no la de producción.
 
