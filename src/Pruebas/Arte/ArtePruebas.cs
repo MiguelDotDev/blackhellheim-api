@@ -30,6 +30,19 @@ public class ValidadorArtePruebas
     public void UnaResolucionPorDebajoDelMinimoSeRechaza(int ancho, int alto) =>
         Assert.Equal(ValidadorArte.ResolucionInsuficiente, Validar(GeneradorPng.Crear(ancho, alto)).Error!.Codigo);
 
+    [Theory]
+    [InlineData(1799, 2400, false)]
+    [InlineData(1800, 2399, false)]
+    [InlineData(1800, 2400, true)]
+    public void ElMinimoPorDefectoEs1800x2400(int ancho, int alto, bool valido)
+    {
+        var o = new OpcionesArte();
+        Assert.Equal((1800, 2400), (o.MinAncho, o.MinAlto));
+        var error = Validar(GeneradorPng.Crear(ancho, alto), o).Error;
+        Assert.Equal(valido ? null : ValidadorArte.ResolucionInsuficiente, error?.Codigo);
+        if (!valido) Assert.Contains("1800×2400", error!.Mensaje);
+    }
+
     [Fact]
     public void UnPngOpacoSeRechazaPorTransparencia() =>
         Assert.Equal(ValidadorArte.SinTransparencia, Validar(GeneradorPng.Crear(40, 50, transparente: false)).Error!.Codigo);
