@@ -59,9 +59,9 @@ Meta: API de catálogo, panel de alta de diseños y motor de precios. Rama: `spr
 
 | HU | Repos | Comp. | Horas | Prio | Historia | Criterio de aceptación | Spec | Estado |
 |---|---|---|---|---|---|---|---|---|
-| 19 | api | BE | 6 | M | Como visitante, quiero que la API de catálogo liste, filtre y detalle las playeras. | Listado paginado con filtros; el detalle trae imágenes, colores y tallas. |  | Pendiente |
+| 19 | api | BE | 6 | M | Como visitante, quiero que la API de catálogo liste, filtre y detalle las playeras. | Listado paginado con filtros; el detalle trae imágenes, colores y tallas. | specs/019-api-catalogo | Hecha |
 | 18 | web | FE | 12 | M | Como administradora, quiero crear y editar diseños con varias imágenes, colores y tallas. | El formulario guarda un diseño completo y avisa si el arte negro va sobre prenda negra. |  | Pendiente |
-| 20 | api | BE | 12 | M | Quiero un motor de precios con tipo de cambio, colchón y margen estático. | Para entradas dadas, el precio coincide con la fórmula y termina en 9 o 90; el tipo de cambio se guarda por día. |  | Pendiente |
+| 20 | api | BE | 12 | M | Quiero un motor de precios con tipo de cambio, colchón y margen estático. | Para entradas dadas, el precio coincide con la fórmula y termina en 9 o 90; el tipo de cambio se guarda por día. | specs/020-motor-precios | Hecha |
 
 ## Sprint 6 · 23–29 oct · 36 h
 

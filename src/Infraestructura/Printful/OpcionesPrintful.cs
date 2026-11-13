@@ -8,6 +8,9 @@ public sealed class OpcionesPrintful
     public int TiempoEsperaSegundos { get; set; } = 10;
     public int MinutosCache { get; set; } = 10;
 
+    /// <summary>Categorías de playeras en /v2/catalog-categories (verificadas 2026-11-13): 24 hombre, 32 mujer, 38 niños.</summary>
+    public int[] CategoriasPlayeras { get; set; } = [24, 32, 38];
+
     /// <summary>Regiones de venta de Printful que cubren cada país; "worldwide" siempre aplica. A verificar con token real.</summary>
     public Dictionary<string, string[]> RegionesPorPais { get; set; } = new()
     {

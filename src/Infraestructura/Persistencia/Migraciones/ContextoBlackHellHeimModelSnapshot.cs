@@ -238,6 +238,82 @@ namespace BlackHellHeim.Infraestructura.Persistencia.Migraciones
                     b.ToTable("Variantes", "dbo");
                 });
 
+            modelBuilder.Entity("BlackHellHeim.Dominio.Precios.ParametrosPrecio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("ColchonCambiario")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<decimal>("ComisionPasarela")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<decimal>("ImpresionExtraUsd")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("Margen")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<DateTimeOffset>("VigenteDesdeUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VigenteDesdeUtc");
+
+                    b.ToTable("ParametrosPrecio", "dbo");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0b7f3c1e-5a0d-4a53-9c1e-7d0f6b2a4e11"),
+                            ActualizadoPor = "semilla",
+                            ColchonCambiario = 0.03m,
+                            ComisionPasarela = 0.036m,
+                            ImpresionExtraUsd = 0m,
+                            Margen = 0.40m,
+                            VigenteDesdeUtc = new DateTimeOffset(new DateTime(2026, 11, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("BlackHellHeim.Dominio.Precios.TipoCambioDiario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Fuente")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("ObtenidoUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha")
+                        .IsUnique();
+
+                    b.ToTable("TiposCambioDiarios", "dbo");
+                });
+
             modelBuilder.Entity("BlackHellHeim.Dominio.Tiendas.Tienda", b =>
                 {
                     b.Property<string>("Codigo")

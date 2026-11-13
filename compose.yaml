@@ -54,6 +54,8 @@ services:
       Administrador__Contrasena: ${BHH_ADMIN_CONTRASENA:-}
       # Printful (historia 015): opcional; sin token los endpoints de catálogo responden 502.
       Printful__Token: ${BHH_PRINTFUL_TOKEN:-}
+      # Tipo de cambio (historia 020): opcional; sin token el precio usa el último tipo de cambio guardado o responde 503.
+      Banxico__Token: ${BHH_BANXICO_TOKEN:-}
       # Almacén de arte (historia 017): por omisión Azurite del compose; en producción, la cadena de la Storage Account.
       AlmacenArchivos__CadenaConexion: ${BHH_ALMACEN_CADENA:-UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://azurite}
     ports:
