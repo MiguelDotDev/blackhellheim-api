@@ -5,7 +5,7 @@ Etiquetas: [BE] [MANUAL]. Pruebas primero.
 ## Fase 1
 - [X] T001 [BE] Prueba de contrato contra `contratos/openapi.yaml` (falla) y verificar que HU-13 está integrada (si no, implementar casos de uso y dejar los endpoints como última tarea).
 - [X] T002 [BE] Verificar rutas, campos y límites de la API v2 de Printful en su documentación; anotar en `investigacion.md` (con fecha) y registrar licencia: no hay dependencias nuevas.
-- [ ] T003 [MANUAL] Crear cuenta de Printful y token privado; guardar `Printful__Token` en `.env` local (nunca en el repo).
+- [x] T003 [MANUAL] Crear cuenta de Printful y token privado; guardar `Printful__Token` en `.env` local (nunca en el repo). Evidencia (prueba manual 2026-11-13, API local con credenciales reales): login de administrador 200; variantes reales del producto 71 (Bella+Canvas 3001) con 200, 15 variantes con costo base y disponibilidad; guardado de diseño con variante real 201.
 
 ## Fase 2: Aplicación
 - [X] T004 [P] [BE] Pruebas de los manejadores `ObtenerProducto`, `ListarProductos`, `ListarVariantes` con doble de `IProveedorImpresion` (éxito, 404, técnica/país inválidos → 400, lista vacía).
