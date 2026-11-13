@@ -1,6 +1,6 @@
 # Informe HU-25 (parte API, tareas automáticas)
 
-Rama `sprint/03`. Sin push, sin `az`, sin recursos en la nube. HU-25 **no** está en «Hecha» en el backlog (faltan tareas [MANUAL] y la parte web).
+Rama `sprint/03`. Al redactar este informe no se ejecutó nada; el 13 nov 2026 se ejecutaron después las tareas [MANUAL] T003, T007, T009 y T014 (región final `westus3`, API desplegado, `/salud` responde; ver runbook). HU-25 **no** está en «Hecha» en el backlog (faltan tareas [MANUAL] y la parte web).
 
 ## Lectura tomada
 Solo `specs/025-despliegue-azure`, parte API: scripts `az` (no ejecutados), flujos, pruebas y runbook.
