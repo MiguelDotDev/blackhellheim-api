@@ -18,7 +18,7 @@ Etiquetas: [BE] [DB] [MANUAL]. Pruebas primero.
 - [x] T009 [P] [BE] Pruebas de `SubirArte`: éxito, deduplicado, sin huérfanos si falla el registro, cancelación.
 - [x] T010 [BE] Manejador y `ArteAdminEndpoints` (multipart, límite 200 MB por ruta, política Administrador).
 - [x] T011 [BE] Pruebas de endpoint de todos los códigos; 201 devuelve URL pública.
-- [ ] T012 [MANUAL] Crear Storage Account y contenedor `arte` público; guardar cadena en secretos de Azure.
+- [x] T012 [MANUAL] Crear Storage Account y contenedor `arte` público; guardar cadena en secretos de Azure. _(cuenta bhhst229976c3 y contenedor arte creados en Azure el 13 nov 2026 por crear-recursos.sh; subida de arte aún sin probar en producción)_
 ## Fase 5: Cierre
 - [x] T013 [BE] `build`/`test` en verde; backlog = Hecha; commit `HU-17: subida de arte a Azure Blob`.
 
