@@ -1,4 +1,6 @@
 using BlackHellHeim.Dominio.Autenticacion;
+using BlackHellHeim.Dominio.Disenos;
+using BlackHellHeim.Dominio.Precios;
 using BlackHellHeim.Dominio.Tiendas;
 using BlackHellHeim.Infraestructura.Identidad;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +15,12 @@ public class ContextoBlackHellHeim(DbContextOptions<ContextoBlackHellHeim> opcio
     public DbSet<Tienda> Tiendas => Set<Tienda>();
 
     public DbSet<TokenRefresco> TokensRefresco => Set<TokenRefresco>();
+    public DbSet<Diseno> Disenos => Set<Diseno>();
+    public DbSet<ProductoBase> ProductosBase => Set<ProductoBase>();
+    public DbSet<Variante> Variantes => Set<Variante>();
+    public DbSet<ArchivoArte> ArchivosArte => Set<ArchivoArte>();
+    public DbSet<TipoCambioDiario> TiposCambioDiarios => Set<TipoCambioDiario>();
+    public DbSet<ParametrosPrecio> ParametrosPrecio => Set<ParametrosPrecio>();
 
     protected override void OnModelCreating(ModelBuilder constructor)
     {

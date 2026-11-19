@@ -34,7 +34,14 @@ public static class LectorContratos
                 continue;
             }
 
-            resultado[carpeta.Parent!.Name] = ConvertirYaml(File.ReadAllText(ruta));
+            var contrato = ConvertirYaml(File.ReadAllText(ruta));
+            // Un contrato con `x-pendiente: true` aún no está implementado: se omite hasta que su historia lo esté.
+            if (contrato["x-pendiente"]?.GetValue<bool>() == true)
+            {
+                continue;
+            }
+
+            resultado[carpeta.Parent!.Name] = contrato;
         }
 
         return resultado;

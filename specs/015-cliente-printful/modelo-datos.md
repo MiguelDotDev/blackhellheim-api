@@ -1,0 +1,2 @@
+# Modelo de datos 015
+Sin tablas ni migraciones. Modelos de aplicación (records): `ProductoCatalogo {Id, Nombre, Tipo, Tecnicas[]}`, `VarianteCatalogo {Id, ProductoId, Color, CodigoColor, Talla, CostoBaseUsd, Tecnica, DisponiblePais}`, `Disponibilidad {VarianteId, Pais, Tecnica, Estado}`. Valores de `tecnica`: `dtg`, `embroidery`, `dtfilm`, `sublimation` (los que Printful publique); `pais`: código ISO-3166 alfa-2.
