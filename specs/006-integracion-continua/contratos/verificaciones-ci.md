@@ -14,6 +14,10 @@ protección de rama y la documentación dependen de ellos.
 | `pull_request` | base `main`, `release`, `developer` o `sprint/**` | los tres |
 | `push` | `main`, `release`, `developer` y `sprint/**` | los tres |
 
+Excepción: `calidad-sonar.yml` dispara `push` solo en `main`, porque SonarQube Cloud no
+permite consultar el Quality Gate de ramas distintas de `main`; las ramas `release`,
+`developer` y `sprint/**` se analizan en el `pull_request`.
+
 No se usan `paths-ignore` ni `paths`: todo cambio, incluida la documentación, pasa por
 las verificaciones. No hay `schedule` ni `workflow_dispatch` en esta historia.
 
