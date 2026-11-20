@@ -9,10 +9,10 @@ namespace BlackHellHeim.Infraestructura.Webhooks;
 
 public static class VerificadorFirmaHmac
 {
-    /// <summary>HMAC-SHA256 del cuerpo crudo contra la firma hexadecimal, en tiempo constante.</summary>
-    public static bool EsValida(string secreto, ReadOnlySpan<byte> cuerpo, string? firma)
+    /// <summary>HMAC-SHA256 del cuerpo crudo con el secreto ya decodificado, contra la firma hexadecimal, en tiempo constante.</summary>
+    public static bool EsValida(byte[] secreto, ReadOnlySpan<byte> cuerpo, string? firma)
     {
-        if (string.IsNullOrEmpty(secreto) || string.IsNullOrWhiteSpace(firma)) return false;
+        if (secreto.Length == 0 || string.IsNullOrWhiteSpace(firma)) return false;
         if (firma.Length != 64) return false;
         byte[] recibida;
         try
@@ -24,7 +24,7 @@ public static class VerificadorFirmaHmac
             return false;
         }
 
-        var esperada = HMACSHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secreto), cuerpo);
+        var esperada = HMACSHA256.HashData(secreto, cuerpo);
         return CryptographicOperations.FixedTimeEquals(esperada, recibida);
     }
 }

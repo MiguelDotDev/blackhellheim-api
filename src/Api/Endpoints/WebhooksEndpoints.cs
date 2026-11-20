@@ -27,15 +27,28 @@ public static class WebhooksEndpoints
                 if (string.IsNullOrEmpty(o.SecretoWebhook))
                     return Error(new(TipoError.NoDisponible, "webhook_no_configurado", "El webhook no está configurado.", null, Id()));
 
+                // Printful entrega el secreto como hexadecimal: se decodifica a bytes antes del HMAC.
+                byte[] secreto;
+                try { secreto = Convert.FromHexString(o.SecretoWebhook.Trim()); }
+                catch (FormatException)
+                {
+                    registro.LogError("Printful__SecretoWebhook no es hexadecimal válido; webhook deshabilitado.");
+                    return Error(new(TipoError.NoDisponible, "webhook_no_configurado", "El webhook no está configurado.", null, Id()));
+                }
+
                 var cuerpo = await LeerAcotadoAsync(h.Request, c);
                 if (cuerpo is null)
                     return Error(new(TipoError.ArchivoDemasiadoGrande, "webhook_demasiado_grande", "El cuerpo supera 1 MB.", null, Id()));
 
-                if (!VerificadorFirmaHmac.EsValida(o.SecretoWebhook, cuerpo, h.Request.Headers[o.CabeceraFirma].ToString()))
+                // El nombre real de la cabecera de firma está sin verificar: se registran todas para confirmarlo.
+                registro.LogInformation("Webhook printful: cabeceras recibidas [{Cabeceras}]; firma leída de «{Usada}».",
+                    string.Join(", ", h.Request.Headers.Keys), o.CabeceraFirma);
+
+                if (!VerificadorFirmaHmac.EsValida(secreto, cuerpo, h.Request.Headers[o.CabeceraFirma].ToString()))
                     return Error(ErrorUniforme.NoAutenticado(Id()));
 
                 if (!TryLeerEvento(cuerpo, out var idEvento, out var tipo))
-                    return Error(ErrorUniforme.DeValidacion([new("cuerpo", "Se esperaba un JSON con «id» y «type».")], Id()));
+                    return Error(ErrorUniforme.DeValidacion([new("cuerpo", "Se esperaba un JSON objeto con «type».")], Id()));
 
                 var r = await e.Send(new RecibirWebhookComando("printful", idEvento, tipo, System.Text.Encoding.UTF8.GetString(cuerpo)), c);
                 if (r.Valor is { CuerpoDistinto: true })
@@ -75,26 +88,45 @@ public static class WebhooksEndpoints
         return memoria.ToArray();
     }
 
-    private static bool TryLeerEvento(byte[] cuerpo, out string id, out string tipo)
+    /// <summary>
+    /// Printful no envía id en la raíz: se deriva de forma determinista (type|id de la tarea u objeto en data|occurred_at);
+    /// sin id en data, SHA-256 del cuerpo crudo. shortcut: en el respaldo, un reintento con «retries» distinto cambia el hash.
+    /// </summary>
+    public static bool TryLeerEvento(byte[] cuerpo, out string id, out string tipo)
     {
         id = tipo = "";
         try
         {
             using var doc = JsonDocument.Parse(cuerpo);
-            if (doc.RootElement.ValueKind != JsonValueKind.Object) return false;
             var raiz = doc.RootElement;
-            id = raiz.TryGetProperty("id", out var i) ? i.ValueKind switch
+            if (raiz.ValueKind != JsonValueKind.Object) return false;
+            tipo = Texto(raiz, "type");
+            if (tipo.Length is 0 or > 80) return false;
+
+            var objeto = "";
+            if (raiz.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Object)
             {
-                JsonValueKind.String => i.GetString() ?? "",
-                JsonValueKind.Number => i.GetRawText(),
-                _ => ""
-            } : "";
-            tipo = raiz.TryGetProperty("type", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() ?? "" : "";
-            return id.Length is > 0 and <= 100 && tipo.Length is > 0 and <= 80;
+                foreach (var nodo in new[] { Hijo(d, "mockup_task"), Hijo(d, "task"), d })
+                {
+                    objeto = Texto(nodo, "id");
+                    if (objeto.Length > 0) break;
+                }
+            }
+
+            id = objeto.Length > 0 ? $"{tipo}|{objeto}|{Texto(raiz, "occurred_at")}" : "";
+            if (id.Length is 0 or > 100) id = "sha256:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(cuerpo));
+            return true;
         }
         catch (JsonException)
         {
             return false;
         }
     }
+
+    private static JsonElement Hijo(JsonElement e, string n) => e.TryGetProperty(n, out var v) ? v : default;
+
+    private static string Texto(JsonElement e, string n) =>
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty(n, out var v)
+            ? v.ValueKind switch { JsonValueKind.String => v.GetString() ?? "", JsonValueKind.Number => v.GetRawText(), _ => "" }
+            : "";
 }

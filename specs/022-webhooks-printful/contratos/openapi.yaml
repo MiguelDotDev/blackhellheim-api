@@ -2,7 +2,8 @@ openapi: 3.1.1
 info:
   title: BlackHellHeim API — webhooks de Printful
   version: 0.6.0
-  description: Recibe eventos de Printful con firma HMAC-SHA256 sobre el cuerpo crudo. Idempotente por id de evento.
+  description: >-
+    Recibe eventos de Printful con firma HMAC-SHA256 sobre el cuerpo crudo. Idempotente por un id derivado del evento (Printful no envía id en la raíz): type + id de la tarea u objeto en data + occurred_at, o SHA-256 del cuerpo si data no trae id. El secreto del webhook es hexadecimal y se decodifica a bytes para el HMAC.
 paths:
   /webhooks/printful:
     post:
@@ -12,7 +13,7 @@ paths:
         - name: X-Printful-Signature
           in: header
           required: true
-          description: Firma HMAC-SHA256 hexadecimal del cuerpo (nombre configurable).
+          description: Firma HMAC-SHA256 hexadecimal del cuerpo (nombre configurable; el nombre real de la cabecera está SIN VERIFICAR).
           schema:
             type: string
       requestBody:
@@ -25,7 +26,7 @@ paths:
         '200':
           description: Evento aceptado (o repetido, ya procesado)
         '400':
-          description: Cuerpo no JSON o sin id/tipo de evento
+          description: Cuerpo no JSON objeto o sin type
           content:
             application/problem+json:
               schema:
@@ -43,7 +44,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
         '503':
-          description: Secreto de webhook no configurado
+          description: Secreto de webhook no configurado o no hexadecimal
           content:
             application/problem+json:
               schema:

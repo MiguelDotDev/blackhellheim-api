@@ -1,14 +1,17 @@
 # Investigación 022 (T002): formato de firma de Printful
 
-**Estado: NO verificado contra Printful real.** No se hicieron llamadas externas (regla de la sesión). Se implementó la suposición de la spec y queda `[MANUAL]` confirmarla.
+Contrastado con la documentación v2 de Printful (sin llamadas reales). **Sin verificar: solo el nombre de la cabecera de firma.**
 
-## Implementado (suposiciones)
-- Firma: HMAC-SHA256 del **cuerpo crudo** (bytes recibidos), en hexadecimal (64 caracteres, mayúsculas o minúsculas), comparada con `CryptographicOperations.FixedTimeEquals`.
-- Cabecera: `X-Printful-Signature`, configurable con `Printful__CabeceraFirma`. Secreto: `Printful__SecretoWebhook`.
-- Identificador de evento: propiedad `id` de la raíz del JSON (cadena o número); tipo: propiedad `type`.
-- Sin marca de tiempo: no se valida la ventana de 5 min (la spec la condiciona a que Printful la envíe).
+## Formato del evento (documentación v2)
+Cada evento trae `type`, `occurred_at`, `retries`, `store_id` y `data`. **No hay `id` en la raíz.**
 
-## Riesgos a confirmar `[MANUAL]` (T003)
-1. La documentación pública de webhooks de Printful (v1) describe el cuerpo como `{type, created, retries, store, data}` y **no** garantiza un `id` de evento ni una firma HMAC propia (v1 se protege con URL secreta). Si es así, hay que decidir el id (p. ej. derivarlo de `type` + identificador dentro de `data`) y el esquema de autenticación, y actualizar spec y contrato (HU-22 es dueña del contrato).
-2. Hasta confirmarlo, un evento real sin `id` recibiría `400`.
-3. Registrar el webhook en Printful requiere URL pública HTTPS (HU-25/HU-40, no implementadas).
+## Implementado
+- **Id de idempotencia** (derivado, determinista): `type|id|occurred_at`, donde `id` es el de `data.mockup_task`, `data.task` o `data` (el primero presente). Sin id en `data` (o si excede 100 caracteres): `sha256:` + SHA-256 del cuerpo crudo. Un reintento con el mismo contenido produce el mismo id; `retries` no interviene en el caso con id. Límite del respaldo por hash: si cambia `retries` en el cuerpo, cambia el hash. Índice único (`Proveedor`, `IdExterno`) conservado.
+- **Firma**: HMAC-SHA256 del cuerpo crudo, hexadecimal (64 caracteres), comparada con `CryptographicOperations.FixedTimeEquals`.
+- **Secreto**: `Printful__SecretoWebhook` es la cadena hexadecimal del `secret_key` del webhook; se decodifica a bytes antes del HMAC. Si no es hexadecimal válido → `503` y error de configuración en el log (sin el valor).
+- **Cabecera**: `X-Printful-Signature` por defecto, configurable con `Printful__CabeceraFirma`. **SIN VERIFICAR.** Cada entrega registra (información) los nombres de todas las cabeceras recibidas y la usada para la firma, para confirmarla con una entrega real.
+- Respuestas: `401` firma inválida, `503` sin secreto o secreto no hexadecimal, `413` cuerpo > 1 MB, `400` cuerpo no JSON objeto o sin `type`.
+
+## Pendiente `[MANUAL]` (T003)
+1. Confirmar con una entrega real el nombre de la cabecera de firma (revisar el log).
+2. Registrar el webhook requiere URL pública HTTPS (HU-25/HU-40, no implementadas).

@@ -16,18 +16,20 @@ namespace BlackHellHeim.Pruebas.Webhooks;
 public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
 {
     private static readonly string Secreto = Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
-    private const string Cuerpo = """{"id":"ev-1","type":"mockup_task_finished","data":{}}""";
+    private const string Cuerpo = """{"type":"mockup_task_finished","occurred_at":"t1","data":{"n":1}}""";
+
+    private static readonly string IdDerivado = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Cuerpo)));
 
     private static string Firma(string cuerpo, string? secreto = null) =>
-        Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(secreto ?? Secreto), Encoding.UTF8.GetBytes(cuerpo))).ToLowerInvariant();
+        Convert.ToHexString(HMACSHA256.HashData(Convert.FromHexString(secreto ?? Secreto), Encoding.UTF8.GetBytes(cuerpo))).ToLowerInvariant();
 
     // --- Verificador (CE-001) ---
     [Fact]
     public void LaFirmaValidaSeAceptaEnMinusculasYMayusculas()
     {
         var bytes = Encoding.UTF8.GetBytes(Cuerpo);
-        Assert.True(VerificadorFirmaHmac.EsValida(Secreto, bytes, Firma(Cuerpo)));
-        Assert.True(VerificadorFirmaHmac.EsValida(Secreto, bytes, Firma(Cuerpo).ToUpperInvariant()));
+        Assert.True(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), bytes, Firma(Cuerpo)));
+        Assert.True(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), bytes, Firma(Cuerpo).ToUpperInvariant()));
     }
 
     [Theory]
@@ -37,19 +39,19 @@ public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
     [InlineData("abc")]
     [InlineData("zz")]
     public void LasFirmasAusentesOMalFormadasSeRechazan(string? firma) =>
-        Assert.False(VerificadorFirmaHmac.EsValida(Secreto, Encoding.UTF8.GetBytes(Cuerpo), firma));
+        Assert.False(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), Encoding.UTF8.GetBytes(Cuerpo), firma));
 
     [Fact]
     public void UnaFirmaConHexInvalidoDe64CaracteresSeRechaza() =>
-        Assert.False(VerificadorFirmaHmac.EsValida(Secreto, Encoding.UTF8.GetBytes(Cuerpo), new string('g', 64)));
+        Assert.False(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), Encoding.UTF8.GetBytes(Cuerpo), new string('g', 64)));
 
     [Fact]
     public void LaFirmaDeOtroCuerpoOSecretoOSinSecretoSeRechaza()
     {
         var bytes = Encoding.UTF8.GetBytes(Cuerpo);
-        Assert.False(VerificadorFirmaHmac.EsValida(Secreto, bytes, Firma(Cuerpo + " ")));
-        Assert.False(VerificadorFirmaHmac.EsValida(Secreto, bytes, Firma(Cuerpo, "otro")));
-        Assert.False(VerificadorFirmaHmac.EsValida("", bytes, Firma(Cuerpo, "")));
+        Assert.False(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), bytes, Firma(Cuerpo + " ")));
+        Assert.False(VerificadorFirmaHmac.EsValida(Convert.FromHexString(Secreto), bytes, Firma(Cuerpo, "ABCD")));
+        Assert.False(VerificadorFirmaHmac.EsValida([], bytes, Firma(Cuerpo, "")));
     }
 
     // --- Caso de uso ---
@@ -230,7 +232,7 @@ public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
     {
         var (cliente, _, _) = Api(Secreto);
 
-        var r = await Enviar(cliente, Cuerpo.Replace("ev-1", "ev-2"), Firma(Cuerpo));
+        var r = await Enviar(cliente, Cuerpo.Replace("\"n\":1", "\"n\":2"), Firma(Cuerpo));
 
         Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode);
     }
@@ -238,10 +240,9 @@ public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
     [Theory]
     [InlineData("no es json")]
     [InlineData("[]")]
-    [InlineData("""{"type":"mockup_task_finished"}""")]
     [InlineData("""{"id":"x"}""")]
-    [InlineData("""{"id":"","type":"t"}""")]
-    [InlineData("""{"id":{"a":1},"type":"t"}""")]
+    [InlineData("""{"type":""}""")]
+    [InlineData("""{"type":{"a":1}}""")]
     public async Task UnCuerpoFirmadoSinJsonOSinIdOTipoDa400(string cuerpo)
     {
         var (cliente, repo, _) = Api(Secreto);
@@ -250,6 +251,46 @@ public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
 
         Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
         Assert.Equal(0, repo.Total);
+    }
+
+    [Fact]
+    public async Task UnSecretoNoHexadecimalDa503()
+    {
+        var (cliente, repo, _) = Api("no-es-hex");
+
+        var r = await Enviar(cliente, Cuerpo, Firma(Cuerpo));
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, r.StatusCode);
+        Assert.DoesNotContain("no-es-hex", await r.Content.ReadAsStringAsync());
+        Assert.Equal(0, repo.Total);
+    }
+
+    // --- Id derivado (Printful no manda id en la raíz) ---
+    private static string IdDe(string json)
+    {
+        Assert.True(BlackHellHeim.Api.Endpoints.WebhooksEndpoints.TryLeerEvento(Encoding.UTF8.GetBytes(json), out var id, out _));
+        return id;
+    }
+
+    [Fact]
+    public void ElIdSeDerivaDeTipoObjetoYOccurredAtYEsDeterminista()
+    {
+        const string a = """{"type":"mockup_task_finished","occurred_at":"2026-11-01T10:00:00Z","retries":0,"data":{"mockup_task":{"id":77}}}""";
+        var reintento = a.Replace("\"retries\":0", "\"retries\":2");
+
+        Assert.Equal("mockup_task_finished|77|2026-11-01T10:00:00Z", IdDe(a));
+        Assert.Equal(IdDe(a), IdDe(reintento));
+        Assert.NotEqual(IdDe(a), IdDe(a.Replace("77", "78")));
+    }
+
+    [Fact]
+    public void SinIdEnDataElIdEsElHashDelCuerpo()
+    {
+        const string a = """{"type":"package_shipped","data":{"x":1}}""";
+
+        Assert.StartsWith("sha256:", IdDe(a));
+        Assert.Equal(IdDe(a), IdDe(a));
+        Assert.NotEqual(IdDe(a), IdDe(a.Replace("1", "2")));
     }
 
     [Fact]
@@ -286,7 +327,7 @@ public class WebhooksPruebas : IClassFixture<FabricaApiPruebas>
 
         Assert.Equal(HttpStatusCode.InternalServerError, falla.StatusCode);
         Assert.Equal(HttpStatusCode.OK, reintento.StatusCode);
-        Assert.Equal(EstadoEvento.Procesado, repo.Estado("ev-1"));
+        Assert.Equal(EstadoEvento.Procesado, repo.Estado(IdDerivado));
     }
 
     [Fact]

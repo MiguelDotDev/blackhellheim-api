@@ -129,8 +129,8 @@ public class MockupsEndpointsPruebas(FabricaApiPruebas fabrica) : IClassFixture<
     // --- Evento firmado (HU-22) → finalización ---
     private static Task<HttpResponseMessage> Evento(HttpClient c, string id, string tarea, string tipo = "mockup_task_finished")
     {
-        var cuerpo = """{"id":"ID","type":"TIPO","data":{"mockup_task":{"id":"TAREA"}}}""".Replace("ID", id).Replace("TIPO", tipo).Replace("TAREA", tarea);
-        var firma = Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(Secreto), Encoding.UTF8.GetBytes(cuerpo))).ToLowerInvariant();
+        var cuerpo = """{"occurred_at":"ID","type":"TIPO","data":{"mockup_task":{"id":"TAREA"}}}""".Replace("ID", id).Replace("TIPO", tipo).Replace("TAREA", tarea);
+        var firma = Convert.ToHexString(HMACSHA256.HashData(Convert.FromHexString(Secreto), Encoding.UTF8.GetBytes(cuerpo))).ToLowerInvariant();
         var r = new HttpRequestMessage(HttpMethod.Post, "/webhooks/printful") { Content = new StringContent(cuerpo, Encoding.UTF8, "application/json") };
         r.Headers.Add("X-Printful-Signature", firma);
         return c.SendAsync(r);
