@@ -44,3 +44,6 @@ Otras decisiones: el administrador inicial se siembra con un servicio en segundo
 - **Contratos pendientes**: `LectorContratos` omite los contratos con `x-pendiente: true`. Se marcó el de la HU-17 (no implementada). **Al fusionar `sprint/04` en `sprint/05`, hay que marcar igual los contratos de las HU-19 y HU-20** o la prueba de contrato fallará; `sprint/05` no se tocó.
 - `sprint/05` conserva la base anterior (no contiene el código de HU-13/15/16).
 - Las pruebas existentes se actualizaron donde cambió el estado esperado: lista de migraciones, `.env.example` y fábrica de pruebas (clave JWT aleatoria por ejecución).
+
+## Observación del Sprint 5 (prueba manual 2026-11-13)
+`GET /admin/printful/productos` devolvió `[]` con 200. La consulta es al **catálogo público** de Printful (`/v2/catalog-products?limit&offset`), no a los productos de la tienda. El filtro de categoría `playeras` se aplica **después** de paginar, en memoria (`EsPlayera`: tipo o nombre con «t-shirt»/«tee»), así que si la primera página de 20 productos del catálogo no trae playeras, el resultado es vacío aunque existan en otras páginas. No es un error de credenciales. Pendiente de decidir: filtrar por categoría en Printful (parámetro `category_ids`) o recorrer páginas; mientras tanto se usa el producto 71 por id.

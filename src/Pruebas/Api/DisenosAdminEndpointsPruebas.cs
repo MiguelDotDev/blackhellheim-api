@@ -172,10 +172,10 @@ public class DisenosAdminEndpointsPruebas(ContenedorSqlServer sql)
     [Fact]
     public async Task UnTerminoBloqueadoSoloAvisa()
     {
-        var (fabrica, cliente, _) = await PrepararAsync(termino: "metallica");
+        var (fabrica, cliente, _) = await PrepararAsync(termino: "marcaficticia");
         await using var _ = fabrica;
 
-        var r = await cliente.PostAsJsonAsync("/admin/disenos", new { nombre = "Estilo Metallica" });
+        var r = await cliente.PostAsJsonAsync("/admin/disenos", new { nombre = "Estilo MarcaFicticia" });
 
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         Assert.Equal(1, (await Json(r)).GetProperty("avisos").GetArrayLength());

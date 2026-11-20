@@ -60,6 +60,37 @@ public class ProveedorImpresionPrintfulPruebas
         _ => new HttpResponseMessage(HttpStatusCode.NotFound)
     };
 
+    private const string UnaPlayera = """{"data":[{"id":71,"type":"T-SHIRT","name":"Unisex Staple T-Shirt"}]}""";
+
+    [Fact]
+    public async Task Playeras_FiltraEnPrintfulPorCategoriasYPaginaConOffset()
+    {
+        var m = new Manejador(_ => Json(UnaPlayera));
+
+        var lista = await Crear(m).ListarProductosAsync("playeras", 2, 20, default);
+
+        Assert.Single(lista);
+        Assert.Equal("/v2/catalog-products?limit=20&offset=20&category_ids=24,32,38", m.Rutas.Single());
+    }
+
+    [Fact]
+    public async Task CategoriaNumerica_SePasaTalCual()
+    {
+        var m = new Manejador(_ => Json(UnaPlayera));
+
+        await Crear(m).ListarProductosAsync("24", 1, 20, default);
+
+        Assert.EndsWith("&category_ids=24", m.Rutas.Single());
+    }
+
+    [Fact]
+    public async Task ListaRealmenteVacia_DevuelveVacio()
+    {
+        var lista = await Crear(new Manejador(_ => Json("""{"data":[]}"""))).ListarProductosAsync("playeras", 1, 20, default);
+
+        Assert.Empty(lista);
+    }
+
     [Fact]
     public async Task FiltraPorTecnicaYPaisYMapeaLosCampos()
     {
@@ -112,14 +143,14 @@ public class ProveedorImpresionPrintfulPruebas
     }
 
     [Fact]
-    public async Task ListarProductosFiltraPlayerasYEnviaLaPaginacion()
+    public async Task ListarProductosTextoLibreFiltraPorTipoYEnviaLaPaginacion()
     {
         var m = new Manejador(_ => Json("""{"data":[{"id":71,"name":"Unisex T-Shirt","type":"T-SHIRT","techniques":[]},{"id":9,"name":"Mug","type":"MUG","techniques":[]}]}"""));
         var proveedor = Crear(m);
 
-        var productos = await proveedor.ListarProductosAsync("playeras", 3, 10, default);
+        var productos = await proveedor.ListarProductosAsync("mug", 3, 10, default);
 
-        Assert.Equal([71], productos.Select(p => p.Id));
+        Assert.Equal([9], productos.Select(p => p.Id));
         Assert.Contains("limit=10&offset=20", m.Rutas.Single());
     }
 

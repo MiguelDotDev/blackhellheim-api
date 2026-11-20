@@ -6,7 +6,7 @@ Etiquetas: [BE] [DB] [MANUAL]. Pruebas primero.
 - [x] T001 [BE] Prueba de contrato contra `contratos/openapi.yaml` (falla).
 - [x] T002 [BE] Verificar ruta, serie y términos de la API SIE de Banxico; anotar en `investigacion.md`. Sin dependencias nuevas (licencia: N/A).
 - [x] ~~Confirmar la lectura del redondeo~~ (cerrado el 2026-11-11: entero terminado en 9, siempre hacia arriba).
-- [ ] T003 [MANUAL] Obtener token de Banxico; `Banxico__Token` en `.env` local y en secretos de Azure (HU-25); confirmar parámetros iniciales (colchón, margen, comisión).
+- [x] T003 [MANUAL] Obtener token de Banxico; `Banxico__Token` en `.env` local y en secretos de Azure (HU-25); confirmar parámetros iniciales (colchón, margen, comisión). Evidencia (prueba manual 2026-11-13): `GET /admin/precios/simular` 200, tipoCambio 18.5525 del 2026-11-13, tipoCambioObsoleto false; costo 13.25 USD → costoMxn 253.20, precioBruto 448.93, precioFinal 449. Parámetros confirmados por el administrador: colchón 3 %, margen 40 %, comisión 3.6 %, extra 0, redondeo Entero9. Pendiente (HU-25): cargar el token de Banxico (y el de Printful) como secretos de Azure; no está hecho.
 ## Fase 2: Dominio
 - [x] T004 [P] [BE] Pruebas del redondeo (tabla con límites: 412.30→419, 449.01→459, 489.99→499, 490.00→499, 499.00→499, 499.01→509, 0→9) y de la fórmula (≥20 casos, validación de margen+comisión ≥1, costos negativos, tipo de cambio ≤0).
 - [x] T005 [BE] `RedondeoComercial` y `CalculadoraPrecios` con `decimal`.

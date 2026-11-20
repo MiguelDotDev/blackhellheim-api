@@ -11,8 +11,8 @@ namespace BlackHellHeim.Aplicacion.Arte;
 /// <summary>Límites configurables (<c>Arte__*</c>), validados al arrancar.</summary>
 public sealed class OpcionesArte
 {
-    public int MinAncho { get; set; } = 4500;
-    public int MinAlto { get; set; } = 5400;
+    public int MinAncho { get; set; } = 1800;
+    public int MinAlto { get; set; } = 2400;
     public long MaxBytes { get; set; } = 200L * 1024 * 1024;
     public int MaxMegapixeles { get; set; } = 100;
     public double PorcentajeMinimoTransparente { get; set; } = 5;
