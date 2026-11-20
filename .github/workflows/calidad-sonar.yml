@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [main, release, developer, "sprint/**"]
   push:
-    branches: [main, release, developer, "sprint/**"]
+    branches: [main]
 
 permissions:
   contents: read
