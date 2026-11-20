@@ -16,6 +16,8 @@ public static class RegistroPrintful
         servicios.AddHttpClient<IProveedorImpresion, ProveedorImpresionPrintful>()
             // El tiempo por intento lo controla el manejador; el del cliente cubre todos los reintentos.
             .ConfigureHttpClient(c => c.Timeout = TimeSpan.FromMinutes(5))
+            // Sin redirecciones: la descarga de imágenes no debe salirse de la lista de hosts permitidos.
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
             .AddHttpMessageHandler(sp => new ManejadorReintentos(
                 TimeSpan.FromSeconds(sp.GetRequiredService<IOptions<OpcionesPrintful>>().Value.TiempoEsperaSegundos),
                 sp.GetRequiredService<TimeProvider>()));

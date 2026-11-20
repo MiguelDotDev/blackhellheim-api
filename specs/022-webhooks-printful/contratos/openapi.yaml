@@ -1,0 +1,90 @@
+openapi: 3.1.1
+info:
+  title: BlackHellHeim API — webhooks de Printful
+  version: 0.6.0
+  description: >-
+    Recibe eventos de Printful con firma HMAC-SHA256 sobre el cuerpo crudo. Idempotente por un id derivado del evento (Printful no envía id en la raíz): type + id de la tarea u objeto en data + occurred_at, o SHA-256 del cuerpo si data no trae id. El secreto del webhook es hexadecimal y se decodifica a bytes para el HMAC.
+paths:
+  /webhooks/printful:
+    post:
+      operationId: recibirWebhookPrintful
+      summary: Recibe un evento de Printful
+      parameters:
+        - name: X-Printful-Signature
+          in: header
+          required: true
+          description: Firma HMAC-SHA256 hexadecimal del cuerpo (nombre configurable; el nombre real de la cabecera está SIN VERIFICAR).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Evento aceptado (o repetido, ya procesado)
+        '400':
+          description: Cuerpo no JSON objeto o sin type
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Firma ausente o inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '413':
+          description: Cuerpo mayor a 1 MB
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Secreto de webhook no configurado o no hexadecimal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Un consumidor falló; el proveedor puede reintentar
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [type, title, status, codigo, idCorrelacion]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        codigo:
+          type: string
+          description: Código estable del error.
+        idCorrelacion:
+          type: string
+          description: Identificador de correlación de la ejecución.
+        errores:
+          type: object
+          description: Errores por campo; solo en errores de validación.
+          additionalProperties:
+            type: array
+            items:
+              type: string

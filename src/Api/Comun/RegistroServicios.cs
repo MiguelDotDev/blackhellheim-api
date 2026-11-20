@@ -57,6 +57,8 @@ public static class RegistroServicios
         servicios.AddScoped<IValidadorSolicitud<EditarDisenoComando>, ValidadorEditarDiseno>();
         servicios.AddScoped<IValidadorSolicitud<ListarDisenosQuery>, ValidadorListarDisenos>();
 
+        servicios.AddScoped<BlackHellHeim.Aplicacion.Webhooks.IRepositorioEventos, BlackHellHeim.Infraestructura.Webhooks.RepositorioEventos>();
+
         return servicios;
     }
 }
