@@ -6,6 +6,9 @@ public sealed class OpcionesPrintful
     public string Token { get; set; } = "";
     public string UrlBase { get; set; } = "https://api.printful.com";
     public int TiempoEsperaSegundos { get; set; } = 10;
+    /// <summary>Secreto HMAC del webhook (<c>Printful__SecretoWebhook</c>); vacío = endpoint en 503. Nunca versionado.</summary>
+    public string SecretoWebhook { get; set; } = "";
+    public string CabeceraFirma { get; set; } = "X-Printful-Signature";
     public int MinutosCache { get; set; } = 10;
 
     /// <summary>Categorías de playeras en /v2/catalog-categories (verificadas 2026-11-13): 24 hombre, 32 mujer, 38 niños.</summary>

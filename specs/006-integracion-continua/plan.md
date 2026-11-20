@@ -168,7 +168,7 @@ las verificaciones requeridas documentadas en `contratos/verificaciones-ci.md`.
 |-------|--------------|--------|----------|-------------------|
 | `integracion-continua.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `Compilación y pruebas` | `contents: read` | ninguno |
 | `codeql.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `CodeQL (C#)` | `contents: read`, `security-events: write` | ninguno |
-| `calidad-sonar.yml` | `pull_request` y `push` a `main`, `release`, `developer` y `sprint/**` | `Detección de token de Sonar` y `SonarQube Cloud` | `contents: read` | `SONAR_TOKEN` (secreto), `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` (variables) |
+| `calidad-sonar.yml` | `pull_request` hacia `main`, `release`, `developer` y `sprint/**`; `push` solo a `main` (Sonar no consulta el Quality Gate en ramas distintas de `main`) | `Detección de token de Sonar` y `SonarQube Cloud` | `contents: read` | `SONAR_TOKEN` (secreto), `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY` (variables) |
 
 Reglas comunes:
 

@@ -11,6 +11,9 @@ public class ImpresionPruebas
     {
         public string? UltimaCategoria { get; private set; }
         public bool Existe { get; set; } = true;
+        public Task<string> CrearTareaMockupAsync(SolicitudMockup s, CancellationToken c) => throw new NotSupportedException();
+        public Task<ResultadoTareaMockup?> ConsultarTareaMockupAsync(string id, CancellationToken c) => throw new NotSupportedException();
+        public Task<byte[]?> DescargarImagenAsync(Uri url, long max, CancellationToken c) => throw new NotSupportedException();
         public Task<IReadOnlyList<ProductoPrintfulDto>> ListarProductosAsync(string categoria, int pagina, int tamano, CancellationToken c)
         {
             UltimaCategoria = categoria;

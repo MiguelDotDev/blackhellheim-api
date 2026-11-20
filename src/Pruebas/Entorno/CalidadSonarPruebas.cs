@@ -13,7 +13,12 @@ public class CalidadSonarPruebas
     public void DisparadoresYPermisos()
     {
         var flujo = Cargar(Archivo);
-        IntegracionContinuaPruebas.VerificarDisparadores(flujo);
+        // Sonar no consulta el Quality Gate fuera de main: push solo a main; las ramas sprint/developer/release se cubren con pull_request.
+        var on = Hijo(flujo, "on")!;
+        Assert.Equal(["pull_request", "push"], on.Keys.Order());
+        Assert.Equal(Ramas.Order(), Lista(Hijo(on, "pull_request")!["branches"]).Order());
+        Assert.Equal(["main"], Lista(Hijo(on, "push")!["branches"]));
+        Assert.All(on.Keys, e => Assert.False(Hijo(on, e)!.ContainsKey("paths") || Hijo(on, e)!.ContainsKey("paths-ignore")));
         Assert.Equal(["contents"], Hijo(flujo, "permissions")!.Keys);
     }
 
