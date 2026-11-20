@@ -24,6 +24,9 @@ public class PrintfulAdminEndpointsPruebas : IClassFixture<FabricaApiPruebas>
         public Task<IReadOnlyList<VariantePrintfulDto>?> ListarVariantesAsync(int id, string t, string p, CancellationToken x) =>
             Fallar<IReadOnlyList<VariantePrintfulDto>?>() ?? Task.FromResult<IReadOnlyList<VariantePrintfulDto>?>(
                 id == 404 ? null : [new(1, id, "Black", "#000000", "S", 12.5m, t, true)]);
+        public Task<string> CrearTareaMockupAsync(SolicitudMockup s, CancellationToken c) => throw new NotSupportedException();
+        public Task<ResultadoTareaMockup?> ConsultarTareaMockupAsync(string id, CancellationToken c) => throw new NotSupportedException();
+        public Task<byte[]?> DescargarImagenAsync(Uri url, long max, CancellationToken c) => throw new NotSupportedException();
         private Task<T>? Fallar<T>() => Fallo() is { } e ? Task.FromException<T>(e) : null;
     }
 
