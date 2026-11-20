@@ -80,6 +80,8 @@ read -rs BHH_ADMIN_CLAVE;    export BHH_ADMIN_CLAVE      # contraseña fuerte de
 ./scripts/azure/configurar-secretos.sh
 ```
 El script falla si falta una variable. Crea los secretos `cadena-conexion`, `jwt-clave`, `admin-correo` y `admin-clave` y los enlaza por `secretref`. Además, el script obtiene la cadena de la cuenta de almacenamiento con `az storage account show-connection-string` (no la imprime ni la guarda), la crea como secreto `almacenamiento` y la enlaza a `AlmacenArchivos__CadenaConexion`; también fija `AlmacenArchivos__Contenedor=arte`.
+
+**Printful (opcional)**: `Printful__Token` (secreto), `Printful__SecretoWebhook` (secreto) y `Printful__IdTienda` (no es secreto; en Azure se fija como variable de entorno de la app). Sin `Printful__IdTienda` los mockups fallan: el token es de cuenta y `POST/GET /v2/mockup-tasks` exigen la cabecera `X-PF-Store-Id`.
 Al terminar: `unset BHH_SQL_CLAVE BHH_JWT_CLAVE BHH_ADMIN_CORREO BHH_ADMIN_CLAVE`.
 
 ## 4. OIDC entre GitHub y Azure — **[SCRIPT]** `scripts/azure/configurar-oidc.sh` + **[MANUAL]** en GitHub

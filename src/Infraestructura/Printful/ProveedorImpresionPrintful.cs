@@ -6,6 +6,7 @@ using BlackHellHeim.Aplicacion.Comun.Errores;
 using BlackHellHeim.Aplicacion.Impresion;
 using BlackHellHeim.Aplicacion.Mockups;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BlackHellHeim.Infraestructura.Printful;
@@ -13,7 +14,7 @@ namespace BlackHellHeim.Infraestructura.Printful;
 /// <summary>Adaptador HTTP de la API v2 de catálogo de Printful (rutas verificadas el 2026-11-11, T002).</summary>
 public sealed class ProveedorImpresionPrintful(
     HttpClient http, IOptions<OpcionesPrintful> opciones, IMemoryCache cache, TimeProvider reloj, IContextoEjecucion contexto,
-    OpcionesMockups? mockups = null)
+    OpcionesMockups? mockups = null, ILogger<ProveedorImpresionPrintful>? log = null)
     : IProveedorImpresion
 {
     private readonly OpcionesPrintful _opciones = opciones.Value;
@@ -41,7 +42,7 @@ public sealed class ProveedorImpresionPrintful(
                 }
             })
         };
-        var raiz = await ObtenerAsync("/v2/mockup-tasks", cancelacion, HttpMethod.Post, System.Net.Http.Json.JsonContent.Create(cuerpo));
+        var raiz = await ObtenerAsync("/v2/mockup-tasks", cancelacion, HttpMethod.Post, System.Net.Http.Json.JsonContent.Create(cuerpo), deTienda: true);
         var primero = raiz is null ? default : Datos(raiz.Value).FirstOrDefault();
         var id = primero.ValueKind == JsonValueKind.Object && primero.TryGetProperty("id", out var i)
             ? i.ValueKind == JsonValueKind.String ? i.GetString() : i.ValueKind == JsonValueKind.Number ? i.GetRawText() : null
@@ -51,7 +52,7 @@ public sealed class ProveedorImpresionPrintful(
 
     public async Task<ResultadoTareaMockup?> ConsultarTareaMockupAsync(string tareaId, CancellationToken cancelacion)
     {
-        var raiz = await ObtenerAsync($"/v2/mockup-tasks?id={Uri.EscapeDataString(tareaId)}", cancelacion);
+        var raiz = await ObtenerAsync($"/v2/mockup-tasks?id={Uri.EscapeDataString(tareaId)}", cancelacion, deTienda: true);
         var t = raiz is null ? default : Datos(raiz.Value).FirstOrDefault();
         if (t.ValueKind != JsonValueKind.Object) return null;
         var estado = Texto(t, "status").ToLowerInvariant() switch
@@ -226,7 +227,7 @@ public sealed class ProveedorImpresionPrintful(
     }
 
     /// <summary>GET autenticado. Null en 404; el resto de fallos se traducen a errores uniformes sin exponer el token.</summary>
-    private async Task<JsonElement?> ObtenerAsync(string ruta, CancellationToken cancelacion, HttpMethod? metodo = null, HttpContent? cuerpo = null)
+    private async Task<JsonElement?> ObtenerAsync(string ruta, CancellationToken cancelacion, HttpMethod? metodo = null, HttpContent? cuerpo = null, bool deTienda = false)
     {
         if (string.IsNullOrWhiteSpace(_opciones.Token))
         {
@@ -235,6 +236,7 @@ public sealed class ProveedorImpresionPrintful(
 
         using var solicitud = new HttpRequestMessage(metodo ?? HttpMethod.Get, new Uri(new Uri(_opciones.UrlBase), ruta)) { Content = cuerpo };
         solicitud.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _opciones.Token);
+        if (deTienda && !string.IsNullOrWhiteSpace(_opciones.IdTienda)) solicitud.Headers.Add("X-PF-Store-Id", _opciones.IdTienda);
         HttpResponseMessage respuesta;
         try
         {
@@ -251,6 +253,7 @@ public sealed class ProveedorImpresionPrintful(
 
         using (respuesta)
         {
+            if (deTienda && (int)respuesta.StatusCode >= 400) await RegistrarRechazoAsync(respuesta, cancelacion);
             if (respuesta.StatusCode == HttpStatusCode.NotFound) return null;
             if (respuesta.StatusCode == HttpStatusCode.TooManyRequests)
             {
@@ -269,6 +272,14 @@ public sealed class ProveedorImpresionPrintful(
                 throw Fallo();
             }
         }
+    }
+
+    /// <summary>Warning con código y primeros 500 caracteres del cuerpo; nunca cabeceras ni token.</summary>
+    private async Task RegistrarRechazoAsync(HttpResponseMessage respuesta, CancellationToken cancelacion)
+    {
+        var texto = await respuesta.Content.ReadAsStringAsync(cancelacion);
+        log?.LogWarning("Printful rechazó la llamada de tienda: HTTP {Codigo}, cuerpo: {Cuerpo}",
+            (int)respuesta.StatusCode, texto.Length > 500 ? texto[..500] : texto);
     }
 
     private ExcepcionCasoDeUso Fallo() => new(ErrorUniforme.ProveedorFallo(contexto.IdCorrelacion));

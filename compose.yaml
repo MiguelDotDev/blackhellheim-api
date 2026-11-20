@@ -55,6 +55,8 @@ services:
       # Printful (historia 015): opcional; sin token los endpoints de catálogo responden 502.
       Printful__Token: ${BHH_PRINTFUL_TOKEN:-}
       # Webhooks de Printful (historia 022): opcional; sin secreto el endpoint /webhooks/printful responde 503.
+      # Id de tienda (HU-21): el token es de cuenta y mockup-tasks exige X-PF-Store-Id; no es secreto. Vacío = no se envía.
+      Printful__IdTienda: ${BHH_PRINTFUL_ID_TIENDA:-}
       Printful__SecretoWebhook: ${BHH_PRINTFUL_SECRETO_WEBHOOK:-}
       # Mockups asíncronos (historia 021): intervalo del polling de respaldo y tiempo máximo de una tarea.
       Mockups__IntervaloPollingSegundos: ${BHH_MOCKUPS_INTERVALO:-30}
