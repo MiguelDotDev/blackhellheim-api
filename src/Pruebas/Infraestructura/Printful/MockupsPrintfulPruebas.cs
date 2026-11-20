@@ -29,9 +29,58 @@ public class MockupsPrintfulPruebas
     private static HttpResponseMessage Json(string texto, HttpStatusCode c = HttpStatusCode.OK) =>
         new(c) { Content = new StringContent(texto, Encoding.UTF8, "application/json") };
 
-    private static ProveedorImpresionPrintful Crear(Manejador m, OpcionesMockups? o = null) =>
-        new(new HttpClient(m), Options.Create(new OpcionesPrintful { Token = "token-de-prueba-no-real" }),
-            new MemoryCache(new MemoryCacheOptions()), TimeProvider.System, new ContextoFalso(), o);
+    private static ProveedorImpresionPrintful Crear(Manejador m, OpcionesMockups? o = null, string idTienda = "", Microsoft.Extensions.Logging.ILogger<ProveedorImpresionPrintful>? log = null) =>
+        new(new HttpClient(m), Options.Create(new OpcionesPrintful { Token = "token-de-prueba-no-real", IdTienda = idTienda }),
+            new MemoryCache(new MemoryCacheOptions()), TimeProvider.System, new ContextoFalso(), o, log);
+
+    private sealed class RegistroFalso : Microsoft.Extensions.Logging.ILogger<ProveedorImpresionPrintful>
+    {
+        public List<(Microsoft.Extensions.Logging.LogLevel Nivel, string Mensaje)> Entradas { get; } = [];
+        public IDisposable? BeginScope<TState>(TState estado) where TState : notnull => null;
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel nivel) => true;
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel nivel, Microsoft.Extensions.Logging.EventId id, TState estado, Exception? ex, Func<TState, Exception?, string> f) =>
+            Entradas.Add((nivel, f(estado, ex)));
+    }
+
+    private static readonly SolicitudMockup Pedido = new([new ProductoMockup(71, [1])], "https://x.test/a.png", "front", "dtg");
+
+    [Fact]
+    public async Task LaCabeceraDeTiendaSeEnviaAlCrearYConsultar()
+    {
+        var cabeceras = new List<string?>();
+        var m = new Manejador(r =>
+        {
+            cabeceras.Add(r.Headers.TryGetValues("X-PF-Store-Id", out var v) ? v.Single() : null);
+            return Json("""{"data":[{"id":7,"status":"pending"}]}""");
+        });
+        var p = Crear(m, idTienda: "123");
+        await p.CrearTareaMockupAsync(Pedido, default);
+        await p.ConsultarTareaMockupAsync("7", default);
+        Assert.Equal(["123", "123"], cabeceras);
+    }
+
+    [Fact]
+    public async Task SinIdDeTiendaNoSeEnviaLaCabeceraNiFalla()
+    {
+        var m = new Manejador(r =>
+            Json(r.Headers.Contains("X-PF-Store-Id") ? "no" : """{"data":[{"id":7,"status":"pending"}]}"""));
+        Assert.Equal("7", await Crear(m).CrearTareaMockupAsync(Pedido, default));
+    }
+
+    [Fact]
+    public async Task UnRechazoDeTiendaSeRegistraEnWarningSinElToken()
+    {
+        var log = new RegistroFalso();
+        var cuerpo = "This endpoint requires `store_id`!" + new string('x', 600);
+        var m = new Manejador(_ => Json(cuerpo, HttpStatusCode.BadRequest));
+        await Assert.ThrowsAsync<ExcepcionCasoDeUso>(() => Crear(m, log: log).CrearTareaMockupAsync(Pedido, default));
+        var (nivel, mensaje) = Assert.Single(log.Entradas);
+        Assert.Equal(Microsoft.Extensions.Logging.LogLevel.Warning, nivel);
+        Assert.Contains("400", mensaje);
+        Assert.Contains("requires `store_id`", mensaje);
+        Assert.DoesNotContain(new string('x', 500), mensaje); // truncado a 500 en total
+        Assert.DoesNotContain("token-de-prueba-no-real", mensaje);
+    }
 
     [Fact]
     public async Task CrearEnviaElProductoLasVariantesLaColocacionYLaCapaConElArte()
