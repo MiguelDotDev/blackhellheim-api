@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using BlackHellHeim.Aplicacion.Comun.Correlacion;
 using BlackHellHeim.Aplicacion.Comun.Errores;
 using BlackHellHeim.Aplicacion.Impresion;
@@ -62,7 +63,7 @@ public sealed class ProveedorImpresionPrintful(
             _ => EstadoMockupProveedor.Pendiente
         };
         var motivo = t.TryGetProperty("failure_reasons", out var f) && f.ValueKind is JsonValueKind.Array or JsonValueKind.Object
-            ? f.GetRawText() : null;
+            ? MotivoLegible(f) : null;
         var mockups = new List<MockupGenerado>();
         if (t.TryGetProperty("catalog_variant_mockups", out var porVariante) && porVariante.ValueKind == JsonValueKind.Array)
         {
@@ -79,6 +80,16 @@ public sealed class ProveedorImpresionPrintful(
         }
 
         return new ResultadoTareaMockup(tareaId, estado, motivo, mockups);
+    }
+
+    /// <summary>"tipo: detalle; ..." a partir de failure_reasons[{type,detail}]; si no tienen esa forma, el JSON crudo.</summary>
+    private static string MotivoLegible(JsonElement f)
+    {
+        // El detalle puede repetir la URL enviada: se quita la consulta para no persistir firmas ni tokens.
+        var partes = (f.ValueKind == JsonValueKind.Array ? f.EnumerateArray().ToList() : [f])
+            .Select(r => Texto(r, "type") is { Length: > 0 } tipo ? $"{tipo}: {Texto(r, "detail")}".TrimEnd(' ', ':') : r.GetRawText())
+            .Select(p => Regex.Replace(p, @"(https?://[^\s""'?]+)\?[^\s""']*", "$1"));
+        return string.Join("; ", partes);
     }
 
     public async Task<byte[]?> DescargarImagenAsync(Uri url, long maxBytes, CancellationToken cancelacion)

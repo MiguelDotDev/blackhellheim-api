@@ -35,7 +35,7 @@ Descarga de imagen que falla (la tarea sigue pendiente y se reintenta en cada ci
 - **RF-005** Copia de imágenes con `IAlmacenArchivos`; nombres generados por el servidor.
 - **RF-006** Finalización idempotente (evento y polling comparten el mismo caso de uso).
 - **RF-007** Pruebas con dobles de Printful y almacén; nunca red real.
-- **RF-008** La descarga de imágenes solo acepta URL https de hosts de una lista configurable (por omisión `files.cdn.printful.com`, sin verificar), hasta 20 MB y PNG/JPEG por su firma binaria.
+- **RF-008** La descarga de imágenes solo acepta URL https de hosts de una lista configurable (por omisión `files.cdn.printful.com` y `printful-upload.s3-accelerate.amazonaws.com`), hasta 20 MB y PNG/JPEG por su firma binaria.
 
 ## Criterios de éxito
 - **CE-001** El 100 % de las tareas terminan en `Completada` o `Fallida` (ninguna queda pendiente más de 30 min más un intervalo de polling).

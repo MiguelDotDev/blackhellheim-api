@@ -227,6 +227,25 @@ public class MockupsCasosDeUsoPruebas
         Assert.Empty(e.Almacen.Blobs);
     }
 
+    [Theory]
+    [InlineData(EstadoMockupProveedor.Completada, "Printful no devolvió imágenes válidas. validacion: arte ilegible")]
+    [InlineData(EstadoMockupProveedor.Fallida, "Printful reportó un fallo: validacion: arte ilegible")]
+    public async Task LosMotivosDePrintfulQuedanEnLaTareaYEnUnWarning(EstadoMockupProveedor estado, string motivo)
+    {
+        var e = new EscenarioMockups();
+        var t = await e.PedirOkAsync();
+        e.Proveedor.Remotas["task-1"] = new("task-1", estado, "validacion: arte ilegible",
+            [new MockupGenerado(1, "front", new Uri("https://evil.test/a.png?sig=secreto"))]);
+
+        await e.Finalizar.Handle(new FinalizarTareaMockupComando(t.Id), default);
+
+        Assert.Equal(motivo, (await e.Repo.ObtenerAsync(t.Id, default))!.Motivo);
+        var mensaje = Assert.Single(e.Advertencias.Mensajes);
+        Assert.Contains("arte ilegible", mensaje);
+        Assert.DoesNotContain("secreto", mensaje);
+        if (estado == EstadoMockupProveedor.Completada) Assert.Contains("evil.test", mensaje);
+    }
+
     [Fact]
     public async Task FinalizarUnaTareaInexistenteEsNoEncontrado()
     {

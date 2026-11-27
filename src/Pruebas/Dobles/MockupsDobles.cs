@@ -143,6 +143,12 @@ public sealed class ProveedorMockupsFalso : IProveedorImpresion
     public Task<IReadOnlyList<VariantePrintfulDto>?> ListarVariantesAsync(int id, string t, string p, CancellationToken x) => throw new NotSupportedException();
 }
 
+public sealed class AdvertenciasMockupsFalsas : BlackHellHeim.Aplicacion.Precios.IAdvertencias
+{
+    public List<string> Mensajes { get; } = [];
+    public void Advertir(string mensaje) => Mensajes.Add(mensaje);
+}
+
 /// <summary>Diseño con arte y variantes (S y M negras, L blanca) listo para pedir mockups.</summary>
 public sealed class EscenarioMockups
 {
@@ -158,6 +164,8 @@ public sealed class EscenarioMockups
     public ContextoEjecucionFalso Contexto { get; } = new() { IdCorrelacion = "c" };
 
     public Diseno Diseno { get; } = Diseno.Crear("Diseño de prueba", null, new(2026, 11, 1, 0, 0, 0, TimeSpan.Zero));
+
+    public AdvertenciasMockupsFalsas Advertencias { get; } = new();
 
     public EscenarioMockups(bool conArte = true, bool conVariantes = true)
     {
@@ -180,7 +188,7 @@ public sealed class EscenarioMockups
 
     public ManejadorPedirMockups Pedir => new(Disenos, Repo, Proveedor, Opciones, Reloj, Contexto);
 
-    public ManejadorFinalizarTareaMockup Finalizar => new(Repo, Disenos, Proveedor, Almacen, Opciones, Reloj, Contexto);
+    public ManejadorFinalizarTareaMockup Finalizar => new(Repo, Disenos, Proveedor, Almacen, Opciones, Reloj, Contexto, Advertencias);
 
     public async Task<TareaMockupDto> PedirOkAsync()
     {

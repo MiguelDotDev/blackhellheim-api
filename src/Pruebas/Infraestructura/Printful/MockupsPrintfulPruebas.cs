@@ -148,6 +148,30 @@ public class MockupsPrintfulPruebas
     }
 
     [Fact]
+    public async Task LosMotivosDeFalloSeLeenComoTipoYDetalleSinLaConsultaDeLasUrls()
+    {
+        var proveedor = Crear(new Manejador(_ => Json("""
+            {"data":[{"id":1,"status":"failed","failure_reasons":[
+              {"type":"validacion","detail":"No se pudo leer https://x.test/a.png?sig=secreto"},{"type":"otro"}]}]}
+            """)));
+
+        var r = await proveedor.ConsultarTareaMockupAsync("1", default);
+
+        Assert.Equal("validacion: No se pudo leer https://x.test/a.png; otro", r!.Motivo);
+    }
+
+    [Fact]
+    public async Task LaUrlDeEjemploDeLaDocumentacionSeDescargaConLosHostsPorOmision()
+    {
+        var m = new Manejador(_ => new(HttpStatusCode.OK) { Content = new ByteArrayContent([1]) });
+
+        var url = new Uri("https://printful-upload.s3-accelerate.amazonaws.com/tmp/abc/mockup.png");
+
+        Assert.Equal([1], await Crear(m).DescargarImagenAsync(url, 10, default));
+        Assert.Null(await Crear(m).DescargarImagenAsync(new Uri("https://otro.s3-accelerate.amazonaws.com/a.png"), 10, default));
+    }
+
+    [Fact]
     public async Task ConsultarUnaTareaDesconocidaDevuelveNull()
     {
         Assert.Null(await Crear(new Manejador(_ => new(HttpStatusCode.NotFound))).ConsultarTareaMockupAsync("1", default));

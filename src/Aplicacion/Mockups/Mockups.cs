@@ -5,6 +5,7 @@ using BlackHellHeim.Aplicacion.Comun.Correlacion;
 using BlackHellHeim.Aplicacion.Comun.Errores;
 using BlackHellHeim.Aplicacion.Disenos;
 using BlackHellHeim.Aplicacion.Impresion;
+using BlackHellHeim.Aplicacion.Precios;
 using BlackHellHeim.Aplicacion.Webhooks;
 using BlackHellHeim.Dominio.Mockups;
 using Mediator;
@@ -21,8 +22,8 @@ public sealed class OpcionesMockups
     public string Posicion { get; set; } = "front";
     public string Tecnica { get; set; } = "dtg";
 
-    /// <summary>Hosts https desde los que se descargan imágenes (anti-SSRF). Valor por omisión sin verificar ([MANUAL]).</summary>
-    public string[] HostsDescargaPermitidos { get; set; } = ["files.cdn.printful.com"];
+    /// <summary>Hosts https desde los que se descargan imágenes (anti-SSRF). El de S3 es el de <c>mockup_url</c> en la documentación v2.</summary>
+    public string[] HostsDescargaPermitidos { get; set; } = ["files.cdn.printful.com", "printful-upload.s3-accelerate.amazonaws.com"];
 
     public void Validar()
     {
@@ -134,7 +135,8 @@ public sealed record FinalizarTareaMockupComando(Guid TareaId) : ICommand<Result
 
 public sealed class ManejadorFinalizarTareaMockup(
     IRepositorioMockups repositorio, IRepositorioDisenos disenos, IProveedorImpresion proveedor, IAlmacenArchivos almacen,
-    OpcionesMockups opciones, TimeProvider reloj, IContextoEjecucion contexto)
+    OpcionesMockups opciones, TimeProvider reloj, IContextoEjecucion contexto,
+    IAdvertencias advertencias)
     : ICommandHandler<FinalizarTareaMockupComando, ResultadoCasoDeUso<EstadoTareaMockup>>
 {
     public async ValueTask<ResultadoCasoDeUso<EstadoTareaMockup>> Handle(FinalizarTareaMockupComando c, CancellationToken cancelacion)
@@ -153,26 +155,40 @@ public sealed class ManejadorFinalizarTareaMockup(
         }
 
         if (remota.Estado == EstadoMockupProveedor.Fallida)
-            return await Fallar(tarea, string.IsNullOrWhiteSpace(remota.Motivo) ? "Printful reportó un fallo." : remota.Motivo, ahora, cancelacion);
+        {
+            advertencias.Advertir($"Printful cerró la tarea de mockups como fallida: mockups {remota.Mockups.Count}, motivos {Truncar(remota.Motivo)}");
+            return await Fallar(tarea, string.IsNullOrWhiteSpace(remota.Motivo) ? "Printful reportó un fallo." : "Printful reportó un fallo: " + remota.Motivo, ahora, cancelacion);
+        }
 
         var diseno = await disenos.ObtenerAsync(tarea.DisenoId, cancelacion);
         var colores = (diseno?.Variantes ?? []).GroupBy(v => v.PrintfulVarianteId).ToDictionary(g => g.Key, g => g.First().Color);
         var imagenes = new List<ImagenMockup>();
         var vistos = new HashSet<string>();
+        int sinVariante = 0, sinImagen = 0;
         foreach (var m in remota.Mockups)
         {
-            if (!colores.TryGetValue(m.VarianteId, out var color)) continue; // variante desconocida: se descarta
+            if (!colores.TryGetValue(m.VarianteId, out var color)) { sinVariante++; continue; } // variante desconocida: se descarta
             var clave = $"{Slug(color)}-{Slug(m.Posicion)}";
             if (vistos.Contains(clave)) continue; // Printful da un mockup por talla; basta uno por color y posición
             var bytes = await proveedor.DescargarImagenAsync(m.Url, opciones.MaxBytesImagen, cancelacion);
-            if (bytes is null || TipoImagen(bytes) is not { } tipo) continue; // no permitida, demasiado grande o no PNG/JPEG
+            if (bytes is null || TipoImagen(bytes) is not { } tipo) { sinImagen++; continue; } // no permitida, demasiado grande o no PNG/JPEG
             vistos.Add(clave);
             var nombre = $"mockups/{tarea.Id:N}/{clave}.{tipo.Extension}";
             var url = await almacen.GuardarAsync(nombre, tipo.Mime, new MemoryStream(bytes), cancelacion);
             imagenes.Add(ImagenMockup.Crear(tarea.Id, color, m.Posicion, url.ToString(), nombre));
         }
 
-        if (imagenes.Count == 0) return await Fallar(tarea, "Printful no devolvió imágenes válidas.", ahora, cancelacion);
+        if (imagenes.Count == 0)
+        {
+            var hostsRechazados = remota.Mockups.Where(m => m.Url.Scheme != Uri.UriSchemeHttps
+                    || !opciones.HostsDescargaPermitidos.Contains(m.Url.Host, StringComparer.OrdinalIgnoreCase))
+                .Select(m => m.Url.Host).Distinct().ToList();
+            advertencias.Advertir(
+                $"Printful no dejó imágenes válidas: estado {remota.Estado}, mockups {remota.Mockups.Count}, variante desconocida {sinVariante}, sin imagen válida {sinImagen}, hosts rechazados [{string.Join(',', hostsRechazados)}], motivos {Truncar(remota.Motivo)}");
+            var detalle = string.IsNullOrWhiteSpace(remota.Motivo) ? "" : " " + remota.Motivo;
+            return await Fallar(tarea, "Printful no devolvió imágenes válidas." + detalle, ahora, cancelacion);
+        }
+
         // false = otra finalización ganó la carrera; el resultado es el mismo.
         await repositorio.CompletarAsync(tarea.Id, imagenes, ahora, cancelacion);
         return Exito(EstadoTareaMockup.Completada);
@@ -183,6 +199,8 @@ public sealed class ManejadorFinalizarTareaMockup(
         await repositorio.FallarAsync(t.Id, TareaMockup.RecortarMotivo(motivo), ahora, c);
         return Exito(EstadoTareaMockup.Fallida);
     }
+
+    private static string Truncar(string? t) => t is null ? "" : t.Length > 300 ? t[..300] : t;
 
     private static ResultadoCasoDeUso<EstadoTareaMockup> Exito(EstadoTareaMockup e) => ResultadoCasoDeUso<EstadoTareaMockup>.Exito(e);
 

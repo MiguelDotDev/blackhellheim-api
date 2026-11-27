@@ -42,7 +42,7 @@ public class MockupsSqlServerPruebas(ContenedorSqlServer sql)
         var resultados = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => Task.Run(async () =>
         {
             await using var c = Contexto(cadena);
-            var manejador = new ManejadorFinalizarTareaMockup(new RepositorioMockups(c), e.Disenos, e.Proveedor, e.Almacen, e.Opciones, e.Reloj, e.Contexto);
+            var manejador = new ManejadorFinalizarTareaMockup(new RepositorioMockups(c), e.Disenos, e.Proveedor, e.Almacen, e.Opciones, e.Reloj, e.Contexto, e.Advertencias);
             return await manejador.Handle(new FinalizarTareaMockupComando(tareaId), default);
         })));
 

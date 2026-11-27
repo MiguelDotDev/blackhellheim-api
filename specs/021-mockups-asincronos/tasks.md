@@ -39,6 +39,7 @@ Criterio independiente: `GET` lista tareas e imágenes.
 ## Fase 7: Cierre
 - [x] T019 [BE] Añadir las variables `Mockups__*` al `compose.yaml` (sin secretos), `dotnet build`/`dotnet test` en verde, tareas marcadas, fila de `docs/scrum/backlog.md` = Hecha y commit `HU-21: mockups asíncronos`.
 - [x] T020 [BE] Hallazgo con Printful real: `mockup-tasks` exige `X-PF-Store-Id`. Opción `Printful__IdTienda` (vacía = sin cabecera), cabecera al crear y consultar, log Warning con código y 500 caracteres del cuerpo en 4xx/5xx, variable en `compose.yaml`/`.env.example`/runbook y pruebas.
+- [x] T021 [BE] Hallazgo con Printful real: tarea `Fallida` sin imágenes válidas. Admitir por omisión el host de S3 de `mockup_url`, guardar `failure_reasons` en `Motivo` y registrar un Warning (sin consultas de URL), con pruebas.
 
 ## Dependencias y paralelismo
 Fase 2 bloquea el resto. US1, US2 y US3 pueden avanzar tras la fase 2, pero US3 usa `FinalizarTareaMockup` (T012) y US2 necesita tareas creadas por US1 solo en pruebas (se siembran). Marcadas `[P]` las pruebas de cada fase. MVP = fases 1–4 (pedir y recibir por evento); US3 garantiza CE-001.
