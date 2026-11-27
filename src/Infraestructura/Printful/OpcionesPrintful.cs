@@ -4,6 +4,8 @@ namespace BlackHellHeim.Infraestructura.Printful;
 public sealed class OpcionesPrintful
 {
     public string Token { get; set; } = "";
+    /// <summary>Id de tienda (<c>Printful__IdTienda</c>), no es secreto. El token es de cuenta: los endpoints de tienda (mockup-tasks) exigen <c>X-PF-Store-Id</c>. Vacío = no se envía.</summary>
+    public string IdTienda { get; set; } = "";
     public string UrlBase { get; set; } = "https://api.printful.com";
     public int TiempoEsperaSegundos { get; set; } = 10;
     /// <summary>Secreto HMAC del webhook (<c>Printful__SecretoWebhook</c>); vacío = endpoint en 503. Nunca versionado.</summary>

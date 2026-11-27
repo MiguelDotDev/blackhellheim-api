@@ -10,3 +10,6 @@
 | El evento `mockup_task_finished` trae el id de tarea en `data.mockup_task.id`, `data.task.id` o `data.id`; si no coincide, el polling completa la tarea | `ManejadorMockupTaskFinished.ExtraerIdTarea` |
 | Riesgo heredado de HU-22: si el evento no trae `id` propio, HU-22 lo rechaza con 400 (ver `specs/022-webhooks-printful/investigacion.md`) | — |
 | Printful debe poder leer la URL del arte: en local con Azurite no es pública | `PedirMockups` usa `ArchivoArte.Url` |
+
+## Hallazgo verificado contra Printful real (2026-11-20): falta `X-PF-Store-Id`
+`POST /v2/mockup-tasks` respondía 400 «This endpoint requires `store_id`!»: el token es de cuenta y el cliente no enviaba `X-PF-Store-Id`. Con la cabecera Printful ya no objeta la tienda. Corrección: opción `Printful__IdTienda` (no es secreto; vacía = no se envía) y cabecera en crear y consultar tarea (`ObtenerAsync(..., deTienda: true)`). Los endpoints de catálogo (`/v2/catalog-*`) no la necesitan. Los 4xx/5xx de esas dos llamadas se registran en Warning con código y primeros 500 caracteres del cuerpo.
